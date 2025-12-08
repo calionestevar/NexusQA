@@ -1,0 +1,31 @@
+{
+  "name": "DSA",
+  "description": "Digital Services Act (EU) — Platform Responsibility",
+  "checks": [
+    {
+      "id": "report_escalation_24h",
+      "description": "Illegal content reports escalated within 24 hours",
+      "expected": true
+    },
+    {
+      "id": "transparency_reporting",
+      "description": "Monthly transparency reports published",
+      "expected": true
+    },
+    {
+      "id": "risk_assessment_documented",
+      "description": "Systemic risk assessment (harassment, minors) documented",
+      "expected": true
+    },
+    {
+      "id": "content_moderation_visible",
+      "description": "Moderation decisions visible and appealable",
+      "expected": true
+    },
+    {
+      "id": "minor_protection_priority",
+      "description": "Very large platform: enhanced minor protection measures",
+      "expected": true
+    }
+  ]
+}

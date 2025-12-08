@@ -1,0 +1,31 @@
+{
+  "name": "GDPR",
+  "description": "General Data Protection Regulation (EU)",
+  "checks": [
+    {
+      "id": "consent_required",
+      "description": "Personal data collected only with explicit consent",
+      "expected": true
+    },
+    {
+      "id": "right_to_be_forgotten",
+      "description": "Player can request full data deletion",
+      "expected": true
+    },
+    {
+      "id": "no_pii_without_consent",
+      "description": "No PII stored or transmitted without opt-in",
+      "expected": false
+    },
+    {
+      "id": "data_minimization",
+      "description": "Only necessary data collected (no overreach)",
+      "expected": true
+    },
+    {
+      "id": "breach_notification",
+      "description": "72-hour breach notification system exists",
+      "expected": true
+    }
+  ]
+}

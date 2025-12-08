@@ -1,0 +1,7 @@
+{
+  "generated": "2025-12-06T00:00:00Z",
+  "tests": [
+    { "name": "Sample.TestA", "status": "PASSED", "duration": 0.12 },
+    { "name": "Sample.TestB", "status": "FAILED", "duration": 0.45, "artifacts": ["test_Sample_TestB.log"] }
+  ]
+}

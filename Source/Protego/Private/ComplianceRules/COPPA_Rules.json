@@ -1,0 +1,16 @@
+{
+  "name": "COPPA",
+  "description": "Children's Online Privacy Protection Act",
+  "checks": [
+    {
+      "id": "voice_chat_age_gate",
+      "description": "Minors under 13 cannot use voice chat",
+      "expected": false
+    },
+    {
+      "id": "parental_consent_required",
+      "description": "Collecting PII from minors without verifiable parental consent",
+      "expected": false
+    }
+  ]
+}

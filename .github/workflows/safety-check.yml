@@ -1,0 +1,42 @@
+name: Safety Checks
+
+on:
+  pull_request:
+  push:
+    branches: [ main ]
+
+jobs:
+  grep-safety:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run safety grep
+        run: |
+          set -e
+          echo "Searching for critical patterns..."
+          CRITICAL_MATCHES=$(grep -R --line-number --exclude-dir=.git "MakeShareable(this)" || true)
+          if [ -n "$CRITICAL_MATCHES" ]; then
+            echo "CRITICAL PATTERNS FOUND (MakeShareable(this)):\n$CRITICAL_MATCHES"
+            echo "$CRITICAL_MATCHES" > safety-critical.txt
+            exit 1
+          fi
+
+          echo "Searching for advisory patterns (FPlatformProcess::Sleep)..."
+          ADVISORY=$(grep -R --line-number --exclude-dir=.git "FPlatformProcess::Sleep(" || true)
+          if [ -n "$ADVISORY" ]; then
+            echo "Advisory patterns found (review recommended):\n$ADVISORY"
+            echo "$ADVISORY" > safety-advisory.txt
+          else
+            echo "No advisory patterns found."
+          fi
+
+      - name: Upload safety artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: safety-reports
+          path: |
+            safety-critical.txt
+            safety-advisory.txt

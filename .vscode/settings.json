@@ -1,0 +1,40 @@
+{
+    // C++ Formatting
+    "C_Cpp.formatting": "clangFormat",
+    "C_Cpp.clang_format_style": "file",
+    "C_Cpp.clang_format_fallbackStyle": "LLVM",
+    
+    // Format on save
+    "[cpp]": {
+        "editor.formatOnSave": false,  // Set to true to enable auto-format
+        "editor.defaultFormatter": "ms-vscode.cpptools"
+    },
+    
+    "[c]": {
+        "editor.formatOnSave": false,
+        "editor.defaultFormatter": "ms-vscode.cpptools"
+    },
+    
+    // Unreal Engine specific
+    "files.associations": {
+        "*.uproject": "json",
+        "*.uplugin": "json"
+    },
+    
+    // Exclude Unreal Engine generated folders
+    "files.exclude": {
+        "**/Binaries": true,
+        "**/Build": true,
+        "**/Intermediate": true,
+        "**/Saved": true,
+        "**/.vs": true,
+        "**/.vscode": false
+    },
+    
+    "search.exclude": {
+        "**/Binaries": true,
+        "**/Build": true,
+        "**/Intermediate": true,
+        "**/Saved": true
+    }
+}

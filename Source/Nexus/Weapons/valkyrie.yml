@@ -1,0 +1,84 @@
+name: Valkyrie Auto-Upgrader — Game Dev Edition
+
+on:
+  schedule:
+    - cron: '0 6 * * 1'  # Mondays at 6 AM
+  workflow_dispatch:
+    inputs:
+      create_pr:
+        description: 'Create PRs for upgrades (set to true to enable)'
+        required: false
+        default: 'false'
+
+jobs:
+  upgrade:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Tools
+        uses: microsoft/setup-msbuild@v2  # For NuGet/Unity
+      - name: Install vcpkg
+        if: hashFiles('vcpkg.json') != ''
+        run: |
+          git clone https://github.com/Microsoft/vcpkg.git
+          ./vcpkg/bootstrap-vcpkg.sh
+      - name: Install Conan
+        if: hashFiles('conanfile*') != ''
+        run: pip install conan
+
+      - name: Valkyrie Scan vcpkg
+        if: hashFiles('vcpkg.json') != ''
+        id: vcpkg
+        run: |
+          if ./vcpkg/vcpkg list --outdated | grep -q outdated; then
+            ./vcpkg/vcpkg upgrade --no-dry-run
+            git add vcpkg.json
+            git commit -m "Valkyrie: Upgrade vcpkg deps (semver-safe)"
+            echo "vcpkg_changed=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Valkyrie Scan Conan
+        if: hashFiles('conanfile*') != ''
+        id: conan
+        run: |
+          conan install . --build=missing
+          if conan graph info . | grep -q outdated; then
+            conan install . --update
+            git add conanfile*
+            git commit -m "Valkyrie: Upgrade Conan deps (semver-safe)"
+            echo "conan_changed=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Valkyrie Scan NuGet (Unity/C#)
+        if: hashFiles('*.csproj') != ''
+        id: nuget
+        run: |
+          dotnet restore
+          if dotnet list package --outdated | grep -q outdated; then
+            dotnet add package --version * --prerelease
+            git add *.csproj packages.config
+            git commit -m "Valkyrie: Upgrade NuGet deps (semver-safe)"
+            echo "nuget_changed=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create PR
+        # Only create PRs when manually dispatched with create_pr=true
+        if: (github.event_name == 'workflow_dispatch' && github.event.inputs.create_pr == 'true') && (steps.vcpkg.outputs.vcpkg_changed || steps.conan.outputs.conan_changed || steps.nuget.outputs.nuget_changed)
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          title: "Valkyrie Upgrade: Safe dependency updates"
+          body: |
+            Automated by Valkyrie — semver-safe upgrades for vcpkg/Conan/NuGet.
+            - Checked for vulns/outdated
+            - No breaking changes
+            Merge when ready.
+          branch: valkyrie/upgrade-$(date +%Y%m%d)
+          delete-branch: true

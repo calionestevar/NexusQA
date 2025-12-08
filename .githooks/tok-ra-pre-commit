@@ -1,0 +1,46 @@
+#!/bin/sh
+# TOK'RA GUARDIAN — Safer pre-commit checks
+# Scans staged (index) content for high-risk secrets and gives advisory
+# suggestions for package manager updates. Exitable via TOKRA_SKIP_HOOK=1.
+
+set -eu
+
+if [ "${TOKRA_SKIP_HOOK:-0}" = "1" ]; then
+    echo "TOK'RA SKIP — environment override set; skipping checks"
+    exit 0
+fi
+
+echo "TOK'RA SYMBIOTE AWAKENED — SCANNING STAGED FILES..."
+
+# 1) Secrets scan (strict). Scan the git index (staged content).
+SECRETS_PATTERN='(password|secret|token|key|credential|api[_-]?key|private)'
+if git grep --cached -nE "$SECRETS_PATTERN" -- '*.uproject' '*.uplugin' '*.csproj' '*.yaml' '*.yml' '*.json' '*.ini' '*.config' '*.txt' >/dev/null 2>&1; then
+    echo "GOA'ULD DETECTED — potential secret found in staged files!"
+    echo "Inspect staged changes with: git diff --cached --name-only && git show :<path>"
+    echo "Remove secrets or add to .gitignore and try again. Commit blocked."
+    exit 1
+fi
+
+# 2) vcpkg (advisory) — only run if vcpkg exists in repo and executable
+if [ -f "vcpkg.json" ] && [ -x "./vcpkg/vcpkg" ]; then
+    if ./vcpkg/vcpkg list --outdated 2>/dev/null | grep -q '.'; then
+        echo "VCPKG OUTDATED — consider running 'vcpkg upgrade' (hook advisory)"
+    fi
+fi
+
+# 3) Conan (advisory)
+if ( [ -f "conanfile.txt" ] || [ -f "conanfile.py" ] ) && command -v conan >/dev/null 2>&1; then
+    if conan graph info . 2>/dev/null | grep -q outdated; then
+        echo "CONAN OUTDATED DEPS — consider 'conan install --update' (hook advisory)"
+    fi
+fi
+
+# 4) NuGet / dotnet (advisory)
+if ls *.csproj >/dev/null 2>&1 && command -v dotnet >/dev/null 2>&1; then
+    if dotnet list package --outdated 2>/dev/null | grep -q '>' ; then
+        echo "NUGET OUTDATED PACKAGES — consider updating (hook advisory)"
+    fi
+fi
+
+echo "TOK'RA CLEAR — THE GATE IS OPEN"
+exit 0

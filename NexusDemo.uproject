@@ -1,0 +1,48 @@
+{
+    "FileVersion": 3,
+    "EngineAssociation": "5.6",
+    "Category": "QA Toolkit Demo",
+    "Description": "Demo project to run Nexus framework",
+    "Modules": [
+        {
+            "Name": "NexusDemo",
+            "Type": "Runtime",
+            "LoadingPhase": "Default"
+        },
+        {
+            "Name": "Nexus",
+            "Type": "Runtime",
+            "LoadingPhase": "Default"
+        },
+        {
+            "Name": "Utilities",
+            "Type": "Runtime",
+            "LoadingPhase": "Default"
+        },
+        {
+            "Name": "Protego",
+            "Type": "Runtime",
+            "LoadingPhase": "Default"
+        },
+        {
+            "Name": "Chaos",
+            "Type": "Runtime",
+            "LoadingPhase": "Default"
+        },
+        {
+            "Name": "ArgusLens",
+            "Type": "Runtime",
+            "LoadingPhase": "Default"
+        },
+        {
+            "Name": "SwarmOfTheDead",
+            "Type": "Runtime",
+            "LoadingPhase": "Default"
+        },
+        {
+            "Name": "Legacy",
+            "Type": "Runtime",
+            "LoadingPhase": "Default"
+        }
+    ]
+}
