@@ -232,15 +232,15 @@ jobs:
           python -m pip install --upgrade pip
           pip install pyyaml
 
-      - name: Validate valkyrie.yml syntax
+      - name: Validate cair-paravel.yml syntax
         run: |
           python - <<'PY'
 import yaml, sys
-path = 'Source/Nexus/Weapons/valkyrie.yml'
+path = '.github/workflows/cair-paravel.yml'
 try:
     with open(path, 'r') as f:
         data = yaml.safe_load(f)
-    print('valkyrie.yml loaded successfully')
+    print('cair-paravel.yml loaded successfully')
     # Print high-level summary
     jobs = data.get('jobs', {})
     print(f"Found jobs: {', '.join(jobs.keys())}")
@@ -249,7 +249,7 @@ try:
     for k,v in triggers.items():
         print('  ', k)
 except Exception as e:
-    print('Failed to parse valkyrie.yml:', e)
+    print('Failed to parse cair-paravel.yml:', e)
     sys.exit(2)
 PY
 
