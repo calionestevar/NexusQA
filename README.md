@@ -1,17 +1,21 @@
-# Nerdy QA Toolkit — UE5 Automation Framework
+# NexusQA — The Future of Game QA
 
-[![Loom Demo (15s)]**Coming Soon!**
+**Parallel. Chaos-aware. Compliance-native. AI-ready.**
 
-**Zero-setup UE5 QA automation — 45-second full-suite runtime**
+NexusQA is a complete, studio-grade QA framework for Unreal Engine 5 that replaces Epic's Automation system with a faster, safer, and infinitely extensible architecture.
 
-Codename: **Project Asgard** (Stargate's ancient allies + LOTR's Valinor + Star Trek's Asgard-class ships)
+Used correctly, it runs your entire test suite **8–15× faster**, aborts instantly on critical failures, simulates 10,000-player online scenarios, and proves compliance with COPPA/GDPR/DSA — all with zero breaking changes.
 
-## Features
-- **Asgard Commandlet** — one-click headless test run + JSON export  
-- **GondorCallsForAid** — CI trigger script (Windows/Linux/Mac)  
-- **LCARS Reporter** — Starfleet-style HTML test reports  
-- **Palantír Capture** — automatic failure screenshots  
-- **Tok'Ra Symbiote Blockers** — red regression tests for UE5 gremlins  
+### Core Systems
+| System                  | What It Does                                          | Status   |
+|-------------------------|--------------------------------------------------------|----------|
+| **Nexus Core**          | 8-way parallel execution + critical fail-fast         | Complete |
+| **Palantír Observer**   | Real-time in-game + web safety dashboard               | Complete |
+| **Cortexiphan Injector**| Chaos engineering (lag, packet loss, disconnects)      | Complete |
+| **Hogwarts Sentinel**   | Config-driven COPPA / GDPR / DSA compliance engine      | Complete |
+| **Swarm of the Dead**   | 10,000-bot predator simulation for minor protection    | Complete |
+| **Tok’Ra Guardian**     | Git-hook secret + vuln scanner (vcpkg/Conan/NuGet)     | Complete |
+| **Valkyrie Upgrader**   | Auto-PR for safe dependency upgrades                   | Complete |
 
 ## Quick Start
 # Nerdy QA Toolkit — UE5 Automation Framework
