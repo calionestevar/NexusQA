@@ -12,7 +12,8 @@ public class Protego : ModuleRules
             "CoreUObject",
             "Engine",
             "Json",
-            "JsonUtilities"
+            "JsonUtilities",
+            "Nexus"
         });
 
         PrivateDependencyModuleNames.AddRange(new string[]

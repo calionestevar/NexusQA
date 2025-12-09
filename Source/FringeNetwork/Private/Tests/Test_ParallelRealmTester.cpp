@@ -1,15 +1,15 @@
 #include "NexusTest.h"
-#include "Chaos.h"
+#include "FringeNetwork.h"
 
 // This test is marked OnlineOnly: it makes HTTP HEAD requests. On CI, the network
 // environment may vary; testers can skip OnlineOnly tests by passing flags to the
 // Nexus harness.
-NEXUS_TEST(FParallelRealmTesterOnline, "Chaos.ParallelRealmTester.OnlineCheck", (ETestPriority::Normal | ETestPriority::OnlineOnly))
+NEXUS_TEST(FParallelRealmTesterOnline, "FringeNetwork.ParallelRealmTester.OnlineCheck", (ETestPriority::Normal | ETestPriority::OnlineOnly))
 {
-    UChaos* FG = NewObject<UChaos>();
+    UFringeNetwork* FG = NewObject<UFringeNetwork>();
     if (!FG)
     {
-        UE_LOG(LogTemp, Error, TEXT("Failed to construct UChaos for test"));
+        UE_LOG(LogTemp, Error, TEXT("Failed to construct UFringeNetwork for test"));
         return false;
     }
 

@@ -12,7 +12,8 @@ public class StargateStress : ModuleRules
             "CoreUObject",
             "Engine",
             "Json",
-            "JsonUtilities"
+            "JsonUtilities",
+            "Nexus"
         });
 
         PrivateDependencyModuleNames.AddRange(new string[]
