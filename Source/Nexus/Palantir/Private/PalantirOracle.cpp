@@ -11,7 +11,7 @@
 // LCARS export (optional integration)
 #include "../../../../Legacy/Public/LCARSReporter.h"
 #include "Misc/AutomationTest.h"
-#include "../Public/LCARSProvider.h"
+#include "LCARSProvider.h"
 #include "Misc/ConfigCacheIni.h"
 
 // In-memory maps populated by OnTestStarted/OnTestFinished.

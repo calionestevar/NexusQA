@@ -3,7 +3,7 @@
 #include "ObserverNetworkDashboard.generated.h"
 
 UCLASS()
-class UObserverNetworkDashboard : public UObject
+class FRINGENETWORK_API UObserverNetworkDashboard : public UObject
 {
     GENERATED_BODY()
 

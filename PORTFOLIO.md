@@ -27,10 +27,10 @@ This framework demonstrates expertise in:
         ┌──────────────┼──────────────┬──────────────┐
         │              │               │              │
         ▼              ▼               ▼              ▼
-   ┌─────────┐  ┌──────────┐   ┌──────────┐   ┌──────────┐
-   │ Palantír│  │  Chaos   │   │ ArgusLens│   │ Protego  │
-   │(Tracing)│  │(Network) │   │  (Perf)  │   │(Complian)│
-   └────┬────┘  └────┬─────┘   └────┬─────┘   └────┬─────┘
+   ┌─────────┐  ┌────────────┐   ┌──────────┐   ┌──────────┐
+   │ Palantír│  │ FringeNet  │   │ ArgusLens│   │ Protego  │
+   │(Tracing)│  │ (Network)  │   │  (Perf)  │   │(Complian)│
+   └────┬────┘  └────┬───────┘   └────┬─────┘   └────┬─────┘
         │            │               │              │
         └────────────┴───────────────┴──────────────┘
                           │
@@ -435,7 +435,7 @@ jobs:
 - **LCARS Report Generation:** <500ms for 50 tests
 
 ### Code Metrics
-- **8 Modules** — Nexus, Palantír, Chaos, ArgusLens, Protego, SwarmOfTheDead, Legacy, Utilities
+- **8 Modules** — Nexus, Palantír, FringeNetwork, ArgusLens, Protego, StargateStress, Legacy, Utilities
 - **~5,000 LOC** — Production C++ code
 - **~3,000 LOC** — Documentation
 - **9 Sample Tests** — Demonstrating all patterns
@@ -498,7 +498,7 @@ jobs:
 - `docs/PALANTIR.md` — Distributed tracing user guide
 - `docs/PALANTIR_ARCHITECTURE.md` — Architectural deep dive
 - `docs/GAME_INDUSTRY_INTEGRATIONS.md` — Sentry/PlayFab/GameLift integration (470+ lines)
-- `SAMPLE_ARTIFACTS.md` — Example reports and artifacts
+- `Docs/SAMPLE_ARTIFACTS.md` — Example reports and artifacts
 
 ---
 

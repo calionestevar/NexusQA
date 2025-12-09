@@ -1,8 +1,8 @@
 using UnrealBuildTool;
 
-public class Chaos : ModuleRules
+public class FringeNetwork : ModuleRules
 {
-    public Chaos(ReadOnlyTargetRules Target) : base(Target)
+    public FringeNetwork(ReadOnlyTargetRules Target) : base(Target)
     {
         PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 

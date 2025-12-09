@@ -42,10 +42,10 @@ This document explains the high-level design philosophy, module interdependencie
                   │
     ┌─────────────┼─────────────────────────────┐
     │             │             │                │
-┌───▼──────┐ ┌──▼─────┐  ┌────▼───┐  ┌───────▼──┐
-│ Protego  │ │ Chaos  │  │ArgusLens  │SwarmOfDead│
-│(Compliance)│(Network)   │(Perf)    │(Behavior) │
-└──────────┘ └────────┘  └──────────┘└──────────┘
+┌───┴──────┐ ┌──┴──────────┐  ┌────┴───┐  ┌───────┴─────┐
+│ Protego  │ │FringeNet  │  │ArgusLens  │StargateStrs│
+│(Compliance)│(Network)     │(Perf)    │(Load Test) │
+└──────────┘ └────────────┘  └──────────┘└─────────────┘
 ```
 
 ---
@@ -98,14 +98,14 @@ This document explains the high-level design philosophy, module interdependencie
 
 ---
 
-### **Chaos** (Network & Multiplayer Testing)
+### **FringeNetwork** (Network & Multiplayer Testing)
 **Purpose:** Inject realism into networked gameplay testing.
 
 **Modules:**
 - `UCortexiphanInjector` — Network chaos (latency, packet loss, bandwidth throttling)
 - `UObserverNetworkDashboard` — Real-time network event monitoring
-- `UGateBridge` — In-process client replication harness
-- `UParallelRealmTester` — Parallel world simulation for stress testing
+- `UBishopBridge` — In-process client replication harness
+- `UFringeNetwork` — Parallel world simulation for stress testing
 
 **Why Valuable:** Most game failures occur under bad network conditions; this framework makes them reproducible and measurable.
 
@@ -122,11 +122,11 @@ This document explains the high-level design philosophy, module interdependencie
 
 ---
 
-### **SwarmOfTheDead** (Synthetic Chat & NPC Behavior)
+### **StargateStress** (Synthetic Chat & NPC Behavior)
 **Purpose:** Simulate large numbers of players or NPCs with realistic behavior.
 
 **Modules:**
-- `USwarmOfTheDead` — Behavior profile orchestrator
+- `UReplicatorSwarm` — Behavior profile orchestrator
 - **Data:** BehaviorProfiles/ for configurable NPC actions
 
 **Why Valuable:** Multiplayer games need stress-tested concurrent behavior; this framework makes it scriptable.
@@ -224,7 +224,7 @@ All test output lands in `Saved/NexusReports/`:
 | `nexus-results.xml` | JUnit-compatible XML (GitHub Actions, Jenkins, etc.) |
 | `ArgusLensPerformance.json` | Detailed performance metrics |
 | `TransfigurationReport.json` | Accessibility audit results |
-| `Chaos_events.json` | Network event logs |
+| `FringeNetwork_events.json` | Network event logs |
 
 **Why Multiple Formats?**
 - JSON for parsing/analysis
@@ -338,15 +338,15 @@ This section provides detailed documentation of each module in the NexusQA frame
 - **Artifacts:** `Saved/Accessibility/TransfigurationReport.json`, compliance audit logs
 - **Usage:** Call `UTransfiguration::RunAccessibilityAudit()` and compliance checks from test harnesses.
 
-#### **Chaos** (Network & Multiplayer)
+#### **FringeNetwork** (Network & Multiplayer)
 - **Purpose:** Network chaos injection, multiplayer testing, and advanced network simulation.
 - **Key Classes:**
   - `UCortexiphanInjector`: Network latency/packet loss/bandwidth simulation
   - `UObserverNetworkDashboard`: Network metrics monitoring
-  - `UGateBridge`: In-process client replication harness for multiplayer testing
-  - `UParallelRealmTester`: Parallel world simulation for stress testing
+  - `UBishopBridge`: In-process client replication harness for multiplayer testing
+  - `UFringeNetwork`: Parallel world simulation for stress testing
 - **Dependencies:** Core, CoreUObject, Engine, Json, JsonUtilities, Projects, InputCore, Slate, SlateCore
-- **Artifacts:** `Saved/NexusReports/Chaos_*.json`, network event logs
+- **Artifacts:** `Saved/NexusReports/FringeNetwork_*.json`, network event logs
 - **Usage:** Inject chaos into running tests; monitor network behavior; simulate multiplayer scenarios.
 
 #### **ArgusLens** (Performance Monitoring)
@@ -357,9 +357,9 @@ This section provides detailed documentation of each module in the NexusQA frame
 - **Artifacts:** `Saved/NexusReports/ArgusLensPerformance.json`, HTML dashboards
 - **Usage:** Call `UArgusLens::StartPerformanceMonitoring()` before gameplay; export metrics post-run.
 
-#### **SwarmOfTheDead** (NPC & Chat Simulation)
+#### **StargateStress** (NPC & Chat Simulation)
 - **Purpose:** Synthetic chat simulation and NPC behavior generation.
-- **Key Classes:** `USwarmOfTheDead`
+- **Key Classes:** `UReplicatorSwarm`
 - **Contents:** Behavior profiles for AI chat and NPC simulation
 - **Dependencies:** Core, CoreUObject, Engine, Json, JsonUtilities, Projects, InputCore, Slate, SlateCore
 - **Artifacts:** Synthetic conversation logs, NPC behavior metrics
@@ -384,15 +384,15 @@ This section provides detailed documentation of each module in the NexusQA frame
 ```
 Nexus (core + Palantír tracing/assertions)
   └─ NexusDemo (demo target)
-     └─ All feature modules (Chaos, ArgusLens, Protego, SwarmOfTheDead)
+     └─ All feature modules (FringeNetwork, ArgusLens, Protego, StargateStress)
 
 Utilities (shared config)
   ├─ Nexus
   ├─ Legacy
   ├─ Protego
-  ├─ Chaos
+  ├─ FringeNetwork
   ├─ ArgusLens
-  └─ SwarmOfTheDead
+  └─ StargateStress
 
 Legacy (historical tools)
   └─ Optional; used for backward compatibility
@@ -407,9 +407,9 @@ All modules are declared in `NexusDemo.uproject`:
   { "Name": "Nexus", "Type": "Runtime", "LoadingPhase": "Default" },
   { "Name": "Utilities", "Type": "Runtime", "LoadingPhase": "Default" },
   { "Name": "Protego", "Type": "Runtime", "LoadingPhase": "Default" },
-  { "Name": "Chaos", "Type": "Runtime", "LoadingPhase": "Default" },
+  { "Name": "FringeNetwork", "Type": "Runtime", "LoadingPhase": "Default" },
   { "Name": "ArgusLens", "Type": "Runtime", "LoadingPhase": "Default" },
-  { "Name": "SwarmOfTheDead", "Type": "Runtime", "LoadingPhase": "Default" },
+  { "Name": "StargateStress", "Type": "Runtime", "LoadingPhase": "Default" },
   { "Name": "Legacy", "Type": "Runtime", "LoadingPhase": "Default" },
   { "Name": "Toolkit", "Type": "Runtime", "LoadingPhase": "Default" }
 ]
@@ -426,7 +426,7 @@ Each module has a corresponding `ModuleName.Build.cs` defining dependencies. To 
 All test artifacts export to `Saved/NexusReports/<ModuleName>/`:
 - `ArgusLens_*.json` — Performance metrics
 - `Protego_*.json` — Compliance and accessibility reports
-- `Chaos_*.json` — Network event logs
+- `FringeNetwork_*.json` — Network event logs
 - `*_report.html` — Human-readable reports
 
 ### Adding New Features

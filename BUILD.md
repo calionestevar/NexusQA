@@ -141,10 +141,10 @@ Then in the Editor:
 
 ```powershell
 # Windows
-.\Scripts\Engage.ps1 -TestPattern "Chaos.*"
+.\Scripts\Engage.ps1 -TestPattern "FringeNetwork.*"
 
 # Linux/macOS
-./Scripts/RideOut.sh -TestPattern "Chaos.*"
+./Scripts/RideOut.sh -TestPattern "FringeNetwork.*"
 ```
 
 ### Run with Arguments
@@ -304,11 +304,11 @@ ArgusLens runs continuously in the background. If values are 0:
 
 1. **Create test file:**
    ```cpp
-   // Source/Chaos/Private/Tests/MyTest.test.cpp
+   // Source/FringeNetwork/Private/Tests/MyTest.test.cpp
    #include "NexusTest.h"
    #include "CortexiphanInjector.h"
    
-   NEXUS_TEST(FMyChaosTest, "Chaos.MyFeature.Scenario", ETestPriority::Normal)
+   NEXUS_TEST(FMyFringeTest, "FringeNetwork.MyFeature.Scenario", ETestPriority::Normal)
    {
        UCortexiphanInjector::InjectChaos(10.0f, 0.5f);
        return true;

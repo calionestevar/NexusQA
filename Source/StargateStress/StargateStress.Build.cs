@@ -1,8 +1,8 @@
 using UnrealBuildTool;
 
-public class SwarmOfTheDead : ModuleRules
+public class StargateStress : ModuleRules
 {
-    public SwarmOfTheDead(ReadOnlyTargetRules Target) : base(Target)
+    public StargateStress(ReadOnlyTargetRules Target) : base(Target)
     {
         PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 

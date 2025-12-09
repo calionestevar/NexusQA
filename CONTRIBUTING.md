@@ -30,7 +30,7 @@ Thank you for your interest in contributing! This framework is designed to evolv
 ### C++ Style
 - **Naming:** Follow Unreal conventions (UClassName for objects, FStructName for structs)
 - **Headers:** Public API in `Public/`, implementation details in `Private/`
-- **Logging:** Use module-specific log categories (e.g., `LogArgusLens`, `LogChaos`)
+- **Logging:** Use module-specific log categories (e.g., `LogArgusLens`, `LogFringeNetwork`)
 - **Comments:** Explain *why*, not *what*; code should be self-documenting
 
 ### File Organization

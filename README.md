@@ -95,7 +95,7 @@ Opens `TestReports/LCARS_Demo_Report.html` in your browser - screenshot-ready!
 ### Distributed Tracing Timeline
 *Coming soon: JSON export showing breadcrumb timeline across multiple services*
 
-See **[SAMPLE_ARTIFACTS.md](SAMPLE_ARTIFACTS.md)** for example JSON/XML/HTML outputs.
+See **[SAMPLE_ARTIFACTS.md](Docs/SAMPLE_ARTIFACTS.md)** for example JSON/XML/HTML outputs.
 See **[docs/images/README.md](docs/images/README.md)** for screenshot capture guidelines.
 
 ## LCARS Providers & Demo

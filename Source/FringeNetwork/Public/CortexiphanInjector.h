@@ -37,7 +37,7 @@ struct FNetworkProfile
 };
 
 UCLASS()
-class UCortexiphanInjector : public UObject
+class FRINGENETWORK_API UCortexiphanInjector : public UObject
 {
     GENERATED_BODY()
 

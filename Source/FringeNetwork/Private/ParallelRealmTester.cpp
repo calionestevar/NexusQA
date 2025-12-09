@@ -1,16 +1,16 @@
-#include "Chaos.h"
+#include "FringeNetwork.h"
 #include "HttpModule.h"
 #include "HAL/PlatformProcess.h"
 #include "HAL/PlatformAtomics.h"
 #include "Templates/SharedPointer.h"
 
-void UChaos::TestParallelRealms(const TArray<FString>& RegionURLs)
+void UFringeNetwork::TestParallelRealms(const TArray<FString>& RegionURLs)
 {
-    ObserverLog(FString::Printf(TEXT("Testing %d parallel realms"), RegionURLs.Num()));
+    UE_LOG(LogTemp, Display, TEXT("FRINGE NETWORK: Testing %d parallel realms"), RegionURLs.Num());
 
     if (RegionURLs.Num() == 0)
     {
-        ObserverLog(TEXT("No regions provided to TestParallelRealms"));
+        UE_LOG(LogTemp, Warning, TEXT("FRINGE NETWORK: No regions provided to TestParallelRealms"));
         return;
     }
 
@@ -53,5 +53,5 @@ void UChaos::TestParallelRealms(const TArray<FString>& RegionURLs)
 
     float SyncRate = (float)(*SuccessCount) / RegionURLs.Num();
     TestTrue(TEXT("90%+ parallel realms synchronized"), SyncRate >= 0.9f);
-    ObserverLog(FString::Printf(TEXT("Realm synchronization: %.0f%%"), SyncRate * 100));
+    UE_LOG(LogTemp, Display, TEXT("FRINGE NETWORK: Realm synchronization: %.0f%%"), SyncRate * 100);
 }

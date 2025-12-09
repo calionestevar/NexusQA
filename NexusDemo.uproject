@@ -25,7 +25,7 @@
             "LoadingPhase": "Default"
         },
         {
-            "Name": "Chaos",
+            "Name": "FringeNetwork",
             "Type": "Runtime",
             "LoadingPhase": "Default"
         },
@@ -35,7 +35,7 @@
             "LoadingPhase": "Default"
         },
         {
-            "Name": "SwarmOfTheDead",
+            "Name": "StargateStress",
             "Type": "Runtime",
             "LoadingPhase": "Default"
         },

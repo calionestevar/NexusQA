@@ -2,7 +2,7 @@
 #include "CoreMinimal.h"
 #include "UObject/NoExportTypes.h"
 #include "CortexiphanInjector.h"
-#include "GateBridge.generated.h"
+#include "BishopBridge.generated.h"
 
 // Lightweight simulated client for in-process replication testing
 USTRUCT(BlueprintType)
@@ -43,33 +43,33 @@ struct FReplicationEvent
 };
 
 /**
- * GateBridge — Stargate GateBridge Multiplayer Test Harness
+ * BishopBridge — Walter Bishop's Bridge Between Parallel Worlds
  * Simulates 10+ to 100+ clients in-process and measures replication lag, state sync,
  * and network resilience. Produces artifacts for CI/recruiters.
  */
 UCLASS()
-class UGateBridge : public UObject
+class FRINGENETWORK_API UBishopBridge : public UObject
 {
     GENERATED_BODY()
 
 public:
     // Spawn simulated clients and run the test harness
-    UFUNCTION(BlueprintCallable, Category = "Fringe Guardian|GateBridge")
+    UFUNCTION(BlueprintCallable, Category = "Fringe Network|Bishop Bridge")
     static void SpawnSimulatedClients(int32 ClientCount = 10, float DurationMinutes = 5.0f, bool bApplyChaos = false);
 
     // Export replication metrics to JSON for recruiter demo
-    UFUNCTION(BlueprintCallable, Category = "Fringe Guardian|GateBridge")
+    UFUNCTION(BlueprintCallable, Category = "Fringe Network|Bishop Bridge")
     static void ExportReplicationArtifact(const FString& OutputPath = TEXT(""));
 
     // Get average replication lag across all clients
-    UFUNCTION(BlueprintCallable, Category = "Fringe Guardian|GateBridge")
+    UFUNCTION(BlueprintCallable, Category = "Fringe Network|Bishop Bridge")
     static float GetAverageReplicationLagMs();
 
     // Get sync success rate (0-1)
-    UFUNCTION(BlueprintCallable, Category = "Fringe Guardian|GateBridge")
+    UFUNCTION(BlueprintCallable, Category = "Fringe Network|Bishop Bridge")
     static float GetSyncSuccessRate();
 
     // Clear all simulated clients and reset state
-    UFUNCTION(BlueprintCallable, Category = "Fringe Guardian|GateBridge")
+    UFUNCTION(BlueprintCallable, Category = "Fringe Network|Bishop Bridge")
     static void ResetSimulation();
 };

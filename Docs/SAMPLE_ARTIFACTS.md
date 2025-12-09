@@ -23,12 +23,12 @@ LCARS_Report_2025-12-07T14-32-15.html
 │  └─ Compliance: GDPR, COPPA verified
 │
 ├─ Test Results (Detailed)
-│  ├─ [PASS] Chaos.Cortexiphan.FullRealityCollapse (2.34s)
-│  ├─ [PASS] Chaos.ObserverNetworkDashboard.Sanity (1.12s)
+│  ├─ [PASS] FringeNetwork.Cortexiphan.FullRealityCollapse (2.34s)
+│  ├─ [PASS] FringeNetwork.ObserverNetworkDashboard.Sanity (1.12s)
 │  ├─ [PASS] ArgusLens.Performance.Smoke (5.00s)
 │  ├─ [FAIL] Protego.Transfiguration.Smoke (0.89s)
 │  │  └─ Error: Subtitle timing validation failed
-│  └─ [PASS] SwarmOfTheDead.Behavior.Smoke (3.45s)
+│  └─ [PASS] StargateStress.ReplicatorSwarm.Smoke (3.45s)
 │
 ├─ Performance Metrics
 │  ├─ FPS Graph (over time)
@@ -39,7 +39,7 @@ LCARS_Report_2025-12-07T14-32-15.html
 ├─ Artifact Links
 │  ├─ ArgusLensPerformance.json
 │  ├─ TransfigurationReport.json
-│  ├─ Chaos_events.json
+│  ├─ FringeNetwork_events.json
 │  └─ test_Smoke_failure.log
 │
 └─ Footer
@@ -64,9 +64,9 @@ Compatible with GitHub Actions, Jenkins, GitLab CI, and most CI platforms.
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
 <testsuites name="Nexus Test Suite" tests="5" failures="1" skipped="0" time="45.2">
-  <testsuite name="Chaos" tests="2" failures="0" time="3.46">
-    <testcase classname="Chaos" name="Cortexiphan.FullRealityCollapse" time="2.34" />
-    <testcase classname="Chaos" name="ObserverNetworkDashboard.Sanity" time="1.12" />
+  <testsuite name="FringeNetwork" tests="2" failures="0" time="3.46">
+    <testcase classname="FringeNetwork" name="Cortexiphan.FullRealityCollapse" time="2.34" />
+    <testcase classname="FringeNetwork" name="ObserverNetworkDashboard.Sanity" time="1.12" />
   </testsuite>
   
   <testsuite name="ArgusLens" tests="1" failures="0" time="5.00">
@@ -83,8 +83,8 @@ Compatible with GitHub Actions, Jenkins, GitLab CI, and most CI platforms.
     </testcase>
   </testsuite>
   
-  <testsuite name="SwarmOfTheDead" tests="1" failures="0" time="3.45">
-    <testcase classname="SwarmOfTheDead" name="Behavior.Smoke" time="3.45" />
+  <testsuite name="StargateStress" tests="1" failures="0" time="3.45">
+    <testcase classname="StargateStress" name="ReplicatorSwarm.Smoke" time="3.45" />
   </testsuite>
 </testsuites>
 ```
@@ -258,7 +258,7 @@ Compatible with GitHub Actions, Jenkins, GitLab CI, and most CI platforms.
 
 ---
 
-## Network Chaos & Event Log (Chaos Module)
+## Network Chaos & Event Log (FringeNetwork Module)
 
 **Example Network Events (JSON):**
 ```json

@@ -1,24 +1,24 @@
 #pragma once
 #include "CoreMinimal.h"
-#include "Chaos.generated.h"
+#include "FringeNetwork.generated.h"
 
 UCLASS()
-class UChaos : public UObject
+class FRINGENETWORK_API UFringeNetwork : public UObject
 {
     GENERATED_BODY()
 
 public:
     // Master command — runs the full Observer Network
-    UFUNCTION(BlueprintCallable, Category = "Chaos")
+    UFUNCTION(BlueprintCallable, Category = "Fringe Network")
     static void ActivateObserverNetwork();
 
     // Individual Observers
-    UFUNCTION(BlueprintCallable, Category = "Chaos|Observers")
+    UFUNCTION(BlueprintCallable, Category = "Fringe Network|Observers")
     static void RunObserverNetworkTests(const FString& PrimaryServer);
 
-    UFUNCTION(BlueprintCallable, Category = "Chaos|Parallel Realms")
+    UFUNCTION(BlueprintCallable, Category = "Fringe Network|Parallel Realms")
     static void TestParallelRealms(const TArray<FString>& RegionURLs);
 
-    UFUNCTION(BlueprintCallable, Category = "Chaos|Cortexiphan")
+    UFUNCTION(BlueprintCallable, Category = "Fringe Network|Cortexiphan")
     static void InjectCortexiphanChaos(float DurationSeconds = 30.0f);
 };

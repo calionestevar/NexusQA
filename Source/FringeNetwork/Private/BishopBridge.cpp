@@ -1,4 +1,4 @@
-#include "GateBridge.h"
+#include "BishopBridge.h"
 #include "Engine/World.h"
 #include "TimerManager.h"
 #include "Misc/DateTime.h"
@@ -14,24 +14,24 @@
 // Global state for simulated clients and replication events
 static TArray<FSimulatedClient> GSimulatedClients;
 static TArray<FReplicationEvent> GReplicationEvents;
-static FCriticalSection GGateBridgeMutex;
+static FCriticalSection GBishopBridgeMutex;
 static int32 GTotalReplicationAttempts = 0;
 static int32 GSuccessfulReplications = 0;
 
-static void GateBridgeLog(const FString& Msg)
+static void BishopBridgeLog(const FString& Msg)
 {
-    UE_LOG(LogTemp, Display, TEXT("GATEBRIDGE: %s"), *Msg);
+    UE_LOG(LogTemp, Display, TEXT("BISHOP BRIDGE: %s"), *Msg);g);
     if (GEngine)
     {
-        GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Cyan, TEXT("GATEBRIDGE: ") + Msg);
+        GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Cyan, TEXT("BISHOP BRIDGE: ") + Msg);
     }
 }
 
-void UGateBridge::SpawnSimulatedClients(int32 ClientCount, float DurationMinutes, bool bApplyChaos)
+void UBishopBridge::SpawnSimulatedClients(int32 ClientCount, float DurationMinutes, bool bApplyChaos)
 {
     ResetSimulation();
 
-    GateBridgeLog(FString::Printf(TEXT("SPAWNING %d SIMULATED CLIENTS FOR %.1f MINUTES"), ClientCount, DurationMinutes));
+    BishopBridgeLog(FString::Printf(TEXT("SPAWNING %d SIMULATED CLIENTS FOR %.1f MINUTES"), ClientCount, DurationMinutes));
 
     // Create simulated clients
     for (int32 i = 0; i < ClientCount; ++i)
@@ -52,14 +52,14 @@ void UGateBridge::SpawnSimulatedClients(int32 ClientCount, float DurationMinutes
     UWorld* World = GEngine->GetFirstLocalPlayerController() ? GEngine->GetFirstLocalPlayerController()->GetWorld() : nullptr;
     if (!World)
     {
-        GateBridgeLog(TEXT("NO WORLD CONTEXT — SKIPPING SIMULATION"));
+        BishopBridgeLog(TEXT("NO WORLD CONTEXT — SKIPPING SIMULATION"));
         return;
     }
 
     // If chaos enabled, inject network conditions via CortexiphanInjector
     if (bApplyChaos)
     {
-        GateBridgeLog(TEXT("APPLYING CHAOS VIA CORTEXIPHAN"));
+        BishopBridgeLog(TEXT("APPLYING CHAOS VIA CORTEXIPHAN"));
         UCortexiphanInjector::InjectChaos(DurationMinutes * 60.0f, 0.7f);
     }
 
@@ -109,14 +109,14 @@ void UGateBridge::SpawnSimulatedClients(int32 ClientCount, float DurationMinutes
             World->GetTimerManager().ClearTimer(ReplicationHandle);
         }
         float SyncRate = (GTotalReplicationAttempts > 0) ? (float)GSuccessfulReplications / GTotalReplicationAttempts : 1.0f;
-        GateBridgeLog(FString::Printf(TEXT("SIMULATION COMPLETE: %d clients, sync rate %.1f%%"),
+        BishopBridgeLog(FString::Printf(TEXT("SIMULATION COMPLETE: %d clients, sync rate %.1f%%"),
             GSimulatedClients.Num(), SyncRate * 100.0f));
     }), DurationMinutes * 60.0f, false);
 }
 
-float UGateBridge::GetAverageReplicationLagMs()
+float UBishopBridge::GetAverageReplicationLagMs()
 {
-    FScopeLock Lock(&GGateBridgeMutex);
+    FScopeLock Lock(&GBishopBridgeMutex);
     if (GReplicationEvents.Num() == 0) return 0.0f;
 
     double TotalLag = 0.0;
@@ -127,23 +127,23 @@ float UGateBridge::GetAverageReplicationLagMs()
     return (float)(TotalLag / GReplicationEvents.Num());
 }
 
-float UGateBridge::GetSyncSuccessRate()
+float UBishopBridge::GetSyncSuccessRate()
 {
-    FScopeLock Lock(&GGateBridgeMutex);
+    FScopeLock Lock(&GBishopBridgeMutex);
     if (GTotalReplicationAttempts == 0) return 1.0f;
     return (float)GSuccessfulReplications / GTotalReplicationAttempts;
 }
 
-void UGateBridge::ResetSimulation()
+void UBishopBridge::ResetSimulation()
 {
-    FScopeLock Lock(&GGateBridgeMutex);
+    FScopeLock Lock(&GBishopBridgeMutex);
     GSimulatedClients.Empty();
     GReplicationEvents.Empty();
     GTotalReplicationAttempts = 0;
     GSuccessfulReplications = 0;
 }
 
-void UGateBridge::ExportReplicationArtifact(const FString& OutputPath)
+void UBishopBridge::ExportReplicationArtifact(const FString& OutputPath)
 {
     TSharedPtr<FJsonObject> Root = MakeShareable(new FJsonObject);
 
@@ -208,10 +208,10 @@ void UGateBridge::ExportReplicationArtifact(const FString& OutputPath)
 
     if (FFileHelper::SaveStringToFile(JsonString, *OutputFile))
     {
-        GateBridgeLog(FString::Printf(TEXT("REPLICATION ARTIFACT EXPORTED → %s"), *OutputFile));
+        BishopBridgeLog(FString::Printf(TEXT("REPLICATION ARTIFACT EXPORTED → %s"), *OutputFile));
     }
     else
     {
-        GateBridgeLog(FString::Printf(TEXT("FAILED TO WRITE REPLICATION ARTIFACT → %s"), *OutputFile));
+        BishopBridgeLog(FString::Printf(TEXT("FAILED TO WRITE REPLICATION ARTIFACT → %s"), *OutputFile));
     }
 }

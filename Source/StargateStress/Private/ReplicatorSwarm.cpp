@@ -1,4 +1,4 @@
-#include "SwarmOfTheDead.h"
+#include "ReplicatorSwarm.h"
 #include "Engine/World.h"
 #include "TimerManager.h"
 #include "Kismet/GameplayStatics.h"
@@ -6,19 +6,19 @@
 #include "Engine/Engine.h"
 #include "Math/UnrealMathUtility.h"
 
-int32 USwarmOfTheDead::BlockedInteractions = 0;
-int32 USwarmOfTheDead::TotalPredatorAttempts = 0;
+int32 UReplicatorSwarm::BlockedInteractions = 0;
+int32 UReplicatorSwarm::TotalPredatorAttempts = 0;
 
-void USwarmOfTheDead::UnleashSwarm(int32 BotCount, float DurationMinutes)
+void UReplicatorSwarm::UnleashSwarm(int32 BotCount, float DurationMinutes)
 {
     UWorld* World = GetWorld();
     if (!World)
     {
-        UE_LOG(LogTemp, Error, TEXT("SWARM OF THE DEAD: No valid World context to spawn bots."));
+        UE_LOG(LogTemp, Error, TEXT("REPLICATOR SWARM: No valid World context to spawn bots."));
         return;
     }
 
-    UE_LOG(LogTemp, Display, TEXT("SWARM OF THE DEAD — UNLEASHING %d SOULS"), BotCount);
+    UE_LOG(LogTemp, Display, TEXT("REPLICATOR SWARM — UNLEASHING %d REPLICATORS"), BotCount);
 
     // 60% minors, 35% adults, remainder predators (rounding with integers)
     int32 Minors = FMath::RoundToInt(BotCount * 0.6f);
@@ -33,9 +33,9 @@ void USwarmOfTheDead::UnleashSwarm(int32 BotCount, float DurationMinutes)
     const float DurationSeconds = FMath::Max(0.0f, DurationMinutes * 60.0f);
     FTimerDelegate EndDelegate = FTimerDelegate::CreateLambda([this]()
     {
-        UE_LOG(LogTemp, Warning, TEXT("SWARM OF THE DEAD — RETURNING TO THE GRAVE"));
-        const int32 Attempts = USwarmOfTheDead::TotalPredatorAttempts;
-        const int32 Blocked = USwarmOfTheDead::BlockedInteractions;
+        UE_LOG(LogTemp, Warning, TEXT("REPLICATOR SWARM — DISASSEMBLING"));
+        const int32 Attempts = UReplicatorSwarm::TotalPredatorAttempts;
+        const int32 Blocked = UReplicatorSwarm::BlockedInteractions;
         const float Percent = (Attempts > 0) ? (float)Blocked / Attempts * 100.0f : 100.0f;
         UE_LOG(LogTemp, Warning, TEXT("PREDATOR ATTEMPTS: %d | BLOCKED: %d (%.1f%%)"), Attempts, Blocked, Percent);
     });
@@ -44,7 +44,7 @@ void USwarmOfTheDead::UnleashSwarm(int32 BotCount, float DurationMinutes)
     World->GetTimerManager().SetTimer(EndHandle, EndDelegate, DurationSeconds, false);
 }
 
-void USwarmOfTheDead::SpawnBot(EBotRole Role)
+void UReplicatorSwarm::SpawnBot(EBotRole Role)
 {
     // In a real implementation: use MassEntity or AIController spawning
     // For demo: just log and simulate behavior
@@ -53,7 +53,7 @@ void USwarmOfTheDead::SpawnBot(EBotRole Role)
 
     if (Role == EBotRole::Predator)
     {
-        USwarmOfTheDead::TotalPredatorAttempts++;
+        UReplicators::TotalPredatorAttempts++;
         // Simulate grooming attempt
         FTimerHandle AttemptHandle;
         UWorld* World = GetWorld();
