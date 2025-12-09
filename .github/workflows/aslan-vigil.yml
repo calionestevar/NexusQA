@@ -1,4 +1,4 @@
-name: CI - Nexus Tests
+name: Aslan's Vigil - Main CI
 
 on:
   push:

@@ -1,4 +1,4 @@
-name: Safety Checks
+name: Stone Table - Safety & Security
 
 on:
   pull_request:

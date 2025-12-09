@@ -1,4 +1,4 @@
-name: LCARS Smoke
+name: Lamppost Beacon - Smoke Tests
 
 on:
   push:

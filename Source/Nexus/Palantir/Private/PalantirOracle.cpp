@@ -9,7 +9,7 @@
 #include "HAL/CriticalSection.h"
 #include "Misc/ScopeLock.h"
 // LCARS export (optional integration)
-#include "../../../../Legacy/Public/LCARSReporter.h"
+#include "LCARSReporter.h"
 #include "Misc/AutomationTest.h"
 #include "LCARSProvider.h"
 #include "Misc/ConfigCacheIni.h"

@@ -8,7 +8,7 @@ public class Nexus : ModuleRules
 
         PublicIncludePaths.AddRange(new string[] 
         {
-            "Nexus/Reporting/Public",
+            "Nexus/LCARSBridge/Public",
             "Nexus/Palantir/Public"
         });
 

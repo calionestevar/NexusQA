@@ -84,6 +84,22 @@ This document explains the high-level design philosophy, module interdependencie
 
 ---
 
+### **LCARSBridge** (Report Generation & Presentation)
+**Purpose:** Transform observability data into consumable reports for humans and CI systems.
+
+**Provides:**
+- `FLCARSHTMLGenerator` — Star Trek-themed HTML dashboard generation
+- `ILCARSProvider` — Pluggable provider interface for multiple data sources
+- `FPalantirLCARSProvider` — Connects to Palantír observability data
+- `FAutomationTestLCARSProvider` — Connects to UE Automation Framework
+- `LCARSReporter` — Legacy compatibility layer for report export
+
+**Why "Bridge":** In Star Trek, The Bridge is the command center where all ship systems report status — similarly, LCARSBridge receives data from all testing modules (Palantír, ArgusLens, Protego) and presents unified reports.
+
+**Artifacts:** HTML dashboards, JSON exports, JUnit XML for CI integration
+
+---
+
 ## Feature Modules
 
 ### **Protego** (Compliance & Accessibility)
@@ -326,6 +342,19 @@ This section provides detailed documentation of each module in the NexusQA frame
 - **Dependencies:** Core, CoreUObject, Engine, Json, JsonUtilities
 - **Usage:** Import `UNerdyConstants` in any module needing framework-wide configuration.
 
+#### **LCARSBridge** (Report Presentation)
+- **Purpose:** Transform test results and observability data into human-readable and CI-compatible reports.
+- **Key Classes:**
+  - `FLCARSHTMLGenerator`: Starfleet-themed HTML dashboard generator
+  - `ILCARSProvider`: Pluggable provider interface
+  - `FPalantirLCARSProvider`: Palantír data source adapter
+  - `FAutomationTestLCARSProvider`: UE Automation Framework adapter
+  - `LCARSReporter`: Legacy report export compatibility
+- **Contents:** HTML templates, provider implementations, report formatters
+- **Dependencies:** Core, CoreUObject, Engine, Json, JsonUtilities, HTTP (inherits from Nexus module)
+- **Artifacts:** `LCARS_Report_*.html`, `LCARSReport.json`, JUnit XML
+- **Usage:** Automatically invoked by Palantír at test suite completion; can be called directly via `LCARSReporter::ExportResultsToLCARS()`
+
 ### Feature Modules
 
 #### **Protego** (Compliance & Accessibility)
@@ -374,7 +403,6 @@ This section provides detailed documentation of each module in the NexusQA frame
   - `AAsgardCommandlet`: Batch test runner
   - `UPalantirAnalyzer`: Bias/fairness auditing
   - `UPalantirCapture`: Session recording
-  - `ULCARSReporter`: Report generation
   - `UGoauldGatekeeper`: Access control
 - **Dependencies:** Core, CoreUObject, Engine, Json, JsonUtilities, Projects, InputCore, Slate, SlateCore
 - **Usage:** Optional; used for backward compatibility with older test harnesses.

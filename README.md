@@ -16,7 +16,7 @@ Codename: **Project Asgard** (Stargate's ancient allies + LOTR's Valinor + Star 
 ## Quick Start
 # Nerdy QA Toolkit — UE5 Automation Framework
 
-![CI](https://github.com/calionestevar/NexusQA/actions/workflows/ci.yml/badge.svg)
+![CI](https://github.com/calionestevar/NexusQA/actions/workflows/aslan-vigil.yml/badge.svg)
 
 Zero-setup UE5 QA automation — showcase of orchestration, reporting, and CI-friendly artifacts.
 
