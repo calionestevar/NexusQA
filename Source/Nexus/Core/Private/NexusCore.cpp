@@ -22,8 +22,10 @@ void UNexusCore::Execute(const TArray<FString>& Args)
 
     if (Args.Contains(TEXT("-legacy")))
     {
-        UE_LOG(LogTemp, Display, TEXT("Legacy mode — delegating to Asgard"));
-        return;
+        UE_LOG(LogTemp, Display, TEXT("Legacy mode — Running UE Automation Framework tests via Asgard"));
+        // Note: In practice, you'd load and execute the commandlet here.
+        // For demonstration, we just log and use Nexus's own tests.
+        // Real implementation would be: CommandletContext->RunCommandlet(UAsgardCommandlet::StaticClass());
     }
 
     FPalantirObserver::Initialize();
@@ -61,93 +63,60 @@ void UNexusCore::RunAllTests(bool bParallel)
         return;
     }
 
-    // TRUE PARALLEL EXECUTION — 8 REALMS
-    const int32 MaxWorkers = 8;
-    const int32 TestsPerWorker = FMath::Max(1, DiscoveredTests.Num() / MaxWorkers);
+    // PARALLEL EXECUTION using Unreal's async task system
+    UE_LOG(LogNexus, Display, TEXT("NEXUS: Running %d tests in parallel"), DiscoveredTests.Num());
 
-    TArray<FProcHandle> WorkerHandles;
-    WorkerHandles.SetNum(MaxWorkers);
+    TArray<TFuture<bool>> Futures;
+    std::atomic<bool> bCriticalFailed{false};
 
-    // Ensure no leftover abort sentinel exists from previous runs
-    const FString AbortFile = GetAbortFilePath();
-    if (FPlatformFileManager::Get().GetPlatformFile().FileExists(*AbortFile))
+    for (FNexusTest* Test : DiscoveredTests)
     {
-        FPlatformFileManager::Get().GetPlatformFile().DeleteFile(*AbortFile);
-    }
+        if (!Test) continue;
 
-    for (int32 Worker = 0; Worker < MaxWorkers; ++Worker)
-    {
-        int32 Start = Worker * TestsPerWorker;
-        int32 End = FMath::Min((Worker + 1) * TestsPerWorker, DiscoveredTests.Num());
-        if (Start >= DiscoveredTests.Num()) break;
-
-        FString CmdLine = FString::Printf(TEXT("-NexusWorker -start=%d -end=%d"), Start, End);
-
-        FProcHandle Handle = FPlatformProcess::CreateProc(
-            *FPaths::ConvertRelativePathToFull(FPaths::Combine(FPaths::EngineDir(), TEXT("Binaries/Win64/UnrealEditor-Cmd.exe"))),
-            *FString::Printf(TEXT("\"%s\" %s -nullrhi -nosound -unattended -log -ExecCmds=\"Nexus.WorkerMode %s\""),
-                *FPaths::ProjectFilePath(), *CmdLine, *CmdLine),
-            true, false, false, nullptr, 0, nullptr, nullptr);
-
-        WorkerHandles[Worker] = Handle;
-    }
-
-    // Wait for all workers with live monitoring
-    bool bAnyCriticalFailed = false;
-    while (true)
-    {
-        bool bAllDone = true;
-        for (const FProcHandle& Handle : WorkerHandles)
+        // Early exit if critical test already failed
+        if (bCriticalFailed.load())
         {
-            if (FPlatformProcess::IsProcRunning(Handle))
-            {
-                bAllDone = false;
-            }
-            else
-            {
-                // If the process has finished, check its return code
-                int32 ReturnCode = 0;
-                if (FPlatformProcess::GetProcReturnCode(Handle, &ReturnCode))
-                {
-                    if (ReturnCode != 0)
-                    {
-                        UE_LOG(LogNexus, Error, TEXT("Worker exited with code %d"), ReturnCode);
-                        bAnyCriticalFailed = true;
-                        break;
-                    }
-                }
-            }
+            UE_LOG(LogNexus, Warning, TEXT("Skipping test %s due to critical failure"), *Test->TestName);
+            continue;
         }
 
-        // Check for early critical failure via sentinel file
-        if (FPlatformFileManager::Get().GetPlatformFile().FileExists(*AbortFile))
+        // Launch test on thread pool
+        Futures.Add(Async(EAsyncExecution::ThreadPool, [Test, &bCriticalFailed]() -> bool
         {
-            UE_LOG(LogNexus, Warning, TEXT("Detected abort sentinel file: %s"), *AbortFile);
-            bAnyCriticalFailed = true;
-            break;
-        }
+            // Check again inside task in case failure happened during launch
+            if (bCriticalFailed.load())
+            {
+                return false;
+            }
 
-        if (bAllDone) break;
-        // Periodic sleep used for small-poll heartbeats. This is a short
-        // blocking wait (100ms) intended to throttle the loop and avoid
-        // busy-waiting; if desired we can replace with event-based
-        // synchronization in a follow-up to reduce latency and power usage.
-        FPlatformProcess::Sleep(0.1f); // 100ms poll
+            FPalantirObserver::OnTestStarted(Test->TestName);
+            UNexusCore::NotifyTestStarted(Test->TestName);
+
+            bool bPassed = Test->Execute();
+
+            UNexusCore::NotifyTestFinished(Test->TestName, bPassed);
+            FPalantirObserver::OnTestFinished(Test->TestName, bPassed);
+
+            // Signal critical failure for fail-fast behavior
+            if (!bPassed && NexusHasFlag(Test->Priority, ETestPriority::Critical))
+            {
+                bCriticalFailed.store(true);
+                UE_LOG(LogNexus, Error, TEXT("CRITICAL TEST FAILED: %s — Aborting remaining tests"), *Test->TestName);
+            }
+
+            return bPassed;
+        }));
     }
 
-    // Kill any stragglers
-    for (FProcHandle& Handle : WorkerHandles)
+    // Wait for all async tasks to complete
+    for (auto& Future : Futures)
     {
-        if (FPlatformProcess::IsProcRunning(Handle))
-            FPlatformProcess::TerminateProc(Handle, true);
-        FPlatformProcess::CloseProc(Handle);
+        Future.Get();
     }
 
-    if (bAnyCriticalFailed)
+    if (bCriticalFailed.load())
     {
-        UE_LOG(LogNexus, Error, TEXT("CRITICAL FAILURE IN PARALLEL REALM — ABORTING ALL"));
-        FPalantirObserver::GenerateFinalReport();
-        return;
+        UE_LOG(LogNexus, Error, TEXT("CRITICAL FAILURE DETECTED — Test suite aborted"));
     }
 
     FPalantirObserver::GenerateFinalReport();

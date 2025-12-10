@@ -1,35 +1,92 @@
-// LEGACY: AsgardCommandlet -- legacy commandlet entrypoint
+// LEGACY: AsgardCommandlet
 //
-// This commandlet demonstrates use of Unreal's Application Commandlet
-// pattern to run the engine's automation tests and export a JSON report.
-// It is preserved for compatibility and to show familiarity with engine-native
-// testing workflows. For CI and large-scale parallel runs prefer `Nexus`.
+// This demonstrates integration with Unreal's built-in automation framework.
+// Shows competence with engine-native testing workflows while Nexus provides
+// enhanced features (parallel execution, distributed tracing, fail-fast).
+//
+// Usage: UnrealEditor-Cmd.exe MyProject.uproject -run=Asgard
 
-#include "CoreMinimal.h"
-#include "Misc/CoreDelegates.h"
+#include "AsgardCommandlet.h"
 #include "Misc/AutomationTest.h"
-#include "Engine/Engine.h"
-#include "AutomationTestRunner.h"
+#include "Tests/AutomationCommon.h"
+#include "Misc/FileHelper.h"
+#include "Misc/Paths.h"
+#include "Serialization/JsonSerializer.h"
+#include "Serialization/JsonWriter.h"
 
-IMPLEMENT_APPLICATION_COMMANDLET(FAsgardCommandlet, Asgard, TEXT("Runs full QA suite and exports JSON report"));
-
-FAsgardCommandlet::FAsgardCommandlet()
+int32 UAsgardCommandlet::Main(const FString& Params)
 {
-    IsClientOnly = true;
-    IsEditor = false;
-    IsServer = false;
+    UE_LOG(LogTemp, Warning, TEXT("=== ASGARD COMMANDLET: Running UE Automation Tests ==="));
+
+    // Get the automation controller
+    IAutomationControllerModule& AutomationController = FModuleManager::LoadModuleChecked<IAutomationControllerModule>(TEXT("AutomationController"));
+    IAutomationControllerManagerRef AutomationControllerManager = AutomationController.GetAutomationController();
+
+    // Request available tests
+    AutomationControllerManager->RequestAvailableWorkers(FGuid());
+    AutomationControllerManager->RequestTests();
+
+    // Simple synchronous wait for test discovery
+    FPlatformProcess::Sleep(2.0f);
+
+    // Run all available tests
+    const bool bInRunningTests = AutomationControllerManager->RunTests();
+    if (!bInRunningTests)
+    {
+        UE_LOG(LogTemp, Error, TEXT("Failed to start automation tests"));
+        return 1;
+    }
+
+    // Wait for tests to complete (simple polling)
+    while (AutomationControllerManager->GetTestState() == EAutomationControllerModuleState::Running)
+    {
+        FPlatformProcess::Sleep(0.5f);
+    }
+
+    // Export results to JSON
+    const FString OutputPath = FPaths::ProjectSavedDir() / TEXT("Automation/AsgardReport.json");
+    ExportTestResults(OutputPath, AutomationControllerManager);
+
+    UE_LOG(LogTemp, Warning, TEXT("=== ASGARD COMPLETE: Report saved to %s ==="), *OutputPath);
+    return 0;
 }
 
-int32 FAsgardCommandlet::Main(const FString& Params)
+void UAsgardCommandlet::ExportTestResults(const FString& OutputPath, IAutomationControllerManagerRef Controller)
 {
-    UE_LOG(LogTemp, Warning, TEXT("*** ASGARD COMMANDLET ACTIVATED — BEAMING TESTS ***"));
+    TSharedPtr<FJsonObject> JsonRoot = MakeShared<FJsonObject>();
+    
+    // Get test results
+    const TArray<TSharedPtr<IAutomationReport>>& Reports = Controller->GetReports();
+    TArray<TSharedPtr<FJsonValue>> TestArray;
 
-    // Run all tests
-    FAutomationTestRunner::RunAllTests();
+    int32 Passed = 0;
+    int32 Failed = 0;
 
-    // Export JSON report
-    FAutomationTestFramework::GetInstance().ExportResultsToJSON(TEXT("LCARSReport.json"));
+    for (const TSharedPtr<IAutomationReport>& Report : Reports)
+    {
+        if (!Report.IsValid()) continue;
 
-    UE_LOG(LogTemp, Warning, TEXT("*** ASGARD COMPLETE — REPORT EXPORTED TO LCARSReport.json ***"));
-    return 0;
+        TSharedPtr<FJsonObject> TestObj = MakeShared<FJsonObject>();
+        TestObj->SetStringField(TEXT("Name"), Report->GetDisplayName());
+        TestObj->SetBoolField(TEXT("Success"), Report->GetSuccessCount() > 0);
+        TestObj->SetNumberField(TEXT("Duration"), Report->GetDuration());
+
+        if (Report->GetSuccessCount() > 0)
+            Passed++;
+        else
+            Failed++;
+
+        TestArray.Add(MakeShared<FJsonValueObject>(TestObj));
+    }
+
+    JsonRoot->SetArrayField(TEXT("Tests"), TestArray);
+    JsonRoot->SetNumberField(TEXT("TotalTests"), Reports.Num());
+    JsonRoot->SetNumberField(TEXT("PassedTests"), Passed);
+    JsonRoot->SetNumberField(TEXT("FailedTests"), Failed);
+
+    // Write to file
+    FString JsonString;
+    TSharedRef<TJsonWriter<>> Writer = TJsonWriterFactory<>::Create(&JsonString);
+    FJsonSerializer::Serialize(JsonRoot.ToSharedRef(), Writer);
+    FFileHelper::SaveStringToFile(JsonString, *OutputPath);
 }

@@ -1,14 +1,13 @@
 #include "ArgusLens.h"
 #include "Engine/Engine.h"
 #include "Misc/DateTime.h"
-#include "HAL/MemoryStats.h"
+#include "HAL/PlatformMemory.h"
 #include "Json.h"
 #include "Dom/JsonObject.h"
 #include "Serialization/JsonWriter.h"
 #include "Serialization/JsonSerializer.h"
 #include "Misc/FileHelper.h"
 #include "Misc/Paths.h"
-#include "HAL/PlatformFileManager.h"
 #include "TimerManager.h"
 #include "PalantirTrace.h"
 
@@ -17,69 +16,55 @@ DEFINE_LOG_CATEGORY_STATIC(LogArgusLens, Display, All);
 // Global performance monitoring state
 static TArray<FPerformanceSample> GPerformanceSamples;
 static FPerformanceThreshold GPerformanceThresholds;
-static FCriticalSection GPerformanceMutex;
 static FTimerHandle GPerformanceMonitorHandle;
-static bool bMonitoring = false;
 static int32 GTotalHitches = 0;
 static float GPeakMemory = 0.0f;
 
-static void ArgusLog(const FString& Msg)
+void UArgusLens::StartPerformanceMonitoring(float DurationSeconds, bool bTrackNetRelevancy)
 {
-    UE_LOG_TRACE(LogArgusLens, Display, TEXT("%s"), *Msg);
-    if (GEngine)
-    {
-        GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Yellow, TEXT("ArgusLens: ") + Msg);
-    }
+    UE_LOG(LogArgusLens, Display, TEXT("ArgusLens: Starting performance monitoring for %.0f seconds"), DurationSeconds);
     
     // Add breadcrumb if trace is active
     if (!FPalantirTrace::GetCurrentTraceID().IsEmpty())
     {
-        PALANTIR_BREADCRUMB(TEXT("ArgusLens"), Msg);
-    }
-}
-
-void UArgusLens::StartPerformanceMonitoring(float DurationSeconds, bool bTrackNetRelevancy)
-{
-    ArgusLog(FString::Printf(TEXT("Starting performance monitoring for %.0f seconds"), DurationSeconds));
-
-    {
-        FScopeLock Lock(&GPerformanceMutex);
-        GPerformanceSamples.Empty();
-        GTotalHitches = 0;
-        GPeakMemory = 0.0f;
-        bMonitoring = true;
+        PALANTIR_BREADCRUMB(TEXT("ArgusLens"), TEXT("Performance monitoring started"));
     }
 
-    UWorld* World = GEngine->GetFirstLocalPlayerController() ? GEngine->GetFirstLocalPlayerController()->GetWorld() : nullptr;
+    GPerformanceSamples.Empty();
+    GTotalHitches = 0;
+    GPeakMemory = 0.0f;
+
+    UWorld* World = GEngine ? GEngine->GetGameWorld() : nullptr;
     if (!World)
     {
-        ArgusLog(TEXT("NO WORLD CONTEXT — SKIPPING MONITORING"));
+        UE_LOG(LogArgusLens, Warning, TEXT("ArgusLens: No world context - skipping monitoring"));
         return;
     }
 
-    // Periodic sampling (every 100ms)
-    World->GetTimerManager().SetTimer(GPerformanceMonitorHandle, FTimerDelegate::CreateLambda([bTrackNetRelevancy]()
+    // Sample every 100ms
+    World->GetTimerManager().SetTimer(GPerformanceMonitorHandle, FTimerDelegate::CreateLambda([]()
     {
         FPerformanceSample Sample;
-        Sample.Timestamp = FDateTime::Now().ToString();
+        Sample.Timestamp = FDateTime::Now().ToString(TEXT("%Y-%m-%d %H:%M:%S"));
 
         // Sample FPS and frame time
         if (GEngine)
         {
-            float DeltaTime = GEngine->GetDeltaSeconds();
+            float DeltaTime = GEngine->GetMaxTickRate(0.0f, false);
             Sample.FrameTimeMs = DeltaTime * 1000.0f;
-            Sample.FPS = (DeltaTime > 0.0f) ? 1.0f / DeltaTime : 0.0f;
+            Sample.FPS = (DeltaTime > 0.0f) ? 1.0f / DeltaTime : 60.0f; // Default assumption
         }
 
         // Sample memory
         FPlatformMemoryStats MemStats = FPlatformMemory::GetStats();
-        Sample.MemoryMb = (float)MemStats.UsedPhysical / (1024.0f * 1024.0f);
+        Sample.MemoryMb = static_cast<float>(MemStats.UsedPhysical) / (1024.0f * 1024.0f);
 
         // Check if frame is a hitch
         Sample.bIsHitch = Sample.FrameTimeMs > GPerformanceThresholds.HitchThresholdMs;
         if (Sample.bIsHitch)
         {
             GTotalHitches++;
+            UE_LOG(LogArgusLens, Warning, TEXT("ArgusLens: Hitch detected - Frame time: %.1fms"), Sample.FrameTimeMs);
         }
 
         // Track peak memory
@@ -88,10 +73,7 @@ void UArgusLens::StartPerformanceMonitoring(float DurationSeconds, bool bTrackNe
             GPeakMemory = Sample.MemoryMb;
         }
 
-        {
-            FScopeLock Lock(&GPerformanceMutex);
-            GPerformanceSamples.Add(Sample);
-        }
+        GPerformanceSamples.Add(Sample);
     }), 0.1f, true);
 
     // Stop monitoring after duration

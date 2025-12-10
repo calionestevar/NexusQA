@@ -21,17 +21,14 @@ public:
     FString TestName;
     ETestPriority Priority = ETestPriority::Normal;
     TFunction<bool()> TestFunc;
-    mutable TUniquePtr<FPalantirTraceGuard> TraceGuard;
-    mutable FString CurrentTraceID;
 
     FNexusTest(const FString& InName, ETestPriority InPriority, TFunction<bool()> InFunc)
         : TestName(InName), Priority(InPriority), TestFunc(MoveTemp(InFunc)) {}
 
     bool Execute() const
     {
-        // Create trace context for this test
-        TraceGuard = MakeUnique<FPalantirTraceGuard>();
-        CurrentTraceID = FPalantirTrace::GetCurrentTraceID();
+        // RAII guard automatically creates and cleans up trace context
+        FPalantirTraceGuard TraceGuard;
         
         const TCHAR* PriorityStr = NexusHasFlag(Priority, ETestPriority::Critical) ? TEXT("CRITICAL") : TEXT("NORMAL");
         UE_LOG_TRACE(LogNexus, Display, TEXT("RUNNING: %s [%s]"), *TestName, PriorityStr);
@@ -47,9 +44,6 @@ public:
         
         UE_LOG_TRACE(LogNexus, Display, TEXT("COMPLETED: %s [%s] (%.3fs)"), 
             *TestName, bResult ? TEXT("PASS") : TEXT("FAIL"), Duration);
-        
-        // Cleanup trace context
-        TraceGuard.Reset();
         
         return bResult;
     }
