@@ -69,409 +69,70 @@ bool FLCARSHTMLGenerator::SaveToFile(const FReportData& Data, const FString& Out
 
 FString FLCARSHTMLGenerator::GenerateCSS()
 {
+	// LCARS-inspired styling (condensed but maintains Star Trek aesthetic for recruiter appeal)
 	return TEXT(R"(
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: 'Courier New', monospace;
-            background: linear-gradient(135deg, #000033 0%, #001155 100%);
-            color: #ffcc00;
-            padding: 20px;
-            min-height: 100vh;
-        }
-        
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
-        }
-        
-        /* LCARS Header */
-        .lcars-header {
-            background: #000033;
-            border: 3px solid #ff9900;
-            border-radius: 20px;
-            padding: 30px;
-            margin-bottom: 30px;
-            position: relative;
-        }
-        
-        .lcars-header::before {
-            content: '';
-            position: absolute;
-            top: -10px;
-            left: 20px;
-            width: 200px;
-            height: 20px;
-            background: #ff9900;
-            border-radius: 10px;
-        }
-        
-        .header-title h1 {
-            color: #ff9900;
-            font-size: 3em;
-            letter-spacing: 3px;
-            text-shadow: 0 0 20px #ff9900;
-        }
-        
-        .subtitle {
-            color: #ffcc00;
-            font-size: 1.2em;
-            margin-top: 10px;
-        }
-        
-        .timestamp {
-            color: #99ccff;
-            font-size: 1.1em;
-            margin-top: 15px;
-        }
-        
-        /* Summary Section */
-        .summary-section {
-            background: #001133;
-            border-left: 10px solid #ff9900;
-            padding: 30px;
-            margin-bottom: 30px;
-            border-radius: 10px;
-        }
-        
-        .summary-section h2 {
-            color: #ff9900;
-            font-size: 2em;
-            margin-bottom: 20px;
-            text-transform: uppercase;
-        }
-        
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 20px;
-            margin-top: 20px;
-        }
-        
-        .stat-card {
-            background: #000022;
-            border: 2px solid #ffcc00;
-            border-radius: 10px;
-            padding: 20px;
-            text-align: center;
-        }
-        
-        .stat-card.passed {
-            border-color: #00ff00;
-        }
-        
-        .stat-card.failed {
-            border-color: #ff0000;
-        }
-        
-        .stat-label {
-            font-size: 0.9em;
-            color: #99ccff;
-            margin-bottom: 10px;
-        }
-        
-        .stat-value {
-            font-size: 3em;
-            font-weight: bold;
-            color: #ffcc00;
-        }
-        
-        .stat-card.passed .stat-value {
-            color: #00ff00;
-        }
-        
-        .stat-card.failed .stat-value {
-            color: #ff0000;
-        }
-        
-        .pass-rate {
-            font-size: 1.2em;
-            margin-top: 10px;
-            color: #ffffff;
-        }
-        
-        /* API Metrics Section */
-        .api-section {
-            background: #001133;
-            border-left: 10px solid #00ccff;
-            padding: 30px;
-            margin-bottom: 30px;
-            border-radius: 10px;
-        }
-        
-        .api-section h2 {
-            color: #00ccff;
-            font-size: 2em;
-            margin-bottom: 20px;
-        }
-        
-        .chart-container {
-            background: #000022;
-            border: 2px solid #ffcc00;
-            border-radius: 10px;
-            padding: 20px;
-            margin: 20px 0;
-        }
-        
-        .chart-title {
-            color: #ff9900;
-            font-size: 1.5em;
-            margin-bottom: 15px;
-            text-align: center;
-        }
-        
-        .endpoint-list {
-            list-style: none;
-            padding: 0;
-        }
-        
-        .endpoint-item {
-            background: #000033;
-            border-left: 5px solid #00ff00;
-            padding: 15px;
-            margin: 10px 0;
-            border-radius: 5px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
-        .endpoint-item.failed {
-            border-left-color: #ff0000;
-        }
-        
-        .endpoint-name {
-            color: #ffffff;
-            font-size: 1.1em;
-        }
-        
-        .endpoint-time {
-            color: #00ccff;
-            font-size: 1.2em;
-            font-weight: bold;
-        }
-        
-        .status-code-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 15px;
-            margin-top: 20px;
-        }
-        
-        .status-code-item {
-            background: #000033;
-            border: 2px solid #ffcc00;
-            border-radius: 8px;
-            padding: 15px;
-            text-align: center;
-        }
-        
-        .status-code-item.success {
-            border-color: #00ff00;
-        }
-        
-        .status-code-item.error {
-            border-color: #ff0000;
-        }
-        
-        .status-code {
-            font-size: 2em;
-            font-weight: bold;
-            color: #ffcc00;
-        }
-        
-        .status-code-item.success .status-code {
-            color: #00ff00;
-        }
-        
-        .status-code-item.error .status-code {
-            color: #ff0000;
-        }
-        
-        .status-count {
-            font-size: 1.5em;
-            color: #ffffff;
-            margin-top: 5px;
-        }
-        
-        /* Performance Section */
-        .performance-section {
-            background: #001133;
-            border-left: 10px solid #ff00ff;
-            padding: 30px;
-            margin-bottom: 30px;
-            border-radius: 10px;
-        }
-        
-        .performance-section h2 {
-            color: #ff00ff;
-            font-size: 2em;
-            margin-bottom: 20px;
-        }
-        
-        /* Test Details Section */
-        .details-section {
-            background: #001133;
-            border-left: 10px solid #ffcc00;
-            padding: 30px;
-            margin-bottom: 30px;
-            border-radius: 10px;
-        }
-        
-        .test-item {
-            background: #000022;
-            border: 2px solid #ffcc00;
-            border-radius: 8px;
-            padding: 20px;
-            margin: 15px 0;
-            transition: all 0.3s ease;
-        }
-        
-        .test-item:hover {
-            box-shadow: 0 0 20px rgba(255, 204, 0, 0.5);
-            transform: translateX(5px);
-        }
-        
-        .test-item.passed {
-            border-color: #00ff00;
-        }
-        
-        .test-item.failed {
-            border-color: #ff0000;
-        }
-        
-        .test-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 10px;
-        }
-        
-        .test-name {
-            color: #ffffff;
-            font-size: 1.3em;
-            font-weight: bold;
-        }
-        
-        .test-status {
-            padding: 8px 20px;
-            border-radius: 20px;
-            font-weight: bold;
-            font-size: 1.1em;
-        }
-        
-        .test-status.PASSED {
-            background: #00ff00;
-            color: #000000;
-        }
-        
-        .test-status.FAILED {
-            background: #ff0000;
-            color: #ffffff;
-        }
-        
-        .test-meta {
-            color: #99ccff;
-            font-size: 0.9em;
-            margin-top: 10px;
-        }
-        
-        .test-error {
-            background: #330000;
-            border-left: 5px solid #ff0000;
-            padding: 15px;
-            margin-top: 10px;
-            border-radius: 5px;
-            color: #ffcccc;
-            font-size: 1em;
-        }
-        
-        .test-artifacts {
-            margin-top: 15px;
-        }
-        
-        .artifact-link {
-            display: inline-block;
-            background: #000033;
-            border: 1px solid #00ccff;
-            color: #00ccff;
-            padding: 5px 15px;
-            border-radius: 5px;
-            margin: 5px;
-            text-decoration: none;
-            font-size: 0.9em;
-        }
-        
-        .artifact-link:hover {
-            background: #00ccff;
-            color: #000033;
-        }
-        
-        /* Footer */
-        .lcars-footer {
-            text-align: center;
-            padding: 30px;
-            color: #99ccff;
-            font-size: 0.9em;
-        }
-        
-        .lcars-footer p {
-            margin: 5px 0;
-        }
-        
-        /* Responsive */
-        @media (max-width: 768px) {
-            .header-title h1 {
-                font-size: 2em;
-            }
-            
-            .stats-grid {
-                grid-template-columns: 1fr;
-            }
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Courier New', monospace; background: linear-gradient(135deg, #000033 0%, #001155 100%); color: #ffcc00; padding: 20px; min-height: 100vh; }
+        .container { max-width: 1400px; margin: 0 auto; }
+        .lcars-header { background: #000033; border: 3px solid #ff9900; border-radius: 15px; padding: 25px; margin-bottom: 25px; }
+        .header-title h1 { color: #ff9900; font-size: 2.5em; letter-spacing: 2px; text-shadow: 0 0 15px #ff9900; }
+        .subtitle { color: #ffcc00; font-size: 1.1em; margin-top: 8px; }
+        .timestamp { color: #99ccff; font-size: 1em; margin-top: 10px; }
+        .summary-section, .api-section, .performance-section, .details-section { background: #001133; border-left: 8px solid #ff9900; padding: 25px; margin-bottom: 25px; border-radius: 8px; }
+        .api-section { border-left-color: #00ccff; }
+        .performance-section { border-left-color: #ff00ff; }
+        .details-section { border-left-color: #ffcc00; }
+        h2 { color: #ff9900; font-size: 1.8em; margin-bottom: 15px; text-transform: uppercase; }
+        .api-section h2 { color: #00ccff; }
+        .performance-section h2 { color: #ff00ff; }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 18px; margin: 18px 0; }
+        .stat-card { background: #000022; border: 2px solid #ffcc00; border-radius: 8px; padding: 18px; text-align: center; }
+        .stat-card.passed { border-color: #00ff00; }
+        .stat-card.failed { border-color: #ff0000; }
+        .stat-label { font-size: 0.85em; color: #99ccff; margin-bottom: 8px; text-transform: uppercase; }
+        .stat-value { font-size: 2.5em; font-weight: bold; color: #ffcc00; }
+        .stat-card.passed .stat-value { color: #00ff00; }
+        .stat-card.failed .stat-value { color: #ff0000; }
+        .pass-rate { font-size: 1.1em; margin-top: 8px; color: #ffffff; }
+        .chart-container { background: #000022; border: 2px solid #ffcc00; border-radius: 8px; padding: 18px; margin: 18px 0; }
+        .chart-title { color: #ff9900; font-size: 1.3em; margin-bottom: 12px; text-align: center; }
+        .endpoint-list { list-style: none; padding: 0; }
+        .endpoint-item { background: #000033; border-left: 4px solid #00ff00; padding: 12px; margin: 8px 0; border-radius: 4px; display: flex; justify-content: space-between; }
+        .endpoint-item.failed { border-left-color: #ff0000; }
+        .endpoint-name { color: #ffffff; font-size: 1em; }
+        .endpoint-time { color: #00ccff; font-size: 1.1em; font-weight: bold; }
+        .status-code-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; margin-top: 15px; }
+        .status-code-item { background: #000033; border: 2px solid #ffcc00; border-radius: 6px; padding: 12px; text-align: center; }
+        .status-code-item.success { border-color: #00ff00; }
+        .status-code-item.error { border-color: #ff0000; }
+        .status-code { font-size: 1.8em; font-weight: bold; color: #ffcc00; }
+        .status-code-item.success .status-code { color: #00ff00; }
+        .status-code-item.error .status-code { color: #ff0000; }
+        .status-count { font-size: 1.3em; color: #ffffff; margin-top: 4px; }
+        .test-item { background: #000022; border: 2px solid #ffcc00; border-radius: 6px; padding: 18px; margin: 12px 0; }
+        .test-item.passed { border-color: #00ff00; }
+        .test-item.failed { border-color: #ff0000; }
+        .test-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+        .test-name { color: #ffffff; font-size: 1.2em; font-weight: bold; }
+        .test-status { padding: 6px 16px; border-radius: 15px; font-weight: bold; font-size: 1em; }
+        .test-status.PASSED { background: #00ff00; color: #000000; }
+        .test-status.FAILED { background: #ff0000; color: #ffffff; }
+        .test-meta { color: #99ccff; font-size: 0.85em; margin-top: 8px; }
+        .test-error { background: #330000; border-left: 4px solid #ff0000; padding: 12px; margin-top: 8px; border-radius: 4px; color: #ffcccc; font-size: 0.9em; }
+        .test-artifacts { margin-top: 12px; }
+        .artifact-link { display: inline-block; background: #000033; border: 1px solid #00ccff; color: #00ccff; padding: 4px 12px; border-radius: 4px; margin: 4px; text-decoration: none; font-size: 0.85em; }
+        .artifact-link:hover { background: #00ccff; color: #000033; }
+        .lcars-footer { text-align: center; padding: 25px; color: #99ccff; font-size: 0.85em; }
+        .lcars-footer p { margin: 4px 0; }
+        @media (max-width: 768px) { .header-title h1 { font-size: 1.8em; } .stats-grid { grid-template-columns: 1fr; } }
     )");
 }
 
 FString FLCARSHTMLGenerator::GenerateJavaScript()
 {
+	// No JS needed - keep it simple and fast
 	return TEXT(R"(
-        // Smooth scroll to sections
-        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-            anchor.addEventListener('click', function (e) {
-                e.preventDefault();
-                document.querySelector(this.getAttribute('href')).scrollIntoView({
-                    behavior: 'smooth'
-                });
-            });
-        });
-        
-        // Highlight failed tests on hover
-        document.querySelectorAll('.test-item.failed').forEach(item => {
-            item.addEventListener('mouseenter', function() {
-                this.style.boxShadow = '0 0 30px rgba(255, 0, 0, 0.7)';
-            });
-            item.addEventListener('mouseleave', function() {
-                this.style.boxShadow = 'none';
-            });
-        });
-        
-        // Add animation to stat cards
-        const statCards = document.querySelectorAll('.stat-card');
-        statCards.forEach((card, index) => {
-            setTimeout(() => {
-                card.style.opacity = '0';
-                card.style.transform = 'translateY(20px)';
-                card.style.transition = 'all 0.5s ease';
-                setTimeout(() => {
-                    card.style.opacity = '1';
-                    card.style.transform = 'translateY(0)';
-                }, 50);
-            }, index * 100);
-        });
+        console.log('LCARS Report loaded successfully');
     )");
 }
 

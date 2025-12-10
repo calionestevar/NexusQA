@@ -46,44 +46,51 @@ void UReplicatorSwarm::UnleashSwarm(int32 BotCount, float DurationMinutes)
 
 void UReplicatorSwarm::SpawnBot(EBotRole Role)
 {
-    // In a real implementation: use MassEntity or AIController spawning
-    // For demo: just log and simulate behavior
-    FString RoleName = StaticEnum<EBotRole>()->GetNameStringByValue((int64)Role);
-    UE_LOG(LogTemp, Display, TEXT("SPAWNED: %s"), *RoleName);
+    FString RoleName = StaticEnum<EBotRole>()->GetNameStringByValue(static_cast<int64>(Role));
+    UE_LOG(LogTemp, Display, TEXT("REPLICATOR SWARM: Spawned %s"), *RoleName);
+
+    UWorld* World = GetWorld();
+    if (!World)
+    {
+        UE_LOG(LogTemp, Error, TEXT("REPLICATOR SWARM: No World context"));
+        return;
+    }
 
     if (Role == EBotRole::Predator)
     {
-        UReplicators::TotalPredatorAttempts++;
-        // Simulate grooming attempt
+        UReplicatorSwarm::TotalPredatorAttempts++;
+        
+        // Simulate unsafe interaction attempt after random delay
         FTimerHandle AttemptHandle;
-        UWorld* World = GetWorld();
-        if (!World)
-        {
-            UE_LOG(LogTemp, Error, TEXT("SPAWNED PREDATOR: no World to schedule attempt."));
-            return;
-        }
-
-        FTimerDelegate AttemptDel = FTimerDelegate::CreateLambda([]()
-        {
-            // This should trigger your game's safety system (test harness will verify block/report)
-            UE_LOG(LogTemp, Error, TEXT("PREDATOR MESSAGE: hey kid wanna trade rare skins? meet me in private"));
-        });
-
         const float Delay = FMath::FRandRange(5.0f, 30.0f);
-        World->GetTimerManager().SetTimer(AttemptHandle, AttemptDel, Delay, false);
+        
+        World->GetTimerManager().SetTimer(AttemptHandle, FTimerDelegate::CreateLambda([]()
+        {
+            // This represents a grooming attempt that should be blocked by safety systems
+            UE_LOG(LogTemp, Warning, TEXT("PREDATOR ATTEMPT: 'hey kid wanna see something cool? dm me privately'"));
+            // In a real system: BlockedInteractions would be incremented by your moderation layer
+        }), Delay, false);
     }
-    else
+    else if (Role == EBotRole::InnocentMinor)
     {
-        // FUTURE: Generate synthetic chat messages for normal bots
-        // Template examples:
-        //   Safe: "gg nice game", "anyone want to team up?", "great match!", "welcome to the game"
-        //   Unsafe: "hey private dm me", "let's meet irl", "i know your location", etc.
-        // Enhancement ideas:
-        //   1. Use a configurable chat template system with weights for safe/unsafe ratios
-        //   2. Add multi-language support (detect in mods, simulate translations)
-        //   3. Integrate with real ML model for classification if available
-        //   4. Batch-generate thousands of messages for stress-testing moderation systems
-        //   5. Track message dwell time and sentiment analysis
-        // For now, bots just emit their role type; AI-castle repo has fuller implementation.
+        // Simulate typical child player behavior
+        const TArray<FString> SafeMessages = {
+            TEXT("this game is fun!"),
+            TEXT("anyone want to be friends?"),
+            TEXT("how do I get to level 2?"),
+            TEXT("gg everyone!")
+        };
+        
+        FTimerHandle MessageHandle;
+        World->GetTimerManager().SetTimer(MessageHandle, FTimerDelegate::CreateLambda([SafeMessages]()
+        {
+            const FString Message = SafeMessages[FMath::RandRange(0, SafeMessages.Num() - 1)];
+            UE_LOG(LogTemp, Display, TEXT("MINOR: '%s'"), *Message);
+        }), FMath::FRandRange(10.0f, 45.0f), false);
+    }
+    else // NormalAdult
+    {
+        // Simulate normal player interactions
+        UE_LOG(LogTemp, Display, TEXT("ADULT: Normal player behavior simulation"));
     }
 }
