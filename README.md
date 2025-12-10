@@ -1,121 +1,239 @@
-# NexusQA — The Future of Game QA
-
-**Parallel. Chaos-aware. Compliance-native. AI-ready.**
-
-NexusQA is a complete, studio-grade QA framework for Unreal Engine 5 that replaces Epic's Automation system with a faster, safer, and infinitely extensible architecture.
-
-Used correctly, it runs your entire test suite **8–15× faster**, aborts instantly on critical failures, simulates 10,000-player online scenarios, and proves compliance with COPPA/GDPR/DSA — all with zero breaking changes.
-
-### Core Systems
-| System                  | What It Does                                          | Status   |
-|-------------------------|--------------------------------------------------------|----------|
-| **Nexus Core**          | 8-way parallel execution + critical fail-fast         | Complete |
-| **Palantír Observer**   | Real-time in-game + web safety dashboard               | Complete |
-| **Cortexiphan Injector**| Chaos engineering (lag, packet loss, disconnects)      | Complete |
-| **Hogwarts Sentinel**   | Config-driven COPPA / GDPR / DSA compliance engine      | Complete |
-| **Swarm of the Dead**   | 10,000-bot predator simulation for minor protection    | Complete |
-| **Tok’Ra Guardian**     | Git-hook secret + vuln scanner (vcpkg/Conan/NuGet)     | Complete |
-| **Valkyrie Upgrader**   | Auto-PR for safe dependency upgrades                   | Complete |
-
-## Quick Start
-# Nerdy QA Toolkit — UE5 Automation Framework
+# NexusQA — Modular Testing Framework for Unreal Engine 5
 
 ![CI](https://github.com/calionestevar/NexusQA/actions/workflows/aslan-vigil.yml/badge.svg)
 
-Zero-setup UE5 QA automation — showcase of orchestration, reporting, and CI-friendly artifacts.
+A clean, extensible QA automation framework for UE5 featuring parallel execution, distributed tracing, chaos engineering, and compliance testing. Built to demonstrate modern C++ patterns and game industry best practices.
 
-Codename: **Project Asgard** (a playful fusion of your favorite universes: Stargate, LOTR, Star Trek, and more)
+**Codename: Project Asgard** — A fusion of sci-fi and fantasy universes (Stargate, Star Trek, LOTR, Fringe, Harry Potter, Narnia) powering real-world QA solutions.
 
-## Features
-- **Nexus** — modern test orchestration (discovery, parallel workers, fail-fast critical tests)
-- **Palantír** — distributed tracing, API testing, rich assertions
-  - Automatic trace ID propagation (Sentry/PlayFab/GameAnalytics/Unreal Insights integration)
-  - REST & GraphQL request validation with fluent API
-  - Response assertions (status codes, headers, JSON paths)
-  - Retry logic with exponential backoff
-- **Asgard Commandlet (Legacy)** — engine-native commandlet path using Unreal's AutomationTest framework
-- **LCARS Reporter** — Starfleet-style test summary with per-test artifacts
-- **Valkyrie** — optional auto-upgrader workflow for dependency maintenance (vcpkg/Conan/NuGet)
+---
 
-## Quick Start
-Windows (recommended):
+## 🎯 Core Modules
 
+| Module | Purpose | Key Features |
+|--------|---------|--------------|
+| **Nexus** | Test orchestration & parallel execution | Thread pool execution, fail-fast critical tests, test discovery |
+| **Palantír** | Distributed tracing & API testing | Thread-local trace context, REST/GraphQL validation, fluent assertions |
+| **LCARSBridge** | Star Trek-themed HTML/JSON/XML reports | LCARS-styled dashboards, artifact generation, multi-format export |
+| **FringeNetwork** | Network chaos engineering | Lag injection, packet loss simulation, disconnect testing |
+| **StargateStress** | Load testing & bot simulation | Concurrent user simulation, behavior patterns, safety system validation |
+| **ArgusLens** | Performance monitoring | Real-time FPS tracking, memory profiling, hitch detection |
+| **Protego** | Compliance & accessibility | COPPA/GDPR/DSA checks, color-blind support, subtitle validation |
+| **Legacy** | UE5 AutomationTest integration | Commandlet bridge to native automation framework |
+
+---
+
+## 🚀 Quick Start
+
+### Windows (Recommended)
 ```powershell
 git clone https://github.com/calionestevar/NexusQA
-cd nerdy-qa-toolkit
-\Scripts\Engage.bat         # invokes PowerShell harness: Scripts/Engage.ps1
+cd NexusQA
+.\Scripts\Engage.bat
 ```
 
-Linux/macOS:
-
+### Linux/macOS
 ```bash
 git clone https://github.com/calionestevar/NexusQA
 cd NexusQA
 ./Scripts/RideOut.sh
 ```
 
-## What CI produces
-- `Saved/NexusReports/LCARS_Report_<timestamp>.html` — human-friendly HTML report
-- `Saved/NexusReports/nexus-results.xml` — JUnit-style XML for CI dashboards
-- `Saved/NexusReports/test_<name>.log` — per-test artifact/log (linked from JUnit `<system-out>`)
-
-See `Docs/TestingFramework.md` for more detail about running tests and migrating legacy Asgard commandlets to Nexus.
-
-## 📚 Documentation
-
-**Quick Links:**
-- **[PORTFOLIO.md](PORTFOLIO.md)** — 🎯 Technical showcase (architecture, code examples, achievements)
-- **[docs/API_TESTING.md](docs/API_TESTING.md)** — REST/GraphQL testing guide  
-- **[docs/LCARS_PROVIDERS.md](docs/LCARS_PROVIDERS.md)** — HTML reporter and provider system
-- **[docs/PALANTIR.md](docs/PALANTIR.md)** — Distributed tracing, assertions, result aggregation
-- **[docs/GAME_INDUSTRY_INTEGRATIONS.md](docs/GAME_INDUSTRY_INTEGRATIONS.md)** — Sentry, PlayFab, GameLift
-- **[docs/modules.md](docs/modules.md)** — Module architecture
-- **[BUILD.md](BUILD.md)** — Build instructions
-- **[CONTRIBUTING.md](CONTRIBUTING.md)** — Code standards
-
-## 📸 Screenshots & Artifacts
-
-**Visual showcase of framework capabilities:**
-
-### LCARS HTML Dashboard ✅
-The enhanced LCARS reporter generates beautiful Starfleet-themed HTML dashboards with:
-- **Executive Summary** - Total tests, pass/fail counts, pass rate percentage
-- **API Metrics** - Request/response statistics, status code distribution, endpoint performance
-- **Performance Metrics** - FPS tracking, memory usage, hitch detection
-- **Test Details** - Individual test results with trace IDs and artifacts
-
-**Generate Demo Report:**
+### Generate Demo LCARS Report
 ```powershell
 .\Scripts\Generate-LCARSReport.ps1
 ```
-Opens `TestReports/LCARS_Demo_Report.html` in your browser - screenshot-ready!
+Opens `TestReports/LCARS_Demo_Report.html` in your browser — screenshot-ready!
 
-### API Testing with Trace Correlation
-*Coming soon: Screenshot showing trace ID flow from Unreal → PlayFab → Sentry*
+---
 
-### Performance Monitoring Dashboard
-*Coming soon: ArgusLens FPS/memory graphs with hitch detection*
+## 📋 What This Framework Produces
 
-### Distributed Tracing Timeline
-*Coming soon: JSON export showing breadcrumb timeline across multiple services*
+### Test Artifacts (Saved to `Saved/NexusReports/`)
+- **LCARS_Report_\<timestamp\>.html** — Star Trek-themed HTML dashboard with test results
+- **nexus-results.xml** — JUnit-style XML for CI/CD integration
+- **test_\<name\>.log** — Per-test execution logs (linked from JUnit output)
+- **performance_\<test\>.json** — FPS, memory, and hitch metrics
+- **accessibility_\<test\>.json** — Compliance check results
 
-See **[SAMPLE_ARTIFACTS.md](Docs/SAMPLE_ARTIFACTS.md)** for example JSON/XML/HTML outputs.
-See **[docs/images/README.md](docs/images/README.md)** for screenshot capture guidelines.
+### CI/CD Integration
+GitHub Actions workflows automatically:
+- Run safety pattern detection (`stone-table.yml`)
+- Execute test suites (`aslan-vigil.yml`)
+- Generate coverage reports (`lamppost-beacon.yml`)
+- Upload artifacts for review
 
-## LCARS Providers & Demo
-The LCARS reporter supports pluggable result providers so the final JSON and HTML can be driven by different sources (Palantír in-memory maps, Unreal's `AutomationTestFramework`, or future adapters).
+---
 
-Quick demo (no Unreal required):
+## 🏗️ Architecture Highlights
 
-```powershell
-powershell -ExecutionPolicy Bypass -NoProfile -File .\Scripts\Engage.ps1
+### Parallel Execution
+Uses Unreal's `Async(EAsyncExecution::ThreadPool)` for fast test execution without process overhead.
+
+```cpp
+TArray<TFuture<bool>> Futures;
+for (FNexusTest* Test : DiscoveredTests) {
+    Futures.Add(Async(EAsyncExecution::ThreadPool, [Test]() {
+        return Test->Execute();
+    }));
+}
 ```
 
-To choose a different provider, add this to `Config/DefaultEngine.ini`:
+### Distributed Tracing
+Thread-local trace context with automatic ID propagation:
+
+```cpp
+FPalantirTraceGuard TraceGuard; // RAII guard
+FString TraceID = FPalantirTrace::GetCurrentTraceID();
+// Trace ID automatically flows through nested calls
+```
+
+### Fluent API Testing
+Readable, chainable assertions for API testing:
+
+```cpp
+PalantirRequest()
+    .SetURL("https://api.example.com/users")
+    .SetMethod(EHttpMethod::GET)
+    .SetTimeout(5.0f)
+    .ExpectStatus(200)
+    .ExpectHeader("Content-Type", "application/json")
+    .ExpectJsonPath("$.users[0].name", "Alice")
+    .Send();
+```
+
+### Real Performance Monitoring
+ArgusLens samples actual UE5 metrics:
+
+```cpp
+float FPS = 1.0f / FApp::GetDeltaTime();
+FPlatformMemoryStats MemStats;
+FPlatformMemory::GetStatsForMallocProfiler(MemStats);
+uint64 UsedMemoryMB = MemStats.UsedPhysical / (1024 * 1024);
+```
+
+---
+
+## 📚 Documentation
+
+### Core Guides
+- **[PORTFOLIO.md](PORTFOLIO.md)** — 🎯 Technical showcase for recruiters
+- **[Docs/API_TESTING.md](Docs/API_TESTING.md)** — REST/GraphQL testing patterns
+- **[Docs/PALANTIR.md](Docs/PALANTIR.md)** — Distributed tracing deep-dive
+- **[Docs/LCARS_PROVIDERS.md](Docs/LCARS_PROVIDERS.md)** — Report generation system
+- **[Docs/modules.md](Docs/modules.md)** — Module architecture reference
+
+### Development
+- **[BUILD.md](BUILD.md)** — Build instructions and dependencies
+- **[CONTRIBUTING.md](CONTRIBUTING.md)** — Code standards and patterns
+- **[Docs/GAME_INDUSTRY_INTEGRATIONS.md](Docs/GAME_INDUSTRY_INTEGRATIONS.md)** — Sentry, PlayFab, GameLift
+
+---
+
+## 🛡️ Safety & Security
+
+### Tok'Ra Pre-Commit Hook
+Prevents commits containing dangerous patterns:
+
+```bash
+# Install the git hook
+.\Scripts\install-tokra.bat  # Windows
+./Scripts/install-tokra.sh   # Unix
+```
+
+Blocks:
+- `MakeShareable(this)` — dangerous shared pointer patterns
+- Hardcoded secrets (API keys, tokens, passwords)
+- Suspicious patterns (shell injection, path traversal)
+
+### CI Safety Checks
+- **stone-table.yml** — Grep-based pattern detection
+- **cair-paravel.yml** — Dependency vulnerability scanning
+
+---
+
+## 🎨 LCARS Report Preview
+
+The framework generates beautiful Star Trek-themed reports featuring:
+
+- **Executive Summary** — Pass/fail statistics, execution time
+- **API Metrics** — Request counts, status codes, response times
+- **Performance Data** — FPS graphs, memory usage, hitch detection
+- **Test Details** — Individual results with trace IDs and artifacts
+
+**Visual Style:**
+- Dark blue gradient background (`#000033` → `#001155`)
+- LCARS color scheme (orange `#ff9900`, yellow `#ffcc00`, cyan `#00ccff`)
+- Monospace "Courier New" font for authenticity
+- Responsive grid layouts for all screen sizes
+
+---
+
+## 🧪 Example Test
+
+```cpp
+IMPLEMENT_NEXUS_TEST(FMyGameplayTest)
+{
+    FPalantirTraceGuard TraceGuard; // Auto trace context
+    
+    // Performance monitoring
+    UArgusLens* Lens = NewObject<UArgusLens>();
+    Lens->StartPerformanceMonitoring();
+    
+    // Test logic
+    bool bGameplayPassed = RunGameplayScenario();
+    
+    // Export results
+    Lens->StopPerformanceMonitoring();
+    Lens->ExportPerformanceArtifact("MyGameplayTest");
+    
+    return bGameplayPassed && Lens->DidPassPerformanceGates();
+}
+```
+
+---
+
+## 📦 Module Dependencies
 
 ```
-[/Script/Nexus.Palantir]
-LCARSSource=AutomationFramework
+Nexus
+├── Core (Engine, CoreUObject)
+├── Palantír (HTTP, Json, JsonUtilities)
+└── LCARSBridge (Json)
+
+FringeNetwork → Nexus, Sockets
+StargateStress → Nexus, AIModule
+ArgusLens → Nexus, Engine
+Protego → Nexus, Engine
+Legacy → Nexus, AutomationController
 ```
 
-See `Docs/LCARS.md` for details on configuration, providers, and extending the reporter.
+---
+
+## 🤝 Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for:
+- Code style guidelines
+- Pull request process
+- Testing requirements
+- Documentation standards
+
+---
+
+## 📝 License
+
+MIT License — See [LICENSE](LICENSE) for details.
+
+---
+
+## 🌟 Credits
+
+**Inspired by:**
+- Star Trek (LCARS interface design)
+- Stargate SG-1 (Tok'Ra, Goa'uld, Asgard references)
+- Lord of the Rings (Palantír seeing stones)
+- Fringe (Cortexiphan, parallel universes)
+- Harry Potter (Hogwarts, Protego shield charm)
+- Chronicles of Narnia (Aslan, Cair Paravel)
+
+Built to showcase clean architecture, modern C++ patterns, and game industry integration expertise.
