@@ -1,10 +1,34 @@
 # NexusQA — Modular Testing Framework for Unreal Engine 5
 
+<div align="center">
+
+![NexusQA Banner](.github/banner.jpg)
+
+*[🎬 View Animated Banner](.github/banner_animated.mp4)*
+
 ![CI](https://github.com/calionestevar/NexusQA/actions/workflows/aslan-vigil.yml/badge.svg)
+
+</div>
 
 A clean, extensible QA automation framework for UE5 featuring parallel execution, distributed tracing, chaos engineering, and compliance testing. Built to demonstrate modern C++ patterns and game industry best practices.
 
 **Codename: Project Asgard** — A fusion of sci-fi and fantasy universes (Stargate, Star Trek, LOTR, Fringe, Harry Potter, Narnia) powering real-world QA solutions.
+
+---
+
+## 🎯 TL;DR — What This Is
+
+**For Recruiters:** A portfolio project showcasing production-quality C++ for game QA automation. Demonstrates parallel algorithms, distributed tracing, chaos testing, and compliance validation — all using Unreal Engine 5 APIs.
+
+**Key Skills Demonstrated:**
+- ✅ Modern C++ (RAII, thread-local storage, async patterns, smart pointers)
+- ✅ Unreal Engine 5 (automation framework, memory profiling, HTTP module)
+- ✅ Game Industry Patterns (distributed tracing like Sentry, API testing, performance monitoring)
+- ✅ Clean Architecture (modular design, dependency injection, fluent APIs)
+
+**What It Does:** Runs game tests in parallel, monitors performance (FPS/memory), simulates network chaos, validates compliance (COPPA/GDPR), and generates Star Trek-themed HTML reports.
+
+**Tech Stack:** C++17, Unreal Engine 5.6, HTTP/JSON APIs, GitHub Actions CI/CD
 
 ---
 
