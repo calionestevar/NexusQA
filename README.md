@@ -4,9 +4,7 @@
 
 ![NexusQA Banner](.github/banner.jpg)
 
-*[🎬 View Animated Banner](.github/banner_animated.mp4)*
-
-![CI](https://github.com/calionestevar/NexusQA/actions/workflows/aslan-vigil.yml/badge.svg)
+![CI](https://github.com/calionestevar/NexusQA/actions/workflows/stone-table.yml/badge.svg)
 
 </div>
 
