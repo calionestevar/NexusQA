@@ -30,6 +30,15 @@ A clean, extensible QA automation framework for UE5 featuring parallel execution
 
 ---
 
+<div align="center">
+
+**📋 For Recruiters:** [View Portfolio Summary](PORTFOLIO.md) — Skills, achievements, and code highlights  
+**📚 For Developers:** Continue reading below for technical documentation
+
+</div>
+
+---
+
 ## 🎯 Core Modules
 
 | Module | Purpose | Key Features |
@@ -229,6 +238,24 @@ ArgusLens → Nexus, Engine
 Protego → Nexus, Engine
 Legacy → Nexus, AutomationController
 ```
+
+---
+
+## 🗺️ Roadmap
+
+**Near Term:**
+- [ ] Blueprint test coverage support
+- [ ] Integration with Unreal Insights for deeper profiling
+- [ ] Multiplayer session regression testing
+- [ ] EOS (Epic Online Services) integration testing
+- [ ] Enhanced chaos injection (CPU throttling, memory pressure)
+- [ ] Visual regression testing for UI
+
+**Under Consideration:**
+- [ ] Automated test generation from Blueprint graphs
+- [ ] Integration with GameLift for cloud testing
+- [ ] Performance baseline tracking and regression detection
+- [ ] Separate Unity QA framework project (future exploration)
 
 ---
 
