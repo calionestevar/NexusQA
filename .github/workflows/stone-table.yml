@@ -16,7 +16,7 @@ jobs:
         run: |
           set -e
           echo "Searching for critical patterns..."
-          CRITICAL_MATCHES=$(grep -R --line-number --exclude-dir=.git "MakeShareable(this)" || true)
+          CRITICAL_MATCHES=$(grep -R --line-number --exclude-dir=.git --exclude-dir=.github --exclude="*.md" "MakeShareable(this)" . || true)
           if [ -n "$CRITICAL_MATCHES" ]; then
             echo "CRITICAL PATTERNS FOUND (MakeShareable(this)):\n$CRITICAL_MATCHES"
             echo "$CRITICAL_MATCHES" > safety-critical.txt
@@ -24,7 +24,7 @@ jobs:
           fi
 
           echo "Searching for advisory patterns (FPlatformProcess::Sleep)..."
-          ADVISORY=$(grep -R --line-number --exclude-dir=.git "FPlatformProcess::Sleep(" || true)
+          ADVISORY=$(grep -R --line-number --exclude-dir=.git --exclude-dir=.github --exclude="*.md" "FPlatformProcess::Sleep(" . || true)
           if [ -n "$ADVISORY" ]; then
             echo "Advisory patterns found (review recommended):\n$ADVISORY"
             echo "$ADVISORY" > safety-advisory.txt
@@ -38,5 +38,5 @@ jobs:
         with:
           name: safety-reports
           path: |
-            safety-critical.txt
-            safety-advisory.txt
+            safety-*.txt
+          if-no-files-found: ignore
