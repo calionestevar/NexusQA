@@ -251,6 +251,7 @@ Legacy → Nexus, AutomationController
 - [ ] EOS (Epic Online Services) integration testing
 - [ ] Enhanced chaos injection (CPU throttling, memory pressure)
 - [ ] Visual regression testing for UI
+- [ ] Smoke test CI workflow for quick validation
 
 **Under Consideration:**
 - [ ] Automated test generation from Blueprint graphs
