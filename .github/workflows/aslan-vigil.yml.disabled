@@ -1,3 +1,17 @@
+# ================================================================================
+# WORKFLOW DISABLED FOR PORTFOLIO VERSION
+# 
+# This workflow requires a self-hosted GitHub Actions runner with Unreal Engine
+# 5.6 installed. In a production environment, this would:
+# - Run the full Nexus test suite
+# - Execute performance benchmarks
+# - Generate comprehensive test reports
+# - Upload artifacts for review
+#
+# To enable: Rename to aslan-vigil.yml and configure a self-hosted runner with
+# UE5 at the path specified in UE_ENGINE_PATH secret.
+# ================================================================================
+
 name: Aslan's Vigil - Main CI
 
 on:

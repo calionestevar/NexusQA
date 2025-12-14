@@ -1,3 +1,18 @@
+# ================================================================================
+# WORKFLOW DISABLED FOR PORTFOLIO VERSION
+#
+# This workflow provides automated dependency upgrade PRs for projects using:
+# - vcpkg (C++ package manager)
+# - Conan (C++ package manager)
+# - NuGet (Unity/C# dependencies)
+#
+# This portfolio project doesn't use external package managers, so this workflow
+# is disabled. In a production UE5 project with vcpkg dependencies, this would
+# automatically create PRs for safe semver-compatible upgrades.
+#
+# To enable: Add vcpkg.json/conanfile.txt and rename to cair-paravel.yml
+# ================================================================================
+
 name: Cair Paravel - Automated Throne Maintenance
 
 on:
