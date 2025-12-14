@@ -4,7 +4,8 @@
 
 ![NexusQA Banner](.github/banner_animated.gif)
 
-![CI](https://github.com/calionestevar/NexusQA/actions/workflows/stone-table.yml/badge.svg)
+![Safety Checks](https://github.com/calionestevar/NexusQA/actions/workflows/stone-table.yml/badge.svg)
+![LCARS Demo](https://github.com/calionestevar/NexusQA/actions/workflows/lamppost-beacon.yml/badge.svg)
 
 </div>
 
