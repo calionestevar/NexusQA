@@ -2,7 +2,7 @@
 
 <div align="center">
 
-![NexusQA Banner](.github/banner.jpg)
+![NexusQA Banner](.github/banner_animated.gif)
 
 ![CI](https://github.com/calionestevar/NexusQA/actions/workflows/stone-table.yml/badge.svg)
 
