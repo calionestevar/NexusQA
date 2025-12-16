@@ -1,0 +1,53 @@
+{
+	"FileVersion": 3,
+	"Version": 1,
+	"VersionName": "1.0.0",
+	"FriendlyName": "NexusQA - Testing Framework",
+	"Description": "Comprehensive QA automation framework for Unreal Engine 5 featuring parallel test execution, distributed tracing, chaos engineering, and compliance testing",
+	"Category": "Testing",
+	"CreatedBy": "Calion Estevar",
+	"CreatedByURL": "https://github.com/calionestevar",
+	"DocsURL": "https://github.com/calionestevar/NexusQA",
+	"MarketplaceURL": "",
+	"SupportURL": "https://github.com/calionestevar/NexusQA/issues",
+	"EngineVersion": "5.6.0",
+	"CanContainContent": false,
+	"Installed": false,
+	"Modules": [
+		{
+			"Name": "Nexus",
+			"Type": "Runtime",
+			"LoadingPhase": "Default"
+		},
+		{
+			"Name": "ArgusLens",
+			"Type": "Runtime",
+			"LoadingPhase": "Default"
+		},
+		{
+			"Name": "FringeNetwork",
+			"Type": "Runtime",
+			"LoadingPhase": "Default"
+		},
+		{
+			"Name": "Protego",
+			"Type": "Runtime",
+			"LoadingPhase": "Default"
+		},
+		{
+			"Name": "StargateStress",
+			"Type": "Runtime",
+			"LoadingPhase": "Default"
+		},
+		{
+			"Name": "Legacy",
+			"Type": "Runtime",
+			"LoadingPhase": "Default"
+		},
+		{
+			"Name": "Utilities",
+			"Type": "Runtime",
+			"LoadingPhase": "Default"
+		}
+	]
+}
