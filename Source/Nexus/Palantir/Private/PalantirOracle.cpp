@@ -1,4 +1,4 @@
-#include "PalantirObserver.h"
+#include "PalantirOracle.h"
 #include "NexusCore.h"
 #include "Misc/FileHelper.h"
 #include "Misc/Paths.h"

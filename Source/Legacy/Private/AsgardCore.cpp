@@ -14,7 +14,7 @@ void UAsgardCore::RunTestSuite(const FString& Filter)
     FAutomationTestRunner::RunTests(Filter);
 }
 
-void UAsgardCore::GenerateAI AssistedTest(const FString& Prompt, FString& OutTestCode)
+void UAsgardCore::GenerateAIAssistedTest(const FString& Prompt, FString& OutTestCode)
 {
     // Use AI API or placeholder (expand with OpenAI plugin later)
     OutTestCode = TEXT("IMPLEMENT_SIMPLE_AUTOMATION_TEST(FGeneratedTest, \"Generated. " + Prompt + "\", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)");

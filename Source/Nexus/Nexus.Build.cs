@@ -8,11 +8,16 @@ public class Nexus : ModuleRules
 
         PublicIncludePaths.AddRange(new string[] 
         {
+            "Nexus/Core/Public",
             "Nexus/LCARSBridge/Public",
             "Nexus/Palantir/Public"
         });
 
-        PrivateIncludePaths.AddRange(new string[] { });
+        PrivateIncludePaths.AddRange(new string[] 
+        { 
+            "Nexus/Core/Private",
+            "Nexus/Private"
+        });
 
         PublicDependencyModuleNames.AddRange(new string[]
         {

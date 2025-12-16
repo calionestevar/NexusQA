@@ -1,6 +1,6 @@
 #include "NexusCore.h"
 #include "NexusTest.h"
-#include "PalantirObserver.h"
+#include "PalantirOracle.h"
 #include "Misc/CommandLine.h"
 #include "HAL/PlatformProcess.h"
 #include "Misc/Paths.h"

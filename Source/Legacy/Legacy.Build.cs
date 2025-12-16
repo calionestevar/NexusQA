@@ -12,7 +12,8 @@ public class Legacy : ModuleRules
             "CoreUObject",
             "Engine",
             "Json",
-            "JsonUtilities"
+            "JsonUtilities",
+            "Nexus"                    // Add dependency on Nexus for test framework
         });
 
         PrivateDependencyModuleNames.AddRange(new string[]
@@ -20,7 +21,8 @@ public class Legacy : ModuleRules
             "Projects",
             "InputCore",
             "Slate",
-            "SlateCore"
+            "SlateCore",
+            "AutomationController"     // Add for commandlet support
         });
     }
 }

@@ -1,7 +1,7 @@
 #pragma once
 #include "CoreMinimal.h"
 
-class PALANTIR_API FPalantirObserver
+class NEXUS_API FPalantirObserver
 {
 public:
     static void Initialize();                    // Called at startup

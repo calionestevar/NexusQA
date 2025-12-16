@@ -1,3 +1,6 @@
+#pragma once
+#include "Misc/AutomationTest.h"
+
 // TOK'RA SYMBIOTE — PERMANENT RED BLOCKER
 // This test intentionally fails in normal builds.
 // If it ever passes → CI MUST FAIL → a known UE5 engine bug has returned.
