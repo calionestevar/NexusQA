@@ -71,6 +71,31 @@ cd NexusQA
 ./Scripts/RideOut.sh
 ```
 
+---
+
+## 🔌 Integration as Reusable Framework
+
+### Option 1: Git Submodule (Recommended)
+Add NexusQA as a plugin to your UE5 project:
+
+```bash
+cd YourGameProject
+git submodule add https://github.com/calionestevar/NexusQA.git Plugins/NexusQA
+git commit -m "Add NexusQA testing framework"
+```
+
+Then regenerate your project files and rebuild.
+
+**Updating to latest framework:**
+```bash
+git submodule update --remote Plugins/NexusQA
+```
+
+### Option 2: Manual Copy
+Copy the entire `Plugins/NexusQA/` folder to your project's `Plugins/` directory and rebuild.
+
+---
+
 ### Generate Demo LCARS Report
 ```powershell
 .\Scripts\Generate-LCARSReport.ps1
