@@ -1,5 +1,7 @@
 #include "ObserverNetworkDashboard.h"
+#if WITH_IMGUI
 #include "imgui.h"
+#endif
 #include "Misc/FileHelper.h"
 #include "Misc/Paths.h"
 #include "HAL/PlatformFileManager.h"
@@ -44,6 +46,7 @@ void UObserverNetworkDashboard::UpdateLiveDashboard()
         LocalUptime = FPlatformTime::Seconds() - SessionStartTime;
     }
 
+#if WITH_IMGUI
     ImGui::Begin("OBSERVER NETWORK — LIVE AUDIT", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
     ImGui::TextColored(ImVec4(1, 0.8f, 0, 1), "REALITY STATUS: STABLE");
     ImGui::Separator();
@@ -66,6 +69,7 @@ void UObserverNetworkDashboard::UpdateLiveDashboard()
     }
 
     ImGui::End();
+#endif
 }
 
 void UObserverNetworkDashboard::GenerateWebReport()
