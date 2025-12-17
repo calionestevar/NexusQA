@@ -32,9 +32,14 @@ public class Nexus : ModuleRules
             "Projects",
             "InputCore",
             "Slate",
-            "SlateCore",
-            "ImGui"                    // ← Enables ImGui
+            "SlateCore"
         });
+
+        // ImGui is optional - only include if available
+        if (Target.IsInPlugin("ImGui") || System.IO.Directory.Exists(System.IO.Path.Combine(Target.ProjectDir, "Plugins/ImGui")))
+        {
+            PrivateDependencyModuleNames.Add("ImGui");
+        }
 
         if (Target.bBuildEditor)
         {

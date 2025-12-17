@@ -4,7 +4,9 @@
 #include "Misc/Paths.h"
 #include "HAL/PlatformFileManager.h"
 #include "Misc/DateTime.h"
+#if WITH_IMGUI
 #include "imgui.h"
+#endif
 #include "NexusTest.h"
 #include "HAL/CriticalSection.h"
 #include "Misc/ScopeLock.h"
@@ -190,6 +192,7 @@ void FPalantirObserver::UpdateLiveOverlay()
 {
     if (!GEngine || !GEngine->GameViewport) return;
 
+#if WITH_IMGUI
     ImGui::Begin("PALANTÍR LIVE", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
     ImGui::TextColored(ImVec4(1, 0.8f, 0, 1), "NEXUS STATUS");
     ImGui::Separator();
@@ -197,6 +200,7 @@ void FPalantirObserver::UpdateLiveOverlay()
     ImGui::Text("Passed: %d", UNexusCore::PassedTests);
     ImGui::Text("Failed: %d", UNexusCore::FailedTests);
     ImGui::End();
+#endif
 }
 
 void FPalantirObserver::GenerateFinalReport()
