@@ -14,24 +14,24 @@ class UTILITIES_API UNerdyConstants : public UObject
 
 public:
     // Game mechanics thresholds
-    UPROPERTY(Config, Category = "Gameplay")
+    UPROPERTY(Config, BlueprintReadOnly, VisibleAnywhere, Category = "Gameplay")
     float FallDamageThreshold = -800.f;
 
     // AI auditing keywords
-    UPROPERTY(Config, Category = "AI")
+    UPROPERTY(Config, BlueprintReadOnly, VisibleAnywhere, Category = "AI")
     FString AI_BiasKeywords = TEXT("bias, unfair, discriminatory");
 
     // Compliance enforcement
-    UPROPERTY(Config, Category = "Compliance")
+    UPROPERTY(Config, BlueprintReadOnly, VisibleAnywhere, Category = "Compliance")
     bool bLegalComplianceRequired = true;
 
     // Report output paths
-    UPROPERTY(Config, Category = "Reporting")
+    UPROPERTY(Config, BlueprintReadOnly, VisibleAnywhere, Category = "Reporting")
     FString ReportBaseDir = TEXT("Saved/NexusReports");
 
-    UPROPERTY(Config, Category = "Reporting")
+    UPROPERTY(Config, BlueprintReadOnly, VisibleAnywhere, Category = "Reporting")
     bool bExportJSON = true;
 
-    UPROPERTY(Config, Category = "Reporting")
+    UPROPERTY(Config, BlueprintReadOnly, VisibleAnywhere, Category = "Reporting")
     bool bExportHTML = true;
 };

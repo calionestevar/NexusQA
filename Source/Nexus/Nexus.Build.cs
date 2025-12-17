@@ -11,7 +11,9 @@ public class Nexus : ModuleRules
             "Nexus/Core/Public",
             "Nexus/Core/Private",
             "Nexus/LCARSBridge/Public",
+            "Nexus/LCARSBridge/Private",
             "Nexus/Palantir/Public",
+            "Nexus/Palantir/Private",
             "Nexus/Private"
         });
 
