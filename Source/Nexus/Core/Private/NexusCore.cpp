@@ -9,6 +9,8 @@
 #include "Misc/DateTime.h"
 #include <atomic>
 
+DEFINE_LOG_CATEGORY_STATIC(LogNexus, Display, All);
+
 int32 UNexusCore::TotalTests = 0;
 int32 UNexusCore::PassedTests = 0;
 int32 UNexusCore::FailedTests = 0;

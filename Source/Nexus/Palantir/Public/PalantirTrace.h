@@ -85,8 +85,8 @@ private:
 class NEXUS_API FPalantirTraceGuard
 {
 public:
-	FTraceContextGuard();
-	~FTraceContextGuard();
+	FPalantirTraceGuard();
+	~FPalantirTraceGuard();
 
 	const FString& GetTraceID() const { return TraceID; }
 

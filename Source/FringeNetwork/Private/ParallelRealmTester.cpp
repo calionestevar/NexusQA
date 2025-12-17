@@ -1,5 +1,6 @@
 #include "FringeNetwork.h"
 #include "HttpModule.h"
+#include "Interfaces/IHttpResponse.h"
 #include "HAL/PlatformProcess.h"
 #include "HAL/PlatformAtomics.h"
 #include "Templates/SharedPointer.h"

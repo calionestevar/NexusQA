@@ -15,6 +15,7 @@
 static TArray<FSimulatedClient> GSimulatedClients;
 static TArray<FReplicationEvent> GReplicationEvents;
 static FCriticalSection GBishopBridgeMutex;
+static FCriticalSection GGateBridgeMutex;
 static int32 GTotalReplicationAttempts = 0;
 static int32 GSuccessfulReplications = 0;
 
@@ -65,9 +66,9 @@ void UBishopBridge::SpawnSimulatedClients(int32 ClientCount, float DurationMinut
 
     // Simulate replication events periodically
     TSharedRef<int32, ESPMode::ThreadSafe> ReplicationTicks = MakeShared<int32, ESPMode::ThreadSafe>(0);
-    FTimerHandle ReplicationHandle;
+    TSharedRef<FTimerHandle> ReplicationHandle = MakeShared<FTimerHandle>();
 
-    World->GetTimerManager().SetTimer(ReplicationHandle, FTimerDelegate::CreateLambda([ReplicationTicks, ClientCount]()
+    World->GetTimerManager().SetTimer(*ReplicationHandle, FTimerDelegate::CreateLambda([ReplicationTicks, ClientCount]()
     {
         if (*ReplicationTicks > 1000) return; // Limit ticks to avoid infinite log
 
@@ -106,7 +107,7 @@ void UBishopBridge::SpawnSimulatedClients(int32 ClientCount, float DurationMinut
     {
         if (World)
         {
-            World->GetTimerManager().ClearTimer(ReplicationHandle);
+            World->GetTimerManager().ClearTimer(*ReplicationHandle);
         }
         float SyncRate = (GTotalReplicationAttempts > 0) ? (float)GSuccessfulReplications / GTotalReplicationAttempts : 1.0f;
         BishopBridgeLog(FString::Printf(TEXT("SIMULATION COMPLETE: %d clients, sync rate %.1f%%"),

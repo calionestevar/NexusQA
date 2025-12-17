@@ -112,7 +112,7 @@ void UTransfiguration::ExportAccessibilityArtifact(const FString& OutputPath)
     if (FJsonSerializer::Serialize(RootObject.ToSharedRef(), Writer))
     {
         FFileHelper::SaveStringToFile(OutputString, *ArtifactPath);
-        UE_LOG(LogTransfiguration, Display, TEXT(\"Transfiguration: Exported accessibility report to %s\"), *ArtifactPath);
+        UE_LOG(LogTransfiguration, Display, TEXT("Transfiguration: Exported accessibility report to %s"), *ArtifactPath);
     }
 }
 
