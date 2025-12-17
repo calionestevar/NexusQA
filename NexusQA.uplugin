@@ -40,11 +40,6 @@
 			"LoadingPhase": "Default"
 		},
 		{
-			"Name": "Legacy",
-			"Type": "Runtime",
-			"LoadingPhase": "Default"
-		},
-		{
 			"Name": "Utilities",
 			"Type": "Runtime",
 			"LoadingPhase": "Default"

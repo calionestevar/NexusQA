@@ -1,3 +1,4 @@
+#include "LCARSReporter.h"
 #include "CoreMinimal.h"
 #include "Misc/AutomationTest.h"
 #include "Json.h"
