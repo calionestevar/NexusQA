@@ -1,8 +1,8 @@
 #pragma once
 #include "CoreMinimal.h"
 #include "UObject/Object.h"
-#include "NexusCore.generated.h"
 #include "NexusTest.h"
+#include "NexusCore.generated.h"
 
 UCLASS()
 class NEXUS_API UNexusCore : public UObject
