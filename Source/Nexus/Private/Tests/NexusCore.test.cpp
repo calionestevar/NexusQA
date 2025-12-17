@@ -1,4 +1,4 @@
-#include "NexusTest.h"
+#include "Nexus/Core/Public/NexusTest.h"
 #include "NexusCore.h"
 
 /**

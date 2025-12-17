@@ -1,4 +1,4 @@
-#include "NexusTest.h"
+#include "Nexus/Core/Public/NexusTest.h"
 #include "FringeNetwork.h"
 
 // This test is marked OnlineOnly: it makes HTTP HEAD requests. On CI, the network
