@@ -2,8 +2,7 @@
 #include "CoreMinimal.h"
 #include "UObject/Object.h"
 #include "NexusCore.generated.h"
-
-class FNexusTest;
+#include "NexusTest.h"
 
 UCLASS()
 class NEXUS_API UNexusCore : public UObject
