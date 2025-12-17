@@ -11,7 +11,7 @@ int32 UReplicatorSwarm::TotalPredatorAttempts = 0;
 
 void UReplicatorSwarm::UnleashSwarm(int32 BotCount, float DurationMinutes)
 {
-    UWorld* World = GetWorld();
+    UWorld* World = GWorld;
     if (!World)
     {
         UE_LOG(LogTemp, Error, TEXT("REPLICATOR SWARM: No valid World context to spawn bots."));
@@ -31,7 +31,7 @@ void UReplicatorSwarm::UnleashSwarm(int32 BotCount, float DurationMinutes)
 
     // Auto-end swarm after DurationMinutes
     const float DurationSeconds = FMath::Max(0.0f, DurationMinutes * 60.0f);
-    FTimerDelegate EndDelegate = FTimerDelegate::CreateLambda([this]()
+    FTimerDelegate EndDelegate = FTimerDelegate::CreateLambda([]()
     {
         UE_LOG(LogTemp, Warning, TEXT("REPLICATOR SWARM — DISASSEMBLING"));
         const int32 Attempts = UReplicatorSwarm::TotalPredatorAttempts;
@@ -49,7 +49,7 @@ void UReplicatorSwarm::SpawnBot(EBotRole Role)
     FString RoleName = StaticEnum<EBotRole>()->GetNameStringByValue(static_cast<int64>(Role));
     UE_LOG(LogTemp, Display, TEXT("REPLICATOR SWARM: Spawned %s"), *RoleName);
 
-    UWorld* World = GetWorld();
+    UWorld* World = GWorld;
     if (!World)
     {
         UE_LOG(LogTemp, Error, TEXT("REPLICATOR SWARM: No World context"));
