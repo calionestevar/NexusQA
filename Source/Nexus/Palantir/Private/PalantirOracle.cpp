@@ -200,6 +200,8 @@ void FPalantirObserver::UpdateLiveOverlay()
     ImGui::Text("Passed: %d", UNexusCore::PassedTests);
     ImGui::Text("Failed: %d", UNexusCore::FailedTests);
     ImGui::End();
+#else
+    // ImGui not available - overlay disabled
 #endif
 }
 

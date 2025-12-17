@@ -35,11 +35,9 @@ public class Nexus : ModuleRules
             "SlateCore"
         });
 
-        // ImGui is optional - only include if available
-        if (Target.IsInPlugin("ImGui") || System.IO.Directory.Exists(System.IO.Path.Combine(Target.ProjectDir, "Plugins/ImGui")))
-        {
-            PrivateDependencyModuleNames.Add("ImGui");
-        }
+        // ImGui is optional for live overlay support
+        // Uncomment below if you have ImGui plugin installed
+        // PrivateDependencyModuleNames.Add("ImGui");
 
         if (Target.bBuildEditor)
         {
