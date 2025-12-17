@@ -20,7 +20,7 @@ static int32 GSuccessfulReplications = 0;
 
 static void BishopBridgeLog(const FString& Msg)
 {
-    UE_LOG(LogTemp, Display, TEXT("BISHOP BRIDGE: %s"), *Msg);g);
+    UE_LOG(LogTemp, Display, TEXT("BISHOP BRIDGE: %s"), *Msg);
     if (GEngine)
     {
         GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Cyan, TEXT("BISHOP BRIDGE: ") + Msg);

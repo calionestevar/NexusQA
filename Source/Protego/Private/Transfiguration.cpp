@@ -64,11 +64,11 @@ bool UTransfiguration::CheckInputRemapping()
 
 bool UTransfiguration::CheckContrastRatios()
 {
-    // Check if high contrast mode or brightness settings are available
+    // Check if high contrast mode is available (GetBrightness() doesn't exist in UE 5.6)
     if (GEngine && GEngine->GetGameUserSettings())
     {
-        const float Brightness = GEngine->GetGameUserSettings()->GetBrightness();
-        UE_LOG(LogTransfiguration, Display, TEXT("  Contrast: Current brightness %.2f"), Brightness);
+        // In UE 5.6, use GetScreenResolution or check display settings instead
+        UE_LOG(LogTransfiguration, Display, TEXT("  Contrast: Display settings available"));
         return true;
     }
     return false;
