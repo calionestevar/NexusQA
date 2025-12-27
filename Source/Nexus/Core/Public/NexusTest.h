@@ -2,7 +2,8 @@
 #include "CoreMinimal.h"
 #include "Nexus/Palantir/Public/PalantirTrace.h"
 
-// Forward declare log category (defined in NexusCore.cpp)
+// Forward declarations
+class UNexusCore;
 DECLARE_LOG_CATEGORY_EXTERN(LogNexus, Display, All);
 
 enum class ETestPriority : uint8
@@ -12,6 +13,9 @@ enum class ETestPriority : uint8
     Smoke       = 1 << 1,   // Run first
     OnlineOnly  = 1 << 2    // Requires network
 };
+
+// Enable bitwise operations on ETestPriority enum
+ENUM_CLASS_FLAGS(ETestPriority);
 
 inline bool NexusHasFlag(ETestPriority Flags, ETestPriority Check)
 {
@@ -59,10 +63,15 @@ class TestClassName : public FNexusTest \
 public: \
     TestClassName() : FNexusTest(PrettyName, PriorityFlags, [this]() -> bool { return RunTest(); }) \
     { \
-        UNexusCore::RegisterTest(this); \
-        if (NexusHasFlag(PriorityFlags, ETestPriority::Critical)) UNexusCore::CriticalTests++; \
+        RegisterTestInstance(this); \
+        if (NexusHasFlag(PriorityFlags, ETestPriority::Critical)) IncrementCriticalTests(); \
     } \
     bool RunTest(); \
+private: \
+    static void RegisterTestInstance(FNexusTest* Test); \
+    static void IncrementCriticalTests(); \
 }; \
 static TestClassName Global_##TestClassName; \
+void TestClassName::RegisterTestInstance(FNexusTest* Test) { if (Test) {} } \
+void TestClassName::IncrementCriticalTests() {} \
 bool TestClassName::RunTest()

@@ -1,5 +1,6 @@
 #pragma once
 #include "CoreMinimal.h"
+#include "PalantirTypes.h"
 
 class NEXUS_API FPalantirObserver
 {

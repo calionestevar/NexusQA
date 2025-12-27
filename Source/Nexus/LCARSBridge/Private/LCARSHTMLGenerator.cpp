@@ -139,6 +139,8 @@ FString FLCARSHTMLGenerator::GenerateJavaScript()
 FString FLCARSHTMLGenerator::GenerateTestSummarySection(const FReportData& Data)
 {
 	float PassRate = Data.TotalTests > 0 ? (float)Data.PassedTests / Data.TotalTests * 100.0f : 0.0f;
+	// Clamp PassRate to valid range [0, 100]
+	PassRate = FMath::Clamp(PassRate, 0.0f, 100.0f);
 	
 	FString HTML = TEXT(R"(
         <!-- Summary Section -->

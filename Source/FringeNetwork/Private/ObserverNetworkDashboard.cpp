@@ -85,7 +85,7 @@ void UObserverNetworkDashboard::GenerateWebReport()
         LocalUptime = FPlatformTime::Seconds() - SessionStartTime;
     }
 
-    FString Html = TEXT(R"(
+    FString Html = R"(
 <!DOCTYPE html>
 <html><head><title>Observer Network Final Report</title>
 <style>
@@ -97,7 +97,7 @@ void UObserverNetworkDashboard::GenerateWebReport()
 </style></head><body>
 <h1>OBSERVER NETWORK — FINAL REPORT</h1>
 <p>Session Duration: )" + FString::SanitizeFloat(LocalUptime) + TEXT(R"( seconds</p>
-)");
+)";
 
     for (const FString& Entry : LocalEventLog)
     {

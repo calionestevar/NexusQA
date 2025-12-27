@@ -344,7 +344,8 @@ FPalantirResponse FPalantirRequest::ExecuteBlocking()
 			UE_LOG(LogPalantirTrace, Error, TEXT("Failed to start HTTP request: %s %s"), *Verb, *URL);
 			Response.StatusCode = 0;
 			FPlatformProcess::ReturnSynchEventToPool(CompletionEvent);
-			break;
+			++Attempt;
+			continue;
 		}
 
 		// Wait for completion or timeout
@@ -423,5 +424,16 @@ void FPalantirRequest::ExecuteAsync(TFunction<void(const FPalantirResponse&)> On
 		OnComplete(Response);
 	});
 
-	Request->ProcessRequest();
+	// Handle ProcessRequest failure
+	if (!Request->ProcessRequest())
+	{
+		UE_LOG(LogPalantirTrace, Error, TEXT("Failed to start async HTTP request: %s %s"), *Verb, *URL);
+		// Notify callback with error response
+		FPalantirResponse ErrorResponse;
+		ErrorResponse.StatusCode = 0;
+		ErrorResponse.Body = TEXT("Failed to start HTTP request");
+		ErrorResponse.TraceID = TraceID;
+		ErrorResponse.DurationMs = static_cast<float>((FPlatformTime::Seconds() - StartTime) * 1000.0);
+		OnComplete(ErrorResponse);
+	}
 }

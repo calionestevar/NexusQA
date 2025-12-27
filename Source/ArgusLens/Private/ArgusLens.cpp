@@ -19,6 +19,7 @@ static FPerformanceThreshold GPerformanceThresholds;
 static FTimerHandle GPerformanceMonitorHandle;
 static int32 GTotalHitches = 0;
 static float GPeakMemory = 0.0f;
+static FCriticalSection GPerformanceMutex;
 
 void UArgusLens::StartPerformanceMonitoring(float DurationSeconds, bool bTrackNetRelevancy)
 {
@@ -59,21 +60,26 @@ void UArgusLens::StartPerformanceMonitoring(float DurationSeconds, bool bTrackNe
         FPlatformMemoryStats MemStats = FPlatformMemory::GetStats();
         Sample.MemoryMb = static_cast<float>(MemStats.UsedPhysical) / (1024.0f * 1024.0f);
 
-        // Check if frame is a hitch
-        Sample.bIsHitch = Sample.FrameTimeMs > GPerformanceThresholds.HitchThresholdMs;
-        if (Sample.bIsHitch)
+        // Protect global state with mutex
         {
-            GTotalHitches++;
-            UE_LOG(LogArgusLens, Warning, TEXT("ArgusLens: Hitch detected - Frame time: %.1fms"), Sample.FrameTimeMs);
-        }
+            FScopeLock Lock(&GPerformanceMutex);
 
-        // Track peak memory
-        if (Sample.MemoryMb > GPeakMemory)
-        {
-            GPeakMemory = Sample.MemoryMb;
-        }
+            // Check if frame is a hitch
+            Sample.bIsHitch = Sample.FrameTimeMs > GPerformanceThresholds.HitchThresholdMs;
+            if (Sample.bIsHitch)
+            {
+                GTotalHitches++;
+                UE_LOG(LogArgusLens, Warning, TEXT("ArgusLens: Hitch detected - Frame time: %.1fms"), Sample.FrameTimeMs);
+            }
 
-        GPerformanceSamples.Add(Sample);
+            // Track peak memory
+            if (Sample.MemoryMb > GPeakMemory)
+            {
+                GPeakMemory = Sample.MemoryMb;
+            }
+
+            GPerformanceSamples.Add(Sample);
+        }
     }), 0.1f, true);
 
     // Stop monitoring after duration
@@ -83,10 +89,6 @@ void UArgusLens::StartPerformanceMonitoring(float DurationSeconds, bool bTrackNe
         if (World)
         {
             World->GetTimerManager().ClearTimer(GPerformanceMonitorHandle);
-        }
-        {
-            FScopeLock Lock(&GPerformanceMutex);
-            bMonitoring = false;
         }
         ArgusLog(TEXT("PERFORMANCE MONITORING STOPPED"));
     }), DurationSeconds, false);
@@ -98,10 +100,6 @@ void UArgusLens::StopPerformanceMonitoring()
     if (World)
     {
         World->GetTimerManager().ClearTimer(GPerformanceMonitorHandle);
-    }
-    {
-        FScopeLock Lock(&GPerformanceMutex);
-        bMonitoring = false;
     }
     ArgusLog(TEXT("PERFORMANCE MONITORING STOPPED"));
 }
@@ -115,6 +113,7 @@ void UArgusLens::SetPerformanceThresholds(const FPerformanceThreshold& Threshold
 
 float UArgusLens::GetAverageFPS()
 {
+    FScopeLock Lock(&GPerformanceMutex);
     if (GPerformanceSamples.Num() == 0) return 0.0f;
 
     double TotalFPS = 0.0;
@@ -127,19 +126,27 @@ float UArgusLens::GetAverageFPS()
 
 float UArgusLens::GetPeakMemoryMb()
 {
+    FScopeLock Lock(&GPerformanceMutex);
     return GPeakMemory;
 }
 
 int32 UArgusLens::GetHitchCount()
 {
+    FScopeLock Lock(&GPerformanceMutex);
     return GTotalHitches;
 }
 
 bool UArgusLens::DidPassPerformanceGates()
 {
+    FScopeLock Lock(&GPerformanceMutex);
     if (GPerformanceSamples.Num() == 0) return true;
 
-    float AvgFPS = GetAverageFPS();
+    double TotalFPS = 0.0;
+    for (const FPerformanceSample& Sample : GPerformanceSamples)
+    {
+        TotalFPS += Sample.FPS;
+    }
+    float AvgFPS = static_cast<float>(TotalFPS / GPerformanceSamples.Num());
     return AvgFPS >= GPerformanceThresholds.MinFPS && GPeakMemory <= GPerformanceThresholds.MaxMemoryMb;
 }
 

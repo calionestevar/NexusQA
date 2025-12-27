@@ -261,6 +261,8 @@ void FPalantirObserver::GenerateFinalReport()
     UE_LOG(LogTemp, Warning, TEXT("LCARS FINAL REPORT GENERATED → %s"), *HtmlPath);
 
     // Emit a JUnit-style XML report for CI systems
+    FScopeLock _lock(&GPalantirMutex);
+    
     const int32 Total = GPalantirTestResults.Num();
     int32 Failures = 0;
     for (const auto& P : GPalantirTestResults) if (!P.Value) ++Failures;
@@ -283,9 +285,9 @@ void FPalantirObserver::GenerateFinalReport()
         if (GPalantirArtifactPaths.Contains(TestName))
         {
             const TArray<FString>& Arr = GPalantirArtifactPaths[TestName];
-            for (const FString& P : Arr)
+            for (const FString& ArtifactPath : Arr)
             {
-                SystemOut += FString::Printf(TEXT("%s\n"), *P);
+                SystemOut += FString::Printf(TEXT("%s\n"), *ArtifactPath);
             }
         }
 

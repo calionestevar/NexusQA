@@ -4,6 +4,9 @@
 #include "Containers/Map.h"
 #include "Containers/List.h"
 
+// Forward declare log categories
+DECLARE_LOG_CATEGORY_EXTERN(LogPalantirTrace, Log, All);
+
 /**
  * FPalantirTrace maintains a unique trace ID (correlation ID) for each test execution.
  * This ID is injected into logs, HTTP headers, and metrics to enable cross-system tracing

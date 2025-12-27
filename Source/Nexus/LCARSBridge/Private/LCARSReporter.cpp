@@ -1,6 +1,7 @@
 #include "LCARSReporter.h"
 #include "CoreMinimal.h"
 #include "Nexus/Core/Public/NexusCore.h"
+#include "Nexus/Palantir/Public/PalantirTypes.h"
 #include "Json.h"
 #include "Dom/JsonObject.h"
 #include "Serialization/JsonWriter.h"

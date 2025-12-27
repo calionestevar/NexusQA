@@ -3,7 +3,7 @@
 #include "Serialization/JsonSerializer.h"
 #include "Serialization/JsonWriter.h"
 
-DEFINE_LOG_CATEGORY_STATIC(LogPalantirTrace, Display, All);
+DEFINE_LOG_CATEGORY(LogPalantirTrace);
 
 // Thread-local storage for trace context (avoid DLL export issues with static thread_local)
 namespace FPalantirTraceLocal
