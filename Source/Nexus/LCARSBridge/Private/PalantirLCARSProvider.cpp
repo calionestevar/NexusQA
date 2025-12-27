@@ -1,5 +1,6 @@
 #include "PalantirLCARSProvider.h"
 #include "Nexus/Palantir/Public/PalantirOracle.h"
+#include "Nexus/Palantir/Public/PalantirTypes.h"
 
 FPalantirLCARSProvider::FPalantirLCARSProvider(FPalantirOracle* InOracle)
 	: Oracle(InOracle)

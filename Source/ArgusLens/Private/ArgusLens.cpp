@@ -35,7 +35,7 @@ void UArgusLens::StartPerformanceMonitoring(float DurationSeconds, bool bTrackNe
     GTotalHitches = 0;
     GPeakMemory = 0.0f;
 
-    UWorld* World = GEngine ? GEngine->GetGameWorld() : nullptr;
+    UWorld* World = GEngine ? GEngine->GetCurrentPlayWorld() : nullptr;
     if (!World)
     {
         UE_LOG(LogArgusLens, Warning, TEXT("ArgusLens: No world context - skipping monitoring"));
@@ -90,7 +90,7 @@ void UArgusLens::StartPerformanceMonitoring(float DurationSeconds, bool bTrackNe
         {
             World->GetTimerManager().ClearTimer(GPerformanceMonitorHandle);
         }
-        ArgusLog(TEXT("PERFORMANCE MONITORING STOPPED"));
+        UE_LOG(LogArgusLens, Display, TEXT("PERFORMANCE MONITORING STOPPED"));
     }), DurationSeconds, false);
 }
 
@@ -101,7 +101,7 @@ void UArgusLens::StopPerformanceMonitoring()
     {
         World->GetTimerManager().ClearTimer(GPerformanceMonitorHandle);
     }
-    ArgusLog(TEXT("PERFORMANCE MONITORING STOPPED"));
+    UE_LOG(LogArgusLens, Display, TEXT("PERFORMANCE MONITORING STOPPED"));
 }
 
 void UArgusLens::SetPerformanceThresholds(const FPerformanceThreshold& Thresholds)
@@ -189,7 +189,7 @@ FPerformanceSample UArgusLens::GetCurrentPerformanceSnapshot()
     
     if (GEngine)
     {
-        float DeltaTime = GEngine->GetDeltaSeconds();
+        float DeltaTime = FApp::GetDeltaTime();
         Snapshot.FrameTimeMs = DeltaTime * 1000.0f;
         Snapshot.FPS = (DeltaTime > 0.0f) ? 1.0f / DeltaTime : 0.0f;
     }

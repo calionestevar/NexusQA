@@ -55,8 +55,8 @@ void UNexusCore::DiscoverAllTests()
 void UNexusCore::RunAllTests(bool bParallel)
 {
     // Sort: Critical first, then Smoke, then Normal
-    DiscoveredTests.Sort([](const FNexusTest* A, const FNexusTest* B) {
-        return (int32)A->Priority > (int32)B->Priority;
+    DiscoveredTests.Sort([](const FNexusTest& A, const FNexusTest& B) {
+        return (int32)A.Priority > (int32)B.Priority;
     });
 
     if (!bParallel || DiscoveredTests.Num() <= 1)
