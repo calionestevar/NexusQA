@@ -19,7 +19,9 @@
 // The framework now uses PalantirObserver for live result tracking and FPalantirOracle
 // for final report generation. See PalantirOracle.cpp GenerateFinalReport() for usage.
 
+namespace LCARSSample
 {
+	#if 0  // DISABLED: Incompatible with new FReportData structure
 	FReportData GenerateSampleData()
 	{
 		FReportData Data;
@@ -231,6 +233,7 @@
 			UE_LOG(LogTemp, Error, TEXT("❌ Failed to generate sample report at: %s"), *OutputPath);
 		}
 	}
+	#endif
 }
 
 // Commandlet for generating sample report

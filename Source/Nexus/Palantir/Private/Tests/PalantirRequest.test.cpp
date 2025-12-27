@@ -222,7 +222,7 @@ NEXUS_TEST(FPalantirRequest_AsyncRequest, "Palantir.Request.AsyncRequest", (ETes
 NEXUS_TEST(FPalantirRequest_MacroConvenience, "Palantir.Request.MacroConvenience", (ETestPriority::Normal | ETestPriority::OnlineOnly))
 {
 	// Test convenience macros
-	PALANTIR_ASSERT_GET_OK("https://www.example.com/");
+	PALANTIR_ASSERT_GET_OK(TEXT("https://www.example.com/"));
 	
 	PALANTIR_ASSERT_HEALTH_CHECK(TEXT("https://jsonplaceholder.typicode.com/users/1"));
 
