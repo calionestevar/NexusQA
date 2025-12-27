@@ -11,7 +11,7 @@
 #include "Misc/Paths.h"
 #include "HAL/PlatformFileManager.h"
 #include "Containers/Map.h"
-#include "PalantirTrace.h"
+#include "Nexus/Palantir/Public/PalantirTrace.h"
 
 // Global chaos event log for artifact export
 static TArray<TPair<FString, FString>> GChaosEventLog;

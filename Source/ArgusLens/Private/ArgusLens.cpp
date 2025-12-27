@@ -9,7 +9,7 @@
 #include "Misc/FileHelper.h"
 #include "Misc/Paths.h"
 #include "TimerManager.h"
-#include "PalantirTrace.h"
+#include "Nexus/Palantir/Public/PalantirTrace.h"
 
 DEFINE_LOG_CATEGORY_STATIC(LogArgusLens, Display, All);
 

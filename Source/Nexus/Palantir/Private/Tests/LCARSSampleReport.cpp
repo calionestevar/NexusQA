@@ -1,9 +1,24 @@
-// Sample LCARS Report Generator - For Demo/Screenshot Purposes
-#include "LCARSHTMLGenerator.h"
-#include "Misc/Paths.h"
-#include "Nexus/Palantir/Public/PalantirTypes.h"
+/*
+ * DEPRECATED: Sample LCARS Report Generator - Incompatible with new PalantirTypes.h structure
+ * 
+ * This file was using an old FReportData structure that is no longer compatible with the
+ * new PalantirTypes.h which uses TMap<FString, FPalantirTestResult> instead.
+ * 
+ * The actual LCARS reporting functionality is now handled by:
+ * - PalantirOracle.cpp: Test result collection and reporting
+ * - LCARSHTMLGenerator.cpp: HTML report generation
+ * - LCARSReporter.cpp: Report export and artifact management
+ * 
+ * This file remains as documentation of the previous reporting infrastructure.
+ * For sample reports, use the PalantirObserver and FPalantirOracle APIs directly.
+ */
 
-namespace LCARSSample
+#include "CoreMinimal.h"
+
+// NOTE: The old sample report code has been removed due to structural incompatibility.
+// The framework now uses PalantirObserver for live result tracking and FPalantirOracle
+// for final report generation. See PalantirOracle.cpp GenerateFinalReport() for usage.
+
 {
 	FReportData GenerateSampleData()
 	{
