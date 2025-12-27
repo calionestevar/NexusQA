@@ -50,7 +50,8 @@ void UBishopBridge::SpawnSimulatedClients(int32 ClientCount, float DurationMinut
         GSimulatedClients.Add(Client);
     }
 
-    UWorld* World = GEngine->GetFirstLocalPlayerController() ? GEngine->GetFirstLocalPlayerController()->GetWorld() : nullptr;
+    // Get world context - prefer GWorld for static context
+    UWorld* World = GWorld ? GWorld : (GEngine && GEngine->GetCurrentPlayWorld() ? GEngine->GetCurrentPlayWorld() : nullptr);
     if (!World)
     {
         BishopBridgeLog(TEXT("NO WORLD CONTEXT — SKIPPING SIMULATION"));

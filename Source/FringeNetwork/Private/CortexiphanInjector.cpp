@@ -131,7 +131,7 @@ void UCortexiphanInjector::SimulateJitterAndReordering(float JitterMs, float Reo
 {
     ChaosLog(FString::Printf(TEXT("JITTER %.0fms + REORDER %.0f%% FOR %.0fs"), JitterMs, ReorderPercent, Duration));
 
-    UWorld* World = GEngine->GetFirstLocalPlayerController() ? GEngine->GetFirstLocalPlayerController()->GetWorld() : nullptr;
+    UWorld* World = GWorld ? GWorld : (GEngine && GEngine->GetCurrentPlayWorld() ? GEngine->GetCurrentPlayWorld() : nullptr);
     if (!World) return;
 
     TSharedRef<float, ESPMode::ThreadSafe> TimeLeft = MakeShared<float, ESPMode::ThreadSafe>(Duration);

@@ -64,12 +64,11 @@ public:
 	static FString ExportToJSON();
 
 private:
-	// Thread-local trace ID storage
-	static thread_local FString CurrentTraceID;
-	
-	// Breadcrumb events: (timestamp, message)
-	static thread_local TArray<TPair<double, FString>> CurrentBreadcrumbs;
-	static thread_local double TraceStartTime;
+	// Thread-local trace context stored via static accessor functions
+	// (Avoids C2492 DLL export issues with thread_local static members in class interface)
+	static FString& GetCurrentTraceIDRef();
+	static TArray<TPair<double, FString>>& GetBreadcrumbsRef();
+	static double& GetTraceStartTimeRef();
 };
 
 /**

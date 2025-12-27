@@ -2,7 +2,9 @@
 
 #include "CoreMinimal.h"
 #include "LCARSProvider.h"
-#include "PalantirOracle.h"
+
+// Forward declare FPalantirOracle (defined in Palantir module)
+class FPalantirOracle;
 
 /**
  * LCARS Provider implementation that reads from PalantirOracle's in-memory test results

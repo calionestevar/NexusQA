@@ -94,7 +94,7 @@ void UArgusLens::StartPerformanceMonitoring(float DurationSeconds, bool bTrackNe
 
 void UArgusLens::StopPerformanceMonitoring()
 {
-    UWorld* World = GEngine->GetFirstLocalPlayerController() ? GEngine->GetFirstLocalPlayerController()->GetWorld() : nullptr;
+    UWorld* World = GWorld ? GWorld : (GEngine && GEngine->GetCurrentPlayWorld() ? GEngine->GetCurrentPlayWorld() : nullptr);
     if (World)
     {
         World->GetTimerManager().ClearTimer(GPerformanceMonitorHandle);

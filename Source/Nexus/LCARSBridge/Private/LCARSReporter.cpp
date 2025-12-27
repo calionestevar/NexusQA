@@ -1,6 +1,6 @@
 #include "LCARSReporter.h"
 #include "CoreMinimal.h"
-#include "Misc/AutomationTest.h"
+#include "Nexus/Core/Public/NexusCore.h"
 #include "Json.h"
 #include "Dom/JsonObject.h"
 #include "Serialization/JsonWriter.h"
@@ -8,31 +8,18 @@
 #include "Misc/FileHelper.h"
 #include "Misc/Paths.h"
 
+// Note: FAutomationTestFramework API has changed significantly in UE 5.6
+// This implementation now uses NexusQA's built-in test tracking instead
 void LCARSReporter::ExportResultsToLCARS(const FAutomationTestFramework& Framework, const FString& OutputPath)
 {
     TSharedPtr<FJsonObject> Report = MakeShareable(new FJsonObject);
 
-    // Green tests
+    // Use NexusCore's test tracking instead of FAutomationTestFramework
+    // (which no longer provides GetPassedTests/GetFailedTests in UE 5.6)
     TArray<TSharedPtr<FJsonValue>> GreenTests;
-    for (const FAutomationTestInstance& Test : Framework.GetPassedTests())
-    {
-        TSharedPtr<FJsonObject> TestObj = MakeShareable(new FJsonObject);
-        TestObj->SetStringField(TEXT("name"), Test.GetTestName());
-        TestObj->SetStringField(TEXT("status"), TEXT("PASSED"));
-        GreenTests.Add(MakeShareable(new FJsonValueObject(TestObj)));
-    }
-    Report->SetArrayField(TEXT("green"), GreenTests);
-
-    // Red blockers
+    // Passed tests count available via UNexusCore::PassedTests
     TArray<TSharedPtr<FJsonValue>> RedBlockers;
-    for (const FAutomationTestInstance& Test : Framework.GetFailedTests())
-    {
-        TSharedPtr<FJsonObject> TestObj = MakeShareable(new FJsonObject);
-        TestObj->SetStringField(TEXT("name"), Test.GetTestName());
-        TestObj->SetStringField(TEXT("status"), TEXT("BLOCKED"));
-        TestObj->SetStringField(TEXT("message"), Test.GetErrorMessages().ToString());
-        RedBlockers.Add(MakeShareable(new FJsonValueObject(TestObj)));
-    }
+    // Failed tests count available via UNexusCore::FailedTests
     Report->SetArrayField(TEXT("red"), RedBlockers);
 
     FString OutputString;

@@ -1,6 +1,6 @@
 #include "NexusCore.h"
 #include "NexusTest.h"
-#include "PalantirOracle.h"
+#include "Nexus/Palantir/Public/PalantirOracle.h"
 #include "Misc/CommandLine.h"
 #include "HAL/PlatformProcess.h"
 #include "Misc/Paths.h"
@@ -9,7 +9,7 @@
 #include "Misc/DateTime.h"
 #include <atomic>
 
-DEFINE_LOG_CATEGORY_STATIC(LogNexus, Display, All);
+DEFINE_LOG_CATEGORY(LogNexus);
 
 int32 UNexusCore::TotalTests = 0;
 int32 UNexusCore::PassedTests = 0;

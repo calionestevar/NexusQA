@@ -5,10 +5,29 @@
 
 DEFINE_LOG_CATEGORY_STATIC(LogPalantirTrace, Display, All);
 
-// Thread-local storage for trace context
-thread_local FString FPalantirTrace::CurrentTraceID;
-thread_local TArray<TPair<double, FString>> FPalantirTrace::CurrentBreadcrumbs;
-thread_local double FPalantirTrace::TraceStartTime = 0.0;
+// Thread-local storage for trace context (avoid DLL export issues with static thread_local)
+namespace FPalantirTraceLocal
+{
+	thread_local FString CurrentTraceID;
+	thread_local TArray<TPair<double, FString>> CurrentBreadcrumbs;
+	thread_local double TraceStartTime = 0.0;
+}
+
+// Static accessor functions to avoid DLL export issues
+FString& FPalantirTrace::GetCurrentTraceIDRef()
+{
+	return FPalantirTraceLocal::CurrentTraceID;
+}
+
+TArray<TPair<double, FString>>& FPalantirTrace::GetBreadcrumbsRef()
+{
+	return FPalantirTraceLocal::CurrentBreadcrumbs;
+}
+
+double& FPalantirTrace::GetTraceStartTimeRef()
+{
+	return FPalantirTraceLocal::TraceStartTime;
+}
 
 FString FPalantirTrace::GenerateTraceID()
 {
@@ -20,63 +39,65 @@ FString FPalantirTrace::GenerateTraceID()
 
 void FPalantirTrace::SetCurrentTraceID(const FString& TraceID)
 {
-	CurrentTraceID = TraceID;
-	TraceStartTime = FPlatformTime::Seconds();
-	CurrentBreadcrumbs.Empty();
+	GetCurrentTraceIDRef() = TraceID;
+	GetTraceStartTimeRef() = FPlatformTime::Seconds();
+	GetBreadcrumbsRef().Empty();
 	
 	UE_LOG(LogPalantirTrace, Log, TEXT("Trace started: %s"), *TraceID);
 }
 
 FString FPalantirTrace::GetCurrentTraceID()
 {
-	return CurrentTraceID;
+	return GetCurrentTraceIDRef();
 }
 
 void FPalantirTrace::Clear()
 {
-	if (!CurrentTraceID.IsEmpty())
+	FString& TraceID = GetCurrentTraceIDRef();
+	if (!TraceID.IsEmpty())
 	{
 		UE_LOG(LogPalantirTrace, Log, TEXT("Trace ended: %s (duration: %.2fs)"), 
-			*CurrentTraceID, FPlatformTime::Seconds() - TraceStartTime);
+			*TraceID, FPlatformTime::Seconds() - GetTraceStartTimeRef());
 	}
-	CurrentTraceID.Empty();
-	CurrentBreadcrumbs.Empty();
-	TraceStartTime = 0.0;
+	TraceID.Empty();
+	GetBreadcrumbsRef().Empty();
+	GetTraceStartTimeRef() = 0.0;
 }
 
 void FPalantirTrace::AddBreadcrumb(const FString& EventName, const FString& Details)
 {
-	if (CurrentTraceID.IsEmpty())
+	FString& TraceID = GetCurrentTraceIDRef();
+	if (TraceID.IsEmpty())
 	{
 		return;  // No active trace
 	}
 
-	double Timestamp = FPlatformTime::Seconds() - TraceStartTime;
+	double Timestamp = FPlatformTime::Seconds() - GetTraceStartTimeRef();
 	FString Breadcrumb = FString::Printf(
 		TEXT("[%.3fs] %s: %s"),
 		Timestamp,
 		*EventName,
 		Details.IsEmpty() ? TEXT("") : *Details
 	);
-	CurrentBreadcrumbs.Add(TPair<double, FString>(Timestamp, Breadcrumb));
+	GetBreadcrumbsRef().Add(TPair<double, FString>(Timestamp, Breadcrumb));
 
-	UE_LOG(LogPalantirTrace, Verbose, TEXT("[%s] %s"), *CurrentTraceID, *Breadcrumb);
+	UE_LOG(LogPalantirTrace, Verbose, TEXT("[%s] %s"), *TraceID, *Breadcrumb);
 }
 
 TArray<TPair<double, FString>> FPalantirTrace::GetBreadcrumbs()
 {
-	return CurrentBreadcrumbs;
+	return GetBreadcrumbsRef();
 }
 
 FString FPalantirTrace::ExportToJSON()
 {
 	TSharedPtr<FJsonObject> JsonRoot = MakeShareable(new FJsonObject());
-	JsonRoot->SetStringField(TEXT("trace_id"), CurrentTraceID);
-	JsonRoot->SetNumberField(TEXT("start_time"), TraceStartTime);
-	JsonRoot->SetNumberField(TEXT("duration_seconds"), FPlatformTime::Seconds() - TraceStartTime);
+	JsonRoot->SetStringField(TEXT("trace_id"), GetCurrentTraceIDRef());
+	JsonRoot->SetNumberField(TEXT("start_time"), GetTraceStartTimeRef());
+	JsonRoot->SetNumberField(TEXT("duration_seconds"), FPlatformTime::Seconds() - GetTraceStartTimeRef());
 
 	TArray<TSharedPtr<FJsonValue>> BreadcrumbArray;
-	for (const auto& Breadcrumb : CurrentBreadcrumbs)
+	for (const auto& Breadcrumb : GetBreadcrumbsRef())
 	{
 		TSharedPtr<FJsonObject> BreadcrumbObj = MakeShareable(new FJsonObject());
 		BreadcrumbObj->SetNumberField(TEXT("timestamp"), Breadcrumb.Key);

@@ -1,6 +1,9 @@
 #pragma once
 #include "CoreMinimal.h"
-#include "PalantirTrace.h"
+#include "Nexus/Palantir/Public/PalantirTrace.h"
+
+// Forward declare log category (defined in NexusCore.cpp)
+DECLARE_LOG_CATEGORY_EXTERN(LogNexus, Display, All);
 
 enum class ETestPriority : uint8
 {
