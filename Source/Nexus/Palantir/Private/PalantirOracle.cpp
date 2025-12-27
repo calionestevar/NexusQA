@@ -85,7 +85,7 @@ void FPalantirObserver::Initialize()
 
     if (Source.Equals(TEXT("AutomationFramework"), ESearchCase::IgnoreCase))
     {
-        GLCARSProvider.Reset(new FAutomationFrameworkProvider());
+        GLCARSProvider.Reset(new FNexusCoreProvider());
         UE_LOG(LogTemp, Display, TEXT("LCARS provider: AutomationFramework selected"));
     }
     else
@@ -326,7 +326,7 @@ void FPalantirObserver::GenerateFinalReport()
         else
         {
             // Fallback: copy the in-memory Palantír maps
-            FScopeLock _lock(&GPalantirMutex);
+            FScopeLock _lock2(&GPalantirMutex);
             for (const auto& P : GPalantirTestResults) Results.Results.Add(P.Key, P.Value);
             for (const auto& P : GPalantirTestDurations) Results.Durations.Add(P.Key, P.Value);
             for (const auto& P : GPalantirArtifactPaths) Results.Artifacts.Add(P.Key, P.Value);

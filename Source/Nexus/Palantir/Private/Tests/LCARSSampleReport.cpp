@@ -1,6 +1,7 @@
 // Sample LCARS Report Generator - For Demo/Screenshot Purposes
 #include "LCARSHTMLGenerator.h"
 #include "Misc/Paths.h"
+#include "Nexus/Palantir/Public/PalantirTypes.h"
 
 namespace LCARSSample
 {

@@ -96,7 +96,7 @@ void UObserverNetworkDashboard::GenerateWebReport()
     .failed { border-color:#ff3333; }
 </style></head><body>
 <h1>OBSERVER NETWORK — FINAL REPORT</h1>
-<p>Session Duration: )" + FString::SanitizeFloat(LocalUptime) + TEXT(R"( seconds</p>
+<p>Session Duration: )" + FString::SanitizeFloat(LocalUptime) + R"( seconds</p>
 )";
 
     for (const FString& Entry : LocalEventLog)
