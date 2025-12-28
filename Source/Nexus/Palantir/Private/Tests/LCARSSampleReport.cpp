@@ -14,6 +14,7 @@
  */
 
 #include "CoreMinimal.h"
+#include "Commandlets/Commandlet.h"
 
 // NOTE: The old sample report code has been removed due to structural incompatibility.
 // The framework now uses PalantirObserver for live result tracking and FPalantirOracle

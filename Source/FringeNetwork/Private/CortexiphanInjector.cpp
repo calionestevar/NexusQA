@@ -56,7 +56,6 @@ void UCortexiphanInjector::InjectChaos(float DurationSeconds, float Intensity)
     // Use shared refs for timer handles to keep them alive across lambda lifetimes
     TSharedRef<FTimerHandle, ESPMode::ThreadSafe> ChaosTimerHandle = MakeShared<FTimerHandle, ESPMode::ThreadSafe>();
     TSharedRef<FTimerHandle, ESPMode::ThreadSafe> EndTimerHandle = MakeShared<FTimerHandle, ESPMode::ThreadSafe>();
-    TSharedRef<UWorld, ESPMode::ThreadSafe> WorldRef = TSharedRef<UWorld, ESPMode::ThreadSafe>(World, [](UWorld*) {});
 
     // Periodic chaos tick — safe lambda captures (no references to stack locals or this)
     World->GetTimerManager().SetTimer(*ChaosTimerHandle, FTimerDelegate::CreateLambda([TimeLeft, Intensity]()
@@ -91,11 +90,11 @@ void UCortexiphanInjector::InjectChaos(float DurationSeconds, float Intensity)
     }), 3.0f, true);
 
     // End chaos after the requested duration — clear the periodic timer safely.
-    World->GetTimerManager().SetTimer(*EndTimerHandle, FTimerDelegate::CreateLambda([ChaosTimerHandle, WorldRef]()
+    World->GetTimerManager().SetTimer(*EndTimerHandle, FTimerDelegate::CreateLambda([ChaosTimerHandle, World]()
     {
-        if (WorldRef.IsValid())
+        if (World)
         {
-            WorldRef->GetTimerManager().ClearTimer(*ChaosTimerHandle);
+            World->GetTimerManager().ClearTimer(*ChaosTimerHandle);
             ChaosLog(TEXT("CORTEXIPHAN EFFECT SUBSIDING — RETURNING TO BASELINE"));
         }
     }), DurationSeconds, false);
