@@ -234,8 +234,7 @@ namespace LCARSSample
 			UE_LOG(LogTemp, Error, TEXT("❌ Failed to generate sample report at: %s"), *OutputPath);
 		}
 	}
-	#endif
-
+	
 	// Commandlet for generating sample report
 	UCLASS()
 	class UGenerateLCARSReportCommandlet : public UCommandlet
@@ -249,5 +248,5 @@ namespace LCARSSample
 			return 0;
 		}
 	};
-	#endif // Commandlet disabled with the sample report code
+	#endif
 }
