@@ -54,11 +54,12 @@ void UCortexiphanInjector::InjectChaos(float DurationSeconds, float Intensity)
     TSharedRef<float, ESPMode::ThreadSafe> TimeLeft = MakeShared<float, ESPMode::ThreadSafe>(DurationSeconds);
     TWeakObjectPtr<UCortexiphanInjector> WeakThis = this;
 
-    FTimerHandle ChaosTimerHandle;
-    FTimerHandle EndTimerHandle;
+    // Use shared ptr for timer handles to avoid const issues with ClearTimer
+    TSharedRef<FTimerHandle> ChaosTimerHandle = MakeShared<FTimerHandle>();
+    TSharedRef<FTimerHandle> EndTimerHandle = MakeShared<FTimerHandle>();
 
     // Periodic chaos tick — safe lambda captures (no references to stack locals)
-    World->GetTimerManager().SetTimer(ChaosTimerHandle, FTimerDelegate::CreateLambda([WeakThis, TimeLeft, Intensity]()
+    World->GetTimerManager().SetTimer(*ChaosTimerHandle, FTimerDelegate::CreateLambda([WeakThis, TimeLeft, Intensity]()
     {
         UCortexiphanInjector* Injector = WeakThis.Get();
         if (!Injector) return;
@@ -93,13 +94,13 @@ void UCortexiphanInjector::InjectChaos(float DurationSeconds, float Intensity)
     }), 3.0f, true);
 
     // End chaos after the requested duration — clear the periodic timer safely.
-    World->GetTimerManager().SetTimer(EndTimerHandle, FTimerDelegate::CreateLambda([WeakThis, ChaosTimerHandle, World]()
+    World->GetTimerManager().SetTimer(*EndTimerHandle, FTimerDelegate::CreateLambda([WeakThis, ChaosTimerHandle, World]()
     {
         UCortexiphanInjector* Injector = WeakThis.Get();
         if (!Injector) return;
         if (World)
         {
-            World->GetTimerManager().ClearTimer(ChaosTimerHandle);
+            World->GetTimerManager().ClearTimer(*ChaosTimerHandle);
             ChaosLog(TEXT("CORTEXIPHAN EFFECT SUBSIDING — RETURNING TO BASELINE"));
         }
     }), DurationSeconds, false);

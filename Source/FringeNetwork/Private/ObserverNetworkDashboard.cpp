@@ -1,4 +1,10 @@
 #include "ObserverNetworkDashboard.h"
+
+// Define WITH_IMGUI if not already defined by the build system
+#ifndef WITH_IMGUI
+#define WITH_IMGUI 0
+#endif
+
 #if WITH_IMGUI
 #include "imgui.h"
 #endif
