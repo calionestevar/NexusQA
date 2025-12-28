@@ -22,6 +22,78 @@
 #include "LCARSProvider.h"
 #include "Misc/ConfigCacheIni.h"
 
+// ============================================================================
+// FPalantirOracle Implementation - Test Result Repository
+// ============================================================================
+
+FPalantirOracle& FPalantirOracle::Get()
+{
+	static FPalantirOracle Instance;
+	return Instance;
+}
+
+void FPalantirOracle::RecordTestResult(const FString& TestName, const FPalantirTestResult& Result)
+{
+	FScopeLock Lock(&ResultsLock);
+	TestResults.Add(TestName, Result);
+}
+
+const TMap<FString, FPalantirTestResult>& FPalantirOracle::GetAllTestResults() const
+{
+	FScopeLock Lock(&ResultsLock);
+	return TestResults;
+}
+
+const FPalantirTestResult* FPalantirOracle::GetTestResult(const FString& TestName) const
+{
+	FScopeLock Lock(&ResultsLock);
+	return TestResults.Find(TestName);
+}
+
+void FPalantirOracle::ClearAllResults()
+{
+	FScopeLock Lock(&ResultsLock);
+	TestResults.Empty();
+}
+
+int32 FPalantirOracle::GetTotalTestCount() const
+{
+	FScopeLock Lock(&ResultsLock);
+	return TestResults.Num();
+}
+
+int32 FPalantirOracle::GetPassedTestCount() const
+{
+	FScopeLock Lock(&ResultsLock);
+	int32 Count = 0;
+	for (const auto& Pair : TestResults)
+	{
+		if (Pair.Value.bPassed)
+		{
+			Count++;
+		}
+	}
+	return Count;
+}
+
+int32 FPalantirOracle::GetFailedTestCount() const
+{
+	FScopeLock Lock(&ResultsLock);
+	int32 Count = 0;
+	for (const auto& Pair : TestResults)
+	{
+		if (!Pair.Value.bPassed)
+		{
+			Count++;
+		}
+	}
+	return Count;
+}
+
+// ============================================================================
+// End FPalantirOracle Implementation
+// ============================================================================
+
 // In-memory maps populated by OnTestStarted/OnTestFinished.
 static TMap<FString, bool> GPalantirTestResults;
 static TMap<FString, FDateTime> GPalantirTestStartTimes;
