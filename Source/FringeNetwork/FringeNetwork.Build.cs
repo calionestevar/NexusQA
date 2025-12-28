@@ -23,5 +23,8 @@ public class FringeNetwork : ModuleRules
             "Slate",
             "SlateCore"
         });
+
+        // Define WITH_IMGUI to control optional ImGui functionality
+        PublicDefinitions.Add("WITH_IMGUI=0");
     }
 }

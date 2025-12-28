@@ -52,18 +52,15 @@ void UCortexiphanInjector::InjectChaos(float DurationSeconds, float Intensity)
 
     // Store time left in a shared value so the lambda can safely access it after this function returns.
     TSharedRef<float, ESPMode::ThreadSafe> TimeLeft = MakeShared<float, ESPMode::ThreadSafe>(DurationSeconds);
-    TWeakObjectPtr<UCortexiphanInjector> WeakThis = this;
 
-    // Use shared ptr for timer handles to avoid const issues with ClearTimer
-    TSharedRef<FTimerHandle> ChaosTimerHandle = MakeShared<FTimerHandle>();
-    TSharedRef<FTimerHandle> EndTimerHandle = MakeShared<FTimerHandle>();
+    // Use shared refs for timer handles to keep them alive across lambda lifetimes
+    TSharedRef<FTimerHandle, ESPMode::ThreadSafe> ChaosTimerHandle = MakeShared<FTimerHandle, ESPMode::ThreadSafe>();
+    TSharedRef<FTimerHandle, ESPMode::ThreadSafe> EndTimerHandle = MakeShared<FTimerHandle, ESPMode::ThreadSafe>();
+    TSharedRef<UWorld, ESPMode::ThreadSafe> WorldRef = TSharedRef<UWorld, ESPMode::ThreadSafe>(World, [](UWorld*) {});
 
-    // Periodic chaos tick — safe lambda captures (no references to stack locals)
-    World->GetTimerManager().SetTimer(*ChaosTimerHandle, FTimerDelegate::CreateLambda([WeakThis, TimeLeft, Intensity]()
+    // Periodic chaos tick — safe lambda captures (no references to stack locals or this)
+    World->GetTimerManager().SetTimer(*ChaosTimerHandle, FTimerDelegate::CreateLambda([TimeLeft, Intensity]()
     {
-        UCortexiphanInjector* Injector = WeakThis.Get();
-        if (!Injector) return;
-
         if (*TimeLeft <= 0.0f) return;
 
         float Roll = FMath::FRand();
@@ -71,15 +68,15 @@ void UCortexiphanInjector::InjectChaos(float DurationSeconds, float Intensity)
 
         if (Adjusted < 0.4f)
         {
-            Injector->TriggerLagSpike(400 + FMath::RandRange(0, 800));
+            UCortexiphanInjector::TriggerLagSpike(400 + FMath::RandRange(0, 800));
         }
         else if (Adjusted < 0.7f)
         {
-            Injector->TriggerPacketLoss(25 + FMath::RandRange(0, 40), 5.0f);
+            UCortexiphanInjector::TriggerPacketLoss(25 + FMath::RandRange(0, 40), 5.0f);
         }
         else if (Adjusted < 0.85f)
         {
-            Injector->TriggerLagSpike(1500);
+            UCortexiphanInjector::TriggerLagSpike(1500);
         }
         else
         {
@@ -94,13 +91,11 @@ void UCortexiphanInjector::InjectChaos(float DurationSeconds, float Intensity)
     }), 3.0f, true);
 
     // End chaos after the requested duration — clear the periodic timer safely.
-    World->GetTimerManager().SetTimer(*EndTimerHandle, FTimerDelegate::CreateLambda([WeakThis, ChaosTimerHandle, World]()
+    World->GetTimerManager().SetTimer(*EndTimerHandle, FTimerDelegate::CreateLambda([ChaosTimerHandle, WorldRef]()
     {
-        UCortexiphanInjector* Injector = WeakThis.Get();
-        if (!Injector) return;
-        if (World)
+        if (WorldRef.IsValid())
         {
-            World->GetTimerManager().ClearTimer(*ChaosTimerHandle);
+            WorldRef->GetTimerManager().ClearTimer(*ChaosTimerHandle);
             ChaosLog(TEXT("CORTEXIPHAN EFFECT SUBSIDING — RETURNING TO BASELINE"));
         }
     }), DurationSeconds, false);

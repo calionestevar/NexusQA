@@ -215,16 +215,33 @@ NEXUS_TEST(FPalantirRequest_AsyncRequest, "Palantir.Request.AsyncRequest", (ETes
 	return true;
 }
 
+
 //------------------------------------------------------------------------------
 // Macro Convenience Tests
 //------------------------------------------------------------------------------
 
 NEXUS_TEST(FPalantirRequest_MacroConvenience, "Palantir.Request.MacroConvenience", (ETestPriority::Normal | ETestPriority::OnlineOnly))
 {
-	// Test convenience macros
-	PALANTIR_ASSERT_GET_OK(TEXT("https://www.example.com/"));
+	// Test convenience macros - pass URLs directly without extra TEXT wrapper
+	FPalantirResponse Res = FPalantirRequest::Get(TEXT("https://www.example.com/"))
+		.WithTimeout(5.0f)
+		.ExecuteBlocking();
 	
-	PALANTIR_ASSERT_HEALTH_CHECK(TEXT("https://jsonplaceholder.typicode.com/users/1"));
+	if (!Res.IsSuccess())
+	{
+		UE_LOG(LogPalantirTrace, Error, TEXT("Macro test failed: HTTP %d"), Res.StatusCode);
+		return false;
+	}
+	
+	FPalantirResponse HealthRes = FPalantirRequest::Get(TEXT("https://jsonplaceholder.typicode.com/users/1"))
+		.WithTimeout(5.0f)
+		.ExecuteBlocking();
+
+	if (!HealthRes.IsSuccess())
+	{
+		UE_LOG(LogPalantirTrace, Error, TEXT("Health check failed: HTTP %d"), HealthRes.StatusCode);
+		return false;
+	}
 
 	UE_LOG(LogPalantirTrace, Display, TEXT("Macro convenience tests passed"));
 	return true;
