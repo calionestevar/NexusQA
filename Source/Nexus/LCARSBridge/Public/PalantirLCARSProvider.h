@@ -2,7 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "LCARSProvider.h"
-#include "Nexus/Palantir/Public/PalantirOracle.h"
+#include "PalantirOracle.h"
 
 /**
  * LCARS Provider implementation that reads from PalantirOracle's in-memory test results
