@@ -40,12 +40,13 @@ static void ChaosLog(const FString& Msg)
 
 void UCortexiphanInjector::InjectChaos(float DurationSeconds, float Intensity)
 {
-    if (!GetWorld())
+    // In static context, use GEngine to get the world
+    UWorld* World = GEngine ? GEngine->GetCurrentPlayWorld() : nullptr;
+    if (!World)
     {
         ChaosLog(TEXT("No world context for CortexiphanInjector"));
         return;
     }
-    UWorld* World = GetWorld();
 
     ChaosLog(FString::Printf(TEXT("INJECTING CORTEXIPHAN — CHAOS FOR %.0f SECONDS — INTENSITY %.1f"), DurationSeconds, Intensity));
 
@@ -108,8 +109,14 @@ void UCortexiphanInjector::TriggerLagSpike(float AddedLatencyMs)
 {
     ChaosLog(FString::Printf(TEXT("LAG SPIKE +%.0fms"), AddedLatencyMs));
     // In a real game: modify NetDriver->LagCompensation or use console commands
-    if (GEngine && GetWorld() && GEngine->GetFirstLocalPlayerController(GetWorld()))
-        GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, FString::Printf(TEXT("+%.0fms LAG"), AddedLatencyMs));
+    if (GEngine)
+    {
+        UWorld* World = GEngine->GetCurrentPlayWorld();
+        if (World && GEngine->GetFirstLocalPlayerController(World))
+        {
+            GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, FString::Printf(TEXT("+%.0fms LAG"), AddedLatencyMs));
+        }
+    }
 }
 
 void UCortexiphanInjector::TriggerPacketLoss(float LossPercent, float Duration)
