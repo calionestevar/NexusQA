@@ -1,7 +1,7 @@
 #include "PalantirCapture.h"
 #include "Engine/Engine.h"
 #include "HighResScreenshot.h"
-#include "PalantirOracle.h"
+#include "Nexus/Palantir/Public/PalantirOracle.h"
 #include "Misc/Paths.h"
 #include "HAL/PlatformFilemanager.h"
 #include "HAL/PlatformProcess.h"

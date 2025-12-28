@@ -1,5 +1,5 @@
 #pragma once
-#include "Nexus.h"
+#include "Nexus/Core/Public/NexusTest.h"
 #include "CortexiphanInjector.h"
 
 NEXUS_TEST(FCortexiphanChaosTest, "Chaos.Cortexiphan.FullRealityCollapse", ETestPriority::Critical)
