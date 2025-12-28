@@ -13,7 +13,8 @@ public class FringeNetwork : ModuleRules
             "Engine",
             "Json",
             "JsonUtilities",
-            "Nexus"
+            "Nexus",
+            "HTTP"
         });
 
         PrivateDependencyModuleNames.AddRange(new string[]
