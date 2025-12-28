@@ -154,12 +154,14 @@ void UCortexiphanInjector::SimulateJitterAndReordering(float JitterMs, float Reo
     }), 1.0f, true);
 
     // Stop jitter injection after duration
+    // Use a shared ref to keep the handle alive across lambda lifetime
+    TSharedRef<FTimerHandle, ESPMode::ThreadSafe> JitterHandlePtr = MakeShared<FTimerHandle, ESPMode::ThreadSafe>(JitterHandle);
     FTimerHandle StopHandle;
-    World->GetTimerManager().SetTimer(StopHandle, FTimerDelegate::CreateLambda([World, JitterHandle]()
+    World->GetTimerManager().SetTimer(StopHandle, FTimerDelegate::CreateLambda([World, JitterHandlePtr]()
     {
         if (World)
         {
-            World->GetTimerManager().ClearTimer(JitterHandle);
+            World->GetTimerManager().ClearTimer(*JitterHandlePtr);
             ChaosLog(TEXT("JITTER/REORDER SUBSIDING"));
         }
     }), Duration, false);

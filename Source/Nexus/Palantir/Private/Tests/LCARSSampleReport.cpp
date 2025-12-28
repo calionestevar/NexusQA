@@ -235,18 +235,19 @@ namespace LCARSSample
 		}
 	}
 	#endif
-}
 
-// Commandlet for generating sample report
-UCLASS()
-class UGenerateLCARSReportCommandlet : public UCommandlet
-{
-	GENERATED_BODY()
-
-public:
-	virtual int32 Main(const FString& Params) override
+	// Commandlet for generating sample report
+	UCLASS()
+	class UGenerateLCARSReportCommandlet : public UCommandlet
 	{
-		LCARSSample::GenerateSampleReport();
-		return 0;
-	}
-};
+		GENERATED_BODY()
+
+	public:
+		virtual int32 Main(const FString& Params) override
+		{
+			LCARSSample::GenerateSampleReport();
+			return 0;
+		}
+	};
+	#endif // Commandlet disabled with the sample report code
+}
