@@ -27,7 +27,7 @@ A clean, extensible QA automation framework for UE5 featuring parallel execution
 
 **What It Does:** Runs game tests in parallel, monitors performance (FPS/memory), simulates network chaos, validates compliance (COPPA/GDPR), and generates Star Trek-themed HTML reports.
 
-**Tech Stack:** C++17, Unreal Engine 5.6, HTTP/JSON APIs, GitHub Actions CI/CD
+**Tech Stack:** C++17, Unreal Engine 5.7, HTTP/JSON APIs, GitHub Actions CI/CD
 
 ---
 

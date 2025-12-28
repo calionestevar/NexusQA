@@ -97,7 +97,7 @@ This framework demonstrates expertise in:
 ## 🔧 Key Technologies
 
 ### Core Framework
-- **Unreal Engine 5.6** — Game engine integration
+- **Unreal Engine 5.7** — Game engine integration
 - **C++20** — Modern C++ with thread_local, RAII, templates
 - **ImGui** — In-editor dashboard overlays
 - **JSON/XML** — Structured artifact export

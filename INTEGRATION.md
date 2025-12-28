@@ -3,7 +3,7 @@
 Before integrating NexusQA into your demo game, verify the following:
 
 ## ✅ Prerequisites
-- [ ] Your game project uses Unreal Engine 5.6+
+- [ ] Your game project uses Unreal Engine 5.7+
 - [ ] You have git installed (for submodule integration)
 - [ ] Your project compiles cleanly on current engine version
 

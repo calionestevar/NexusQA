@@ -48,10 +48,10 @@ cd NexusQA
 
 ### Prerequisites
 
-1. **Download Unreal Engine 5.6+**
+1. **Download Unreal Engine 5.7+**
    ```bash
    # Via Epic Games Launcher, or:
-   git clone --depth 1 --branch 5.6 https://github.com/EpicGames/UnrealEngine.git
+   git clone --depth 1 --branch 5.7 https://github.com/EpicGames/UnrealEngine.git
    cd UnrealEngine
    ./Setup.sh  # or Setup.bat on Windows
    ./GenerateProjectFiles.sh
