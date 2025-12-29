@@ -78,55 +78,6 @@ void UFringeNetwork::RunObserverNetworkTests(const FString& PrimaryServer)
 	}
 }
 
-void UFringeNetwork::TestParallelRealms(const TArray<FString>& RegionURLs)
-{
-	if (RegionURLs.Num() == 0)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("⚠️  No region URLs provided for parallel realm testing"));
-		return;
-	}
-
-	UE_LOG(LogTemp, Display, TEXT("🌀 PARALLEL REALM TEST INITIATED — Testing %d regions"), RegionURLs.Num());
-
-	FHttpModule& HttpModule = FHttpModule::Get();
-	if (!HttpModule.IsHttpEnabled())
-	{
-		UE_LOG(LogTemp, Error, TEXT("❌ HTTP Module not available for parallel realm tests"));
-		return;
-	}
-
-	// Test each region in parallel
-	for (const FString& RegionURL : RegionURLs)
-	{
-		TSharedRef<IHttpRequest, ESPMode::ThreadSafe> HttpRequest = HttpModule.CreateRequest();
-		HttpRequest->SetVerb(TEXT("GET"));
-		HttpRequest->SetURL(RegionURL);
-		HttpRequest->SetTimeout(5.0f);
-
-		HttpRequest->OnProcessRequestComplete().BindLambda([RegionURL](
-			FHttpRequestPtr Request,
-			FHttpResponsePtr Response,
-			bool bWasSuccessful)
-		{
-			if (bWasSuccessful && Response.IsValid())
-			{
-				UE_LOG(LogTemp, Display, TEXT("✅ Parallel Realm Test Passed — Region: %s"), *RegionURL);
-			}
-			else
-			{
-				UE_LOG(LogTemp, Warning, TEXT("⚠️  Parallel Realm Test Failed — Region: %s"), *RegionURL);
-			}
-		});
-
-		if (!HttpRequest->ProcessRequest())
-		{
-			UE_LOG(LogTemp, Error, TEXT("❌ Failed to dispatch parallel realm test for %s"), *RegionURL);
-		}
-	}
-
-	UE_LOG(LogTemp, Display, TEXT("📡 Parallel realm tests dispatched for %d regions"), RegionURLs.Num());
-}
-
 void UFringeNetwork::InjectCortexiphanChaos(float DurationSeconds)
 {
 	if (DurationSeconds <= 0.0f)
