@@ -18,7 +18,7 @@ void UFringeNetwork::ActivateObserverNetwork()
 	}
 
 	// Activate the observer network dashboard for real-time monitoring
-	UObserverNetworkDashboard::InitializeDashboard();
+	UObserverNetworkDashboard::Initialize();
 
 	// Log activation
 	UE_LOG(LogTemp, Display, TEXT("✅ Observer Network active — Monitoring all test vectors"));
@@ -137,14 +137,6 @@ void UFringeNetwork::InjectCortexiphanChaos(float DurationSeconds)
 
 	UE_LOG(LogTemp, Warning, TEXT("⚡ CORTEXIPHAN INJECTION SEQUENCE INITIATED — DURATION: %.1f SECONDS"), DurationSeconds);
 
-	// Get the current world
-	if (UWorld* World = GEngine ? GEngine->GetCurrentPlayWorld() : nullptr)
-	{
-		// Inject chaos through the CortexiphanInjector
-		UCortexiphanInjector::InjectChaos(World, DurationSeconds, 1.0f);
-	}
-	else
-	{
-		UE_LOG(LogTemp, Error, TEXT("❌ No valid world for Cortexiphan injection"));
-	}
+	// Inject chaos through the CortexiphanInjector
+	UCortexiphanInjector::InjectChaos(DurationSeconds, 1.0f);
 }
