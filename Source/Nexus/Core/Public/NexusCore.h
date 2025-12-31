@@ -1,14 +1,14 @@
 #pragma once
 #include "CoreMinimal.h"
-#include "UObject/Object.h"
 #include "NexusTest.h"
-#include "NexusCore.generated.h"
 
-UCLASS()
-class NEXUS_API UNexusCore : public UObject
+/**
+ * NexusCore - Test framework coordinator
+ * Pure static class for test orchestration and lifecycle management
+ * Note: No UCLASS() - this is a utility class, not a UObject, to avoid DLL reflection issues
+ */
+class NEXUS_API UNexusCore
 {
-    GENERATED_BODY()
-
 public:
     static void Execute(const TArray<FString>& Args);
     static void DiscoverAllTests();
