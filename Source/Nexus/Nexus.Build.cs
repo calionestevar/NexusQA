@@ -6,6 +6,11 @@ public class Nexus : ModuleRules
     {
         PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
 
+        PublicIncludePaths.AddRange(new string[]
+        {
+            "Nexus/Public"
+        });
+
         PrivateIncludePaths.AddRange(new string[] 
         { 
             "Nexus/Core/Public",
