@@ -1,4 +1,3 @@
-#include "CoreMinimal.h"
 #include "NexusModule.h"
 #include "Nexus/Core/Public/NexusCore.h"
 #include "Nexus/Palantir/Public/PalantirOracle.h"
