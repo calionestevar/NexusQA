@@ -140,10 +140,42 @@ public:
     virtual FLCARSResults GetResults() override
     {
         FLCARSResults Out;
-        // Get results from NexusCore's built-in test tracking
-        Out.Results.Reserve(UNexusCore::TotalTests);
-        // Note: Individual test results would be tracked in PalantirObserver's callbacks
-        // For now, summarize as: TotalTests = PassedTests + FailedTests
+        
+        // Get results from FPalantirOracle singleton
+        const TMap<FString, FPalantirTestResult>& OracleResults = FPalantirOracle::Get().GetAllTestResults();
+        
+        for (const auto& Pair : OracleResults)
+        {
+            const FString& TestName = Pair.Key;
+            const FPalantirTestResult& TestResult = Pair.Value;
+            
+            // Add pass/fail result
+            Out.Results.Add(TestName, TestResult.bPassed);
+            
+            // Add duration
+            Out.Durations.Add(TestName, TestResult.Duration);
+            
+            // Add artifacts
+            TArray<FString> Artifacts;
+            if (!TestResult.ScreenshotPath.IsEmpty())
+            {
+                Artifacts.Add(TestResult.ScreenshotPath);
+            }
+            if (!TestResult.TraceFilePath.IsEmpty())
+            {
+                Artifacts.Add(TestResult.TraceFilePath);
+            }
+            if (!TestResult.LogFilePath.IsEmpty())
+            {
+                Artifacts.Add(TestResult.LogFilePath);
+            }
+            
+            if (Artifacts.Num() > 0)
+            {
+                Out.Artifacts.Add(TestName, Artifacts);
+            }
+        }
+        
         return Out;
     }
 };
