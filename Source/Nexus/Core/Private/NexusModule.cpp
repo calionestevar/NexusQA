@@ -1,5 +1,6 @@
 #include "NexusModule.h"
 #include "Nexus/Core/Public/NexusCore.h"
+#include "Nexus/Core/Public/NexusConsoleCommands.h"
 #include "Nexus/Palantir/Public/PalantirOracle.h"
 
 #define LOCTEXT_NAMESPACE "FNexusModule"
@@ -18,9 +19,13 @@ void FNexusModule::StartupModule()
 	// Initialize PalantirOracle for test result tracking
 	FPalantirOracle::Get();
 
+	// Register console commands
+	FNexusConsoleCommands::Register();
+
 	bNexusModuleInitialized = true;
 
 	UE_LOG(LogNexusModule, Display, TEXT("✅ NEXUS FRAMEWORK ONLINE — %d tests discovered"), UNexusCore::TotalTests);
+	UE_LOG(LogNexusModule, Display, TEXT("✅ NEXUS console commands registered"));
 }
 
 void FNexusModule::ShutdownModule()
