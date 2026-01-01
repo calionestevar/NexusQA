@@ -2,6 +2,7 @@
 #include "CoreMinimal.h"
 #include "Nexus/Core/Public/NexusCore.h"
 #include "Nexus/Palantir/Public/PalantirTypes.h"
+#include "Nexus/Palantir/Public/PalantirOracle.h"
 #include "Json.h"
 #include "Dom/JsonObject.h"
 #include "Serialization/JsonWriter.h"
@@ -13,34 +14,85 @@
 // This implementation now uses NexusQA's built-in test tracking instead
 void LCARSReporter::ExportResultsToLCARS(const FAutomationTestFramework& Framework, const FString& OutputPath)
 {
-    TSharedPtr<FJsonObject> Report = MakeShareable(new FJsonObject);
+	TSharedPtr<FJsonObject> Report = MakeShareable(new FJsonObject);
 
-    // Use NexusCore's test tracking instead of FAutomationTestFramework
-    // (which no longer provides GetPassedTests/GetFailedTests in UE 5.6)
-    TArray<TSharedPtr<FJsonValue>> GreenTests;
-    // Passed tests count available via UNexusCore::PassedTests
-    TArray<TSharedPtr<FJsonValue>> RedBlockers;
-    // Failed tests count available via UNexusCore::FailedTests
-    Report->SetArrayField(TEXT("red"), RedBlockers);
+	// Get test results from FPalantirOracle
+	const TMap<FString, FPalantirTestResult>& OracleResults = FPalantirOracle::Get().GetAllTestResults();
 
-    FString OutputString;
-    TSharedRef<TJsonWriter<>> Writer = TJsonWriterFactory<>::Create(&OutputString);
-    FJsonSerializer::Serialize(Report.ToSharedRef(), Writer);
+	TArray<TSharedPtr<FJsonValue>> TestsArray;
+	int32 PassedCount = 0;
+	int32 FailedCount = 0;
 
-    FString FinalPath = OutputPath;
-    if (FinalPath.IsEmpty())
-    {
-        FinalPath = FPaths::Combine(FPaths::ProjectSavedDir(), TEXT("LCARSReport.json"));
-    }
+	for (const auto& Pair : OracleResults)
+	{
+		const FString& TestName = Pair.Key;
+		const FPalantirTestResult& TestResult = Pair.Value;
 
-    if (FFileHelper::SaveStringToFile(OutputString, *FinalPath))
-    {
-        UE_LOG(LogTemp, Warning, TEXT("LCARS Report generated — %d green, %d red blockers -> %s"), GreenTests.Num(), RedBlockers.Num(), *FinalPath);
-    }
-    else
-    {
-        UE_LOG(LogTemp, Error, TEXT("Failed to write LCARS report to %s"), *FinalPath);
-    }
+		TSharedPtr<FJsonObject> TestObj = MakeShareable(new FJsonObject);
+		TestObj->SetStringField(TEXT("name"), TestName);
+		TestObj->SetBoolField(TEXT("passed"), TestResult.bPassed);
+		TestObj->SetNumberField(TEXT("duration"), TestResult.Duration);
+		
+		if (!TestResult.ErrorMessage.IsEmpty())
+		{
+			TestObj->SetStringField(TEXT("error"), TestResult.ErrorMessage);
+		}
+
+		// Attach any artifact paths
+		TArray<TSharedPtr<FJsonValue>> JsonArtifacts;
+		if (!TestResult.ScreenshotPath.IsEmpty())
+		{
+			JsonArtifacts.Add(MakeShareable(new FJsonValueString(TestResult.ScreenshotPath)));
+		}
+		if (!TestResult.TraceFilePath.IsEmpty())
+		{
+			JsonArtifacts.Add(MakeShareable(new FJsonValueString(TestResult.TraceFilePath)));
+		}
+		if (!TestResult.LogFilePath.IsEmpty())
+		{
+			JsonArtifacts.Add(MakeShareable(new FJsonValueString(TestResult.LogFilePath)));
+		}
+
+		if (JsonArtifacts.Num() > 0)
+		{
+			TestObj->SetArrayField(TEXT("artifacts"), JsonArtifacts);
+		}
+
+		TestsArray.Add(MakeShareable(new FJsonValueObject(TestObj)));
+
+		if (TestResult.bPassed)
+		{
+			PassedCount++;
+		}
+		else
+		{
+			FailedCount++;
+		}
+	}
+
+	Report->SetArrayField(TEXT("tests"), TestsArray);
+	Report->SetNumberField(TEXT("passed"), PassedCount);
+	Report->SetNumberField(TEXT("failed"), FailedCount);
+	Report->SetNumberField(TEXT("total"), PassedCount + FailedCount);
+
+	FString OutputString;
+	TSharedRef<TJsonWriter<>> Writer = TJsonWriterFactory<>::Create(&OutputString);
+	FJsonSerializer::Serialize(Report.ToSharedRef(), Writer);
+
+	FString FinalPath = OutputPath;
+	if (FinalPath.IsEmpty())
+	{
+		FinalPath = FPaths::Combine(FPaths::ProjectSavedDir(), TEXT("LCARSReport.json"));
+	}
+
+	if (FFileHelper::SaveStringToFile(OutputString, *FinalPath))
+	{
+		UE_LOG(LogTemp, Warning, TEXT("LCARS Report generated — %d passed, %d failed -> %s"), PassedCount, FailedCount, *FinalPath);
+	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("Failed to write LCARS report to %s"), *FinalPath);
+	}
 }
 
 void LCARSReporter::ExportResultsToLCARSFromPalantir(const TMap<FString, bool>& Results,
