@@ -2,6 +2,8 @@
 
 **Nexus** is the heart of the NexusQA framework, providing test discovery, parallel execution, result aggregation, and console integration. It orchestrates all testing functionality and exposes tests through a simple, discoverable API.
 
+> **New to NexusQA?** Start with [INTEGRATION_GUIDE.md](INTEGRATION_GUIDE.md) for multi-module patterns and best practices. This guide covers Nexus specifically.
+
 ---
 
 ## Overview

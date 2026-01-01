@@ -181,6 +181,9 @@ uint64 UsedMemoryMB = MemStats.UsedPhysical / (1024 * 1024);
 
 ## 📚 Documentation
 
+### 🚀 Getting Started (Start Here!)
+- **[Docs/INTEGRATION_GUIDE.md](Docs/INTEGRATION_GUIDE.md)** — Using multiple modules together, NEXUS_TEST vs NEXUS_TEST_GAMETHREAD, common patterns, and troubleshooting
+
 ### Core Framework Guides
 - **[PORTFOLIO.md](PORTFOLIO.md)** — 🎯 Technical showcase for recruiters
 - **[Docs/NEXUS_GUIDE.md](Docs/NEXUS_GUIDE.md)** — Test framework core: discovery, execution, reporting

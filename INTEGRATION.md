@@ -1,6 +1,8 @@
 # NexusQA Integration Checklist
 
-Before integrating NexusQA into your demo game, verify the following:
+Before integrating NexusQA into your demo game, verify the following.
+
+> **After integration is complete**, see [Docs/INTEGRATION_GUIDE.md](Docs/INTEGRATION_GUIDE.md) for guidance on using multiple modules together, choosing between NEXUS_TEST and NEXUS_TEST_GAMETHREAD, and avoiding common pitfalls.
 
 ## ✅ Prerequisites
 - [ ] Your game project uses Unreal Engine 5.7+
