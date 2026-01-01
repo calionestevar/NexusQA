@@ -308,8 +308,8 @@ FPalantirResponse FPalantirRequest::ExecuteBlocking()
 
 		TSharedRef<IHttpRequest, ESPMode::ThreadSafe> Request = CreateHttpRequest();
 
-		// Use event for blocking wait - use shared ptr to keep event alive in async callback
-		TSharedPtr<FEvent> CompletionEventPtr = MakeShared<FEvent>(FPlatformProcess::GetSynchEventFromPool(false), true);
+		// Use event for blocking wait - get from pool and manage carefully
+		FEvent* CompletionEvent = FPlatformProcess::GetSynchEventFromPool(false);
 		TSharedPtr<std::atomic<bool>> bRequestCompletedPtr = MakeShared<std::atomic<bool>>(false);
 		
 		// Create a shared pointer to Response data to avoid dangling references in async callback
@@ -317,7 +317,10 @@ FPalantirResponse FPalantirRequest::ExecuteBlocking()
 		TSharedPtr<FPalantirResponse> ResponsePtr = MakeShared<FPalantirResponse>();
 		*ResponsePtr = Response;  // Copy initial values
 
-		Request->OnProcessRequestComplete().BindLambda([ResponsePtr, bRequestCompletedPtr, CompletionEventPtr](FHttpRequestPtr Req, FHttpResponsePtr Res, bool bConnectedSuccessfully)
+		// Use a shared pointer to keep track of whether it's safe to access CompletionEvent
+		TSharedPtr<bool> bEventValidPtr = MakeShared<bool>(true);
+
+		Request->OnProcessRequestComplete().BindLambda([ResponsePtr, bRequestCompletedPtr, CompletionEvent, bEventValidPtr](FHttpRequestPtr Req, FHttpResponsePtr Res, bool bConnectedSuccessfully)
 		{
 			if (bConnectedSuccessfully && Res.IsValid())
 			{
@@ -344,9 +347,11 @@ FPalantirResponse FPalantirRequest::ExecuteBlocking()
 			bRequestCompletedPtr->store(true, std::memory_order_release);
 			
 			// Trigger the event to wake main thread
-			if (CompletionEventPtr.IsValid())
+			// The main thread guarantees it won't return the event to the pool until after this callback
+			// completes (via the bRequestCompletedPtr atomic flag and spin-wait)
+			if (bEventValidPtr && *bEventValidPtr && CompletionEvent)
 			{
-				CompletionEventPtr->Trigger();
+				CompletionEvent->Trigger();
 			}
 		});
 
@@ -354,6 +359,7 @@ FPalantirResponse FPalantirRequest::ExecuteBlocking()
 		{
 			UE_LOG(LogPalantirTrace, Error, TEXT("Failed to start HTTP request: %s %s"), *Verb, *URL);
 			Response.StatusCode = 0;
+			FPlatformProcess::ReturnSynchEventToPool(CompletionEvent);
 			++Attempt;
 			continue;
 		}
@@ -362,13 +368,12 @@ FPalantirResponse FPalantirRequest::ExecuteBlocking()
 		// CRITICAL SYNCHRONIZATION:
 		// 1. HTTP thread calls callback lambda with captured smart pointers
 		// 2. Lambda sets bRequestCompletedPtr->store(true, release)
-
 		// 3. Lambda triggers the event
 		// 4. Main thread wakes from Wait()
 		// 5. Smart pointers keep data alive until lambda callback completes
-		if (CompletionEventPtr.IsValid())
+		if (CompletionEvent)
 		{
-			CompletionEventPtr->Wait(static_cast<uint32>(TimeoutSeconds * 1000.0f));
+			CompletionEvent->Wait(static_cast<uint32>(TimeoutSeconds * 1000.0f));
 		}
 		
 		// Add a safety spin-wait to handle edge cases where callback might still be
@@ -379,6 +384,18 @@ FPalantirResponse FPalantirRequest::ExecuteBlocking()
 		{
 			FPlatformProcess::Sleep(0.001f);  // 1ms sleep
 			SpinWaitMs++;
+		}
+		
+		// Mark event as invalid so lambda won't try to trigger it
+		if (bEventValidPtr.IsValid())
+		{
+			*bEventValidPtr = false;
+		}
+		
+		// Now safe to return the event - callback has either completed or won't execute
+		if (CompletionEvent)
+		{
+			FPlatformProcess::ReturnSynchEventToPool(CompletionEvent);
 		}
 		
 		// Copy response data from shared pointer back to local Response
