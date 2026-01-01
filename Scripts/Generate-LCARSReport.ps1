@@ -1,7 +1,8 @@
 #!/usr/bin/env pwsh
 # Generate Sample LCARS HTML Report for Screenshots
+# Cross-platform compatible (Windows, macOS, Linux with PowerShell 7+)
 
-$ReportPath = "TestReports/LCARS_Demo_Report.html"
+$ReportPath = Join-Path "TestReports" "LCARS_Demo_Report.html"
 $ReportDir = Split-Path $ReportPath -Parent
 
 # Create directory if it doesn't exist
