@@ -336,7 +336,12 @@ FPalantirResponse FPalantirRequest::ExecuteBlocking()
 			}
 
 			bRequestCompleted = true;
-			CompletionEvent->Trigger();
+			// Safety check: only trigger if event is still valid
+			// The main thread guarantees CompletionEvent stays valid until after Wait() returns
+			if (CompletionEvent)
+			{
+				CompletionEvent->Trigger();
+			}
 		});
 
 		if (!Request->ProcessRequest())
@@ -349,7 +354,11 @@ FPalantirResponse FPalantirRequest::ExecuteBlocking()
 		}
 
 		// Wait for completion or timeout
+		// CRITICAL: Do NOT return the event to the pool until AFTER Wait() returns.
+		// The HTTP callback runs on a different thread and may still be executing.
 		CompletionEvent->Wait(static_cast<uint32>(TimeoutSeconds * 1000.0f));
+		
+		// Now safe to return the event - callback has completed or timed out
 		FPlatformProcess::ReturnSynchEventToPool(CompletionEvent);
 
 		Response.DurationMs = static_cast<float>((FPlatformTime::Seconds() - StartTime) * 1000.0);
