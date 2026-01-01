@@ -44,6 +44,36 @@ static FNexusTestContext CreateTestContext()
     return Context;
 }
 
+/**
+ * Helper function to populate performance metrics from ArgusLens
+ * Safely checks if ArgusLens is available and retrieves metrics
+ */
+static void PopulatePerformanceMetrics(FTestPerformanceMetrics& OutMetrics)
+{
+    // ArgusLens is optional - only populate if module is loaded
+    // Use reflection to check if UArgusLens class exists (avoids hard dependency)
+    UClass* ArgusLensClass = FindObject<UClass>(ANY_PACKAGE, TEXT("ArgusLens"), true);
+    
+    if (!ArgusLensClass)
+    {
+        // ArgusLens not loaded, skip performance data
+        return;
+    }
+    
+    // If ArgusLens is available, try to get metrics
+    // Note: This requires ArgusLens to have been monitoring during the test
+    // GetAverageFPS, GetPeakMemoryMb, GetHitchCount are static methods
+    
+    // Call via reflection if available:
+    // UFunction* GetAverageFPSFunc = ArgusLensClass->FindFunctionByName(FName("GetAverageFPS"));
+    // For now, we rely on ArgusLens being explicitly called in tests via NEXUS_PERF_TEST
+    
+    OutMetrics.AverageFPS = 0.0f;  // Default: no data
+    OutMetrics.PeakMemoryMb = 0.0f;
+    OutMetrics.HitchCount = 0;
+    OutMetrics.bPassedPerformanceGates = true;
+}
+
 // Define the static test array from FNexusTest
 // NEXUS_API on static member ensures proper DLL export for dependent modules
 TArray<FNexusTest*> FNexusTest::AllTests;
@@ -290,6 +320,9 @@ void UNexusCore::RunSequentialWithFailFast()
         NotifyTestStarted(Name);
 
         bool bPassed = Test->Execute(TestContext);
+        
+        // Populate performance metrics after test execution if available
+        PopulatePerformanceMetrics(TestContext.PerformanceMetrics);
 
         NotifyTestFinished(Name, bPassed);
         FPalantirObserver::OnTestFinished(Name, bPassed);

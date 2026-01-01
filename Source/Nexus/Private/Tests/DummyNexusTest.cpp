@@ -74,3 +74,28 @@ public:
 };
 
 static FNexusRetryExampleTest Global_FNexusRetryExampleTest;
+
+// Example: Performance monitoring with assertions
+// This demonstrates the performance test macro with ArgusLens integration
+NEXUS_PERF_TEST(FNexusPerformanceExampleTest, "Nexus.Performance.ContextExample", ETestPriority::Normal, 5.0f)
+{
+    // Example performance test that monitors metrics during execution
+    
+    if (!HAS_PERF_DATA(Context))
+    {
+        UE_LOG(LogTemp, Display, TEXT("Performance data not available (ArgusLens not running)"));
+        return true;  // Pass if no perf data - this is OK for non-perf tests
+    }
+    
+    // Use performance assertion helpers
+    ASSERT_AVERAGE_FPS(Context, 30.0f);  // Minimum 30 FPS
+    ASSERT_MAX_MEMORY(Context, 2048.0f);  // Maximum 2GB memory
+    ASSERT_MAX_HITCHES(Context, 5);       // No more than 5 hitches
+    
+    UE_LOG(LogTemp, Display, TEXT("✅ Performance test passed!"));
+    UE_LOG(LogTemp, Display, TEXT("  Average FPS: %.1f"), Context.PerformanceMetrics.AverageFPS);
+    UE_LOG(LogTemp, Display, TEXT("  Peak Memory: %.0f MB"), Context.PerformanceMetrics.PeakMemoryMb);
+    UE_LOG(LogTemp, Display, TEXT("  Hitches: %d"), Context.PerformanceMetrics.HitchCount);
+    
+    return true;
+}

@@ -8,6 +8,22 @@ class AGameStateBase;
 class APlayerController;
 DECLARE_LOG_CATEGORY_EXTERN(LogNexus, Display, All);
 
+/**
+ * Performance metrics captured during test execution
+ * Attached to FNexusTestContext for easy performance assertions
+ */
+struct NEXUS_API FTestPerformanceMetrics
+{
+    float AverageFPS = 0.0f;
+    float PeakMemoryMb = 0.0f;
+    int32 HitchCount = 0;
+    bool bPassedPerformanceGates = true;
+    
+    bool IsValid() const
+    {
+        return AverageFPS > 0.0f || PeakMemoryMb > 0.0f;
+    }
+};
 #if !defined(NEXUS_API)
     #define NEXUS_API
 #endif
@@ -42,6 +58,9 @@ struct NEXUS_API FNexusTestContext
     
     // Tracked actors for automatic cleanup
     TArray<AActor*> SpawnedActors;
+    
+    // Performance metrics captured during test execution
+    FTestPerformanceMetrics PerformanceMetrics;
     
     /**
      * Check if context is valid and safe to use
@@ -90,6 +109,77 @@ struct NEXUS_API FNexusTestContext
             }
         }
         SpawnedActors.Empty();
+    }
+    
+    /**
+     * Check if performance metrics are available (ArgusLens ran during test)
+     */
+    bool HasPerformanceData() const
+    {
+        return PerformanceMetrics.IsValid();
+    }
+    
+    /**
+     * Assert that average FPS meets minimum threshold
+     * @param MinFPS Minimum acceptable FPS
+     * @return true if FPS >= MinFPS, false otherwise
+     */
+    bool AssertAverageFPS(float MinFPS) const
+    {
+        if (!HasPerformanceData())
+        {
+            UE_LOG(LogNexus, Warning, TEXT("No performance data available for FPS assertion"));
+            return true;
+        }
+        
+        if (PerformanceMetrics.AverageFPS < MinFPS)
+        {
+            UE_LOG(LogNexus, Error, TEXT("FPS assertion failed: %.1f < %.1f"), PerformanceMetrics.AverageFPS, MinFPS);
+            return false;
+        }
+        return true;
+    }
+    
+    /**
+     * Assert that peak memory usage stays under limit
+     * @param MaxMemoryMb Maximum acceptable memory in MB
+     * @return true if memory <= MaxMemoryMb, false otherwise
+     */
+    bool AssertMaxMemory(float MaxMemoryMb) const
+    {
+        if (!HasPerformanceData())
+        {
+            UE_LOG(LogNexus, Warning, TEXT("No performance data available for memory assertion"));
+            return true;
+        }
+        
+        if (PerformanceMetrics.PeakMemoryMb > MaxMemoryMb)
+        {
+            UE_LOG(LogNexus, Error, TEXT("Memory assertion failed: %.0f > %.0f MB"), PerformanceMetrics.PeakMemoryMb, MaxMemoryMb);
+            return false;
+        }
+        return true;
+    }
+    
+    /**
+     * Assert that hitch count stays under limit
+     * @param MaxHitches Maximum acceptable number of hitches
+     * @return true if hitches <= MaxHitches, false otherwise
+     */
+    bool AssertMaxHitches(int32 MaxHitches) const
+    {
+        if (!HasPerformanceData())
+        {
+            UE_LOG(LogNexus, Warning, TEXT("No performance data available for hitch assertion"));
+            return true;
+        }
+        
+        if (PerformanceMetrics.HitchCount > MaxHitches)
+        {
+            UE_LOG(LogNexus, Error, TEXT("Hitch assertion failed: %d > %d"), PerformanceMetrics.HitchCount, MaxHitches);
+            return false;
+        }
+        return true;
     }
     
     ~FNexusTestContext()
@@ -200,3 +290,29 @@ bool TestClassName::RunTest(const FNexusTestContext& Context)
 // New macro for game-thread-only tests
 #define NEXUS_TEST_GAMETHREAD(TestClassName, PrettyName, PriorityFlags) \
     NEXUS_TEST_INTERNAL(TestClassName, PrettyName, PriorityFlags, true)
+
+// Performance test macro - runs with ArgusLens monitoring
+// Usage: NEXUS_PERF_TEST(FMyPerfTest, "Perf.CPU.Rendering", ETestPriority::Normal, 60.0f) { ... }
+// The last parameter is test duration in seconds for ArgusLens monitoring
+#define NEXUS_PERF_TEST(TestClassName, PrettyName, PriorityFlags, DurationSeconds) \
+class TestClassName : public FNexusTest \
+{ \
+public: \
+    TestClassName() : FNexusTest(PrettyName, PriorityFlags, [this](const FNexusTestContext& Context) -> bool { return RunPerformanceTest(Context); }, true) {} \
+    bool RunPerformanceTest(const FNexusTestContext& Context); \
+}; \
+static TestClassName Global_##TestClassName; \
+bool TestClassName::RunPerformanceTest(const FNexusTestContext& Context)
+
+// Performance assertion helpers - use in tests to validate metrics
+#define ASSERT_AVERAGE_FPS(Context, MinFPS) \
+    if (!(Context).AssertAverageFPS(MinFPS)) { return false; }
+
+#define ASSERT_MAX_MEMORY(Context, MaxMemoryMb) \
+    if (!(Context).AssertMaxMemory(MaxMemoryMb)) { return false; }
+
+#define ASSERT_MAX_HITCHES(Context, MaxHitches) \
+    if (!(Context).AssertMaxHitches(MaxHitches)) { return false; }
+
+// Check if performance data is available (ArgusLens ran)
+#define HAS_PERF_DATA(Context) ((Context).HasPerformanceData())

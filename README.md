@@ -292,17 +292,20 @@ Legacy → Nexus, AutomationController
 - [x] Game-thread test execution (`NEXUS_TEST_GAMETHREAD` macro) — Tests can safely create actors/UObjects
 - [x] Thread-safe test observer with mutex protection (Palantir)
 - [x] Multi-backend dashboard infrastructure (ImGui/Slate/HTML)
+- [x] Test execution context (`FNexusTestContext`) — Provide UWorld, GameState, PlayerController access
+- [x] Test skip/conditional execution — Skip on platform/configuration basis
+- [x] Automated test retry logic (configurable, exponential backoff)
 
 **Near Term (Foundation for Game Testing):**
-- [ ] Test execution context (`FNexusTestContext`) — Provide UWorld, GameState, PlayerController access
 - [ ] Test fixture/setup/teardown support (BeforeEach/AfterEach pattern) — Shared test data, faster execution
+- [ ] **ArgusLens API Integration** — Performance assertions in test macros (`ASSERT_FPS`, `ASSERT_MEMORY`)
+- [ ] **ArgusLens Context Integration** — Attach performance metrics to `FNexusTestContext`
+- [ ] **Performance Test Helper Macros** — `NEXUS_PERF_TEST` for quick performance benchmarking
 - [ ] Test timeout handling with configurable per-test timeouts — Auto-fail hanging tests, log stack traces
 - [ ] Failure stack trace capture — Include memory state, relevant logs, actor state
 - [ ] Real-time test execution dashboard (live pass/fail rates, test progress) — Integrate with ObserverNetworkDashboard
-- [ ] Test skip/conditional execution — Skip on platform/configuration basis
 - [ ] Test dependencies & ordering system — Handle sequential test requirements beyond priority
 - [ ] Smoke test CI workflow for quick validation
-- [ ] Automated test retry logic (configurable, exponential backoff)
 - [ ] Test result history & trend tracking (performance baselines, regression detection)
 
 **Medium Term (Advanced Testing Features):**
