@@ -530,7 +530,7 @@ This is a **reference implementation** of:
 
 **Calione Stevar**  
 GitHub: [@calionestevar](https://github.com/calionestevar)  
-Repository: [nerdy-qa-toolkit](https://github.com/calionestevar/nerdy-qa-toolkit)
+Repository: [NexusQA](https://github.com/calionestevar/NexusQA)
 
 ---
 

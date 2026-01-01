@@ -2,7 +2,7 @@
 
 ## What is LCARS?
 
-**LCARS** (Library Computer Access and Retrieval System) is the Nerdy QA Toolkit's test reporting system, named after Star Trek's fictional starship computer interface. It provides:
+**LCARS** (Library Computer Access and Retrieval System) is the NexusQA framework's test reporting system, named after Star Trek's fictional starship computer interface. It provides:
 
 1. **Multiple Output Formats:**
    - JSON (machine-readable results)

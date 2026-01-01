@@ -173,8 +173,16 @@ uint64 UsedMemoryMB = MemStats.UsedPhysical / (1024 * 1024);
 
 ## 📚 Documentation
 
-### Core Guides
+### Core Framework Guides
 - **[PORTFOLIO.md](PORTFOLIO.md)** — 🎯 Technical showcase for recruiters
+- **[Docs/NEXUS_GUIDE.md](Docs/NEXUS_GUIDE.md)** — Test framework core: discovery, execution, reporting
+- **[OBSERVER_NETWORK_GUIDE.md](OBSERVER_NETWORK_GUIDE.md)** — Real-time dashboard and safety event logging
+- **[Docs/ARGUSLENS_GUIDE.md](Docs/ARGUSLENS_GUIDE.md)** — Performance monitoring: FPS, memory, hitches
+- **[Docs/FRINGENETWORK_GUIDE.md](Docs/FRINGENETWORK_GUIDE.md)** — Network chaos: lag injection, packet loss, failover
+- **[Docs/STARGATESTRESS_GUIDE.md](Docs/STARGATESTRESS_GUIDE.md)** — Load testing: bot simulation, stress validation
+- **[Docs/PROTEGO_GUIDE.md](Docs/PROTEGO_GUIDE.md)** — Compliance: COPPA/GDPR/DSA, accessibility testing
+
+### Advanced Topics
 - **[Docs/API_TESTING.md](Docs/API_TESTING.md)** — REST/GraphQL testing patterns
 - **[Docs/PALANTIR.md](Docs/PALANTIR.md)** — Distributed tracing deep-dive
 - **[Docs/LCARS_PROVIDERS.md](Docs/LCARS_PROVIDERS.md)** — Report generation system

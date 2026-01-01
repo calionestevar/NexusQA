@@ -1,6 +1,6 @@
 # Screenshot Capture Guide
 
-This directory contains visual assets showcasing the Nerdy QA Toolkit in action.
+This directory contains visual assets showcasing NexusQA in action.
 
 ## Status: LCARS Dashboard Ready for Screenshots! 📸
 
