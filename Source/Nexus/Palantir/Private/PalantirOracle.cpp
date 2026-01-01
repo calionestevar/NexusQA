@@ -211,7 +211,10 @@ void FPalantirObserver::OnTestStarted(const FString& Name)
     UE_LOG(LogTemp, Display, TEXT("Palantír: Test started: %s"), *Name);
     UNexusCore::NotifyTestStarted(Name);
     // Record start time for duration measurement
-    GPalantirTestStartTimes.Add(Name, FDateTime::Now());
+    {
+        FScopeLock _lock(&GPalantirMutex);
+        GPalantirTestStartTimes.Add(Name, FDateTime::Now());
+    }
 }
 
 void FPalantirObserver::RegisterArtifact(const FString& TestName, const FString& ArtifactPath)
