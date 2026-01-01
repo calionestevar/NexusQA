@@ -310,14 +310,19 @@ FPalantirResponse FPalantirRequest::ExecuteBlocking()
 
 		// Use event for blocking wait
 		FEvent* CompletionEvent = FPlatformProcess::GetSynchEventFromPool(false);
-		std::atomic<bool> bRequestCompleted(false);  // Changed to atomic for thread-safe access
+		std::atomic<bool> bRequestCompleted(false);
+		
+		// Create a shared pointer to Response data to avoid dangling references in async callback
+		// The lambda will hold a reference to this shared data, keeping it alive until callback completes
+		TSharedPtr<FPalantirResponse> ResponsePtr = MakeShared<FPalantirResponse>();
+		*ResponsePtr = Response;  // Copy initial values
 
-		Request->OnProcessRequestComplete().BindLambda([&Response, &bRequestCompleted, CompletionEvent](FHttpRequestPtr Req, FHttpResponsePtr Res, bool bConnectedSuccessfully)
+		Request->OnProcessRequestComplete().BindLambda([ResponsePtr, &bRequestCompleted, CompletionEvent](FHttpRequestPtr Req, FHttpResponsePtr Res, bool bConnectedSuccessfully)
 		{
 			if (bConnectedSuccessfully && Res.IsValid())
 			{
-				Response.StatusCode = Res->GetResponseCode();
-				Response.Body = Res->GetContentAsString();
+				ResponsePtr->StatusCode = Res->GetResponseCode();
+				ResponsePtr->Body = Res->GetContentAsString();
 
 				// Extract headers
 				for (const FString& HeaderName : Res->GetAllHeaders())
@@ -325,22 +330,20 @@ FPalantirResponse FPalantirRequest::ExecuteBlocking()
 					FString Key, Value;
 					if (HeaderName.Split(TEXT(":"), &Key, &Value))
 					{
-						Response.Headers.Add(Key.TrimStartAndEnd(), Value.TrimStartAndEnd());
+						ResponsePtr->Headers.Add(Key.TrimStartAndEnd(), Value.TrimStartAndEnd());
 					}
 				}
 			}
 			else
 			{
-				Response.StatusCode = 0; // Connection failed
-				Response.Body = TEXT("");
+				ResponsePtr->StatusCode = 0; // Connection failed
+				ResponsePtr->Body = TEXT("");
 			}
 
 			// Signal completion BEFORE triggering event to ensure proper ordering
 			bRequestCompleted.store(true, std::memory_order_release);
 			
 			// Trigger the event to wake main thread
-			// Safe to trigger because main thread is blocked in Wait() and won't return event to pool
-			// until after this trigger completes
 			if (CompletionEvent)
 			{
 				CompletionEvent->Trigger();
@@ -378,6 +381,9 @@ FPalantirResponse FPalantirRequest::ExecuteBlocking()
 		
 		// Now safe to return the event - callback has completed
 		FPlatformProcess::ReturnSynchEventToPool(CompletionEvent);
+		
+		// Copy response data from shared pointer back to local Response
+		Response = *ResponsePtr;
 
 		Response.DurationMs = static_cast<float>((FPlatformTime::Seconds() - StartTime) * 1000.0);
 
