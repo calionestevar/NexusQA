@@ -25,7 +25,14 @@ A clean, extensible QA automation framework for UE5 featuring parallel execution
 - ✅ Game Industry Patterns (distributed tracing like Sentry, API testing, performance monitoring)
 - ✅ Clean Architecture (modular design, dependency injection, fluent APIs)
 
-**What It Does:** Runs game tests in parallel, monitors performance (FPS/memory), simulates network chaos, validates compliance (COPPA/GDPR), and generates Star Trek-themed HTML reports.
+**What It Does:** 
+- Runs game tests in **parallel** (async task pool) or **sequentially** (game-thread-only tests)
+- Monitors real-time performance metrics (FPS, memory usage, hitches)
+- Simulates network chaos (lag injection, packet loss, disconnects)
+- Validates API testing with fluent assertions (REST/GraphQL)
+- Checks compliance requirements (COPPA/GDPR/DSA)
+- Generates Star Trek-themed HTML reports with live network dashboards
+- Supports both engine tests and game-specific tests (with UWorld/GameState access)
 
 **Tech Stack:** C++17, Unreal Engine 5.7, HTTP/JSON APIs, GitHub Actions CI/CD
 
