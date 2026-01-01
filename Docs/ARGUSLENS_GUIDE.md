@@ -575,6 +575,6 @@ Self-contained dashboard with:
 
 ## See Also
 
-- [OBSERVER_NETWORK_GUIDE.md](../OBSERVER_NETWORK_GUIDE.md) — Logging performance events
+- [OBSERVER_NETWORK_GUIDE.md](OBSERVER_NETWORK_GUIDE.md) — Logging performance events
 - [Nexus Core Framework](./NEXUS_GUIDE.md)
 - [FringeNetwork Chaos Testing](./FRINGENETWORK_GUIDE.md)

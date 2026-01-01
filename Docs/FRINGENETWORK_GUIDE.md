@@ -229,7 +229,7 @@ The live dashboard provides real-time monitoring of network events and safety ch
 └──────────────────────────────────────────────────┘
 ```
 
-For detailed dashboard usage, see [OBSERVER_NETWORK_GUIDE.md](../OBSERVER_NETWORK_GUIDE.md).
+For detailed dashboard usage, see [OBSERVER_NETWORK_GUIDE.md](OBSERVER_NETWORK_GUIDE.md).
 
 ---
 
@@ -475,7 +475,7 @@ UObserverNetworkDashboard::LogSafetyEvent(
 
 ## See Also
 
-- [OBSERVER_NETWORK_GUIDE.md](../OBSERVER_NETWORK_GUIDE.md) — Dashboard and event logging
+- [OBSERVER_NETWORK_GUIDE.md](OBSERVER_NETWORK_GUIDE.md) — Dashboard and event logging
 - [Cortexiphan Chaos Injection Guide](./CORTEXIPHAN_GUIDE.md)
 - [Nexus Core Framework](./NEXUS_GUIDE.md)
 - [API Testing with PalantírRequest](./API_TESTING.md)

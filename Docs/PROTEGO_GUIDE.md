@@ -605,6 +605,6 @@ NEXUS_TEST(FAccessibilityAuditTest, "Accessibility.PreLaunch", ETestPriority::Hi
 
 ## See Also
 
-- [OBSERVER_NETWORK_GUIDE.md](../OBSERVER_NETWORK_GUIDE.md) — Log safety events
+- [OBSERVER_NETWORK_GUIDE.md](OBSERVER_NETWORK_GUIDE.md) — Log safety events
 - [Nexus Core Framework](./NEXUS_GUIDE.md)
 - [StargateStress Load Testing](./STARGATESTRESS_GUIDE.md)
