@@ -310,7 +310,7 @@ FPalantirResponse FPalantirRequest::ExecuteBlocking()
 
 		// Use event for blocking wait
 		FEvent* CompletionEvent = FPlatformProcess::GetSynchEventFromPool(false);
-		bool bRequestCompleted = false;
+		std::atomic<bool> bRequestCompleted(false);  // Changed to atomic for thread-safe access
 
 		Request->OnProcessRequestComplete().BindLambda([&Response, &bRequestCompleted, CompletionEvent](FHttpRequestPtr Req, FHttpResponsePtr Res, bool bConnectedSuccessfully)
 		{
@@ -335,9 +335,12 @@ FPalantirResponse FPalantirRequest::ExecuteBlocking()
 				Response.Body = TEXT("");
 			}
 
-			bRequestCompleted = true;
-			// Safety check: only trigger if event is still valid
-			// The main thread guarantees CompletionEvent stays valid until after Wait() returns
+			// Signal completion BEFORE triggering event to ensure proper ordering
+			bRequestCompleted.store(true, std::memory_order_release);
+			
+			// Trigger the event to wake main thread
+			// Safe to trigger because main thread is blocked in Wait() and won't return event to pool
+			// until after this trigger completes
 			if (CompletionEvent)
 			{
 				CompletionEvent->Trigger();
@@ -354,11 +357,26 @@ FPalantirResponse FPalantirRequest::ExecuteBlocking()
 		}
 
 		// Wait for completion or timeout
-		// CRITICAL: Do NOT return the event to the pool until AFTER Wait() returns.
-		// The HTTP callback runs on a different thread and may still be executing.
+		// CRITICAL SYNCHRONIZATION:
+		// 1. HTTP thread calls callback lambda
+		// 2. Lambda sets bRequestCompleted = true with release semantics
+		// 3. Lambda triggers the event
+		// 4. Main thread wakes from Wait()
+		// 5. Main thread checks bRequestCompleted before returning event
+		// This ensures the event stays alive while the callback is executing.
 		CompletionEvent->Wait(static_cast<uint32>(TimeoutSeconds * 1000.0f));
 		
-		// Now safe to return the event - callback has completed or timed out
+		// Add a safety spin-wait to handle edge cases where callback might still be
+		// executing during the event trigger. Very short wait to catch the completion flag.
+		uint32 SpinWaitMs = 0;
+		const uint32 MaxSpinWaitMs = 10;  // Max 10ms spin-wait for safety
+		while (!bRequestCompleted.load(std::memory_order_acquire) && SpinWaitMs < MaxSpinWaitMs)
+		{
+			FPlatformProcess::Sleep(0.001f);  // 1ms sleep
+			SpinWaitMs++;
+		}
+		
+		// Now safe to return the event - callback has completed
 		FPlatformProcess::ReturnSynchEventToPool(CompletionEvent);
 
 		Response.DurationMs = static_cast<float>((FPlatformTime::Seconds() - StartTime) * 1000.0);
