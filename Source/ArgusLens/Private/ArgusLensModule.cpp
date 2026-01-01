@@ -11,9 +11,7 @@ void FArgusLensModule::StartupModule()
 {
 	UE_LOG(LogArgusLensModule, Warning, TEXT("📊 ARGUSLENS PERFORMANCE MONITOR INITIALIZING"));
 
-	// Initialize ArgusLens performance monitoring
-	UArgusLens::Initialize();
-
+	// ArgusLens performance monitoring initialized on-demand when StartPerformanceMonitoring() is called
 	bArgusLensModuleInitialized = true;
 
 	UE_LOG(LogArgusLensModule, Display, TEXT("✅ ARGUSLENS PERFORMANCE MONITOR ONLINE"));
