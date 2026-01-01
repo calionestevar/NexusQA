@@ -200,3 +200,5 @@ FString UObserverNetworkDashboard::GetEmbeddedHTMLTemplate()
 	</div>
 </body>
 </html>)";
+}
+
