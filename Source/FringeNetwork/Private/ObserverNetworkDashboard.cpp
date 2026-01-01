@@ -190,14 +190,11 @@ void UObserverNetworkDashboard::GenerateWebReport()
 			FailedCount++;
 	}
 
-	// Load HTML template
-	FString TemplateDir = FPaths::ProjectSourceDir() / TEXT("FringeNetwork/Private");
-	FString TemplatePath = TemplateDir / TEXT("ObserverNetworkDashboard.html");
-	FString Html = TEXT("");
-	
-	if (!FFileHelper::LoadFileToString(Html, *TemplatePath))
+	// Load HTML template (tries multiple paths for dev and packaged builds)
+	FString Html = LoadHTMLTemplate();
+	if (Html.IsEmpty())
 	{
-		UE_LOG(LogTemp, Error, TEXT("❌ OBSERVER NETWORK FAILED TO LOAD HTML TEMPLATE: %s"), *TemplatePath);
+		UE_LOG(LogTemp, Error, TEXT("❌ OBSERVER NETWORK FAILED TO LOAD HTML TEMPLATE"));
 		return;
 	}
 
@@ -223,3 +220,39 @@ void UObserverNetworkDashboard::GenerateWebReport()
 	FFileHelper::SaveStringToFile(Html, *Path);
 	UE_LOG(LogTemp, Warning, TEXT("📊 OBSERVER FINAL REPORT → %s"), *Path);
 }
+
+FString UObserverNetworkDashboard::LoadHTMLTemplate()
+{
+	// Try loading from source directory first (development builds)
+	FString SourceTemplatePath = FPaths::ProjectSourceDir() / TEXT("Plugins/NexusQA/Source/FringeNetwork/Private/ObserverNetworkDashboard.html");
+	FString Html;
+	
+	if (FFileHelper::LoadFileToString(Html, *SourceTemplatePath))
+	{
+		UE_LOG(LogTemp, Warning, TEXT("✓ OBSERVER TEMPLATE LOADED FROM SOURCE: %s"), *SourceTemplatePath);
+		return Html;
+	}
+
+	// Try alternate source path (if plugin is in project directly)
+	FString AltSourcePath = FPaths::ProjectSourceDir() / TEXT("Source/FringeNetwork/Private/ObserverNetworkDashboard.html");
+	if (FFileHelper::LoadFileToString(Html, *AltSourcePath))
+	{
+		UE_LOG(LogTemp, Warning, TEXT("✓ OBSERVER TEMPLATE LOADED FROM ALT SOURCE: %s"), *AltSourcePath);
+		return Html;
+	}
+
+	// Try content directory (packaged builds may have files here)
+	FString ContentPath = FPaths::ProjectContentDir() / TEXT("ObserverNetwork/ObserverNetworkDashboard.html");
+	if (FFileHelper::LoadFileToString(Html, *ContentPath))
+	{
+		UE_LOG(LogTemp, Warning, TEXT("✓ OBSERVER TEMPLATE LOADED FROM CONTENT: %s"), *ContentPath);
+		return Html;
+	}
+
+	// Fallback: use embedded template (works in all build configurations)
+	UE_LOG(LogTemp, Warning, TEXT("⚠ OBSERVER TEMPLATE NOT FOUND ON DISK, USING EMBEDDED FALLBACK"));
+	return GetEmbeddedHTMLTemplate();
+}
+
+FString UObserverNetworkDashboard::GetEmbeddedHTMLTemplate();
+// Implementation defined in ObserverNetworkTemplate.cpp
