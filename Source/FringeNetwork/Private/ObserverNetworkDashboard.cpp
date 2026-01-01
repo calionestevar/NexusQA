@@ -7,6 +7,7 @@
 #include "HAL/PlatformFileManager.h"
 #include "HAL/CriticalSection.h"
 #include "Misc/ScopeLock.h"
+#include "Engine/Engine.h"
 
 static TMap<FString, int32> SafetyCounters;
 static TArray<FString> EventLog;
@@ -14,8 +15,9 @@ static float SessionStartTime = 0.0f;
 static FCriticalSection DashboardMutex;
 static EDashboardBackend ActiveBackend = EDashboardBackend::Auto;
 
-// Forward declaration for internal ImGui rendering
+// Forward declarations for internal rendering backends
 static void RenderImGuiDashboard(const TMap<FString, int32>& Counters, const TArray<FString>& Events, float Uptime);
+static void RenderSlateDashboard(const TMap<FString, int32>& Counters, const TArray<FString>& Events, float Uptime);
 
 void UObserverNetworkDashboard::Initialize(EDashboardBackend Backend)
 {
@@ -88,8 +90,7 @@ void UObserverNetworkDashboard::UpdateLiveDashboard()
 			break;
 
 		case EDashboardBackend::Slate:
-			// Slate rendering would go here
-			// For now, just log that we'd render to Slate
+			RenderSlateDashboard(LocalCounters, LocalEventLog, LocalUptime);
 			break;
 
 		case EDashboardBackend::HTMLOnly:
@@ -132,6 +133,30 @@ static void RenderImGuiDashboard(const TMap<FString, int32>& Counters, const TAr
 
 	ImGui::End();
 #endif
+}
+
+static void RenderSlateDashboard(const TMap<FString, int32>& Counters, const TArray<FString>& Events, float Uptime)
+{
+	// Slate rendering - logs dashboard state and can be extended to create actual Slate widgets
+	// For now, logs periodically to avoid spam (once per 60 frames or so)
+	static uint32 FrameCounter = 0;
+	if (++FrameCounter % 60 != 0) return;
+
+	FString CounterStr = TEXT("Safety Counters: ");
+	for (const auto& Pair : Counters)
+	{
+		CounterStr += FString::Printf(TEXT("[%s: %d] "), *Pair.Key, Pair.Value);
+	}
+
+	FString EventStr = TEXT("Recent Events: ");
+	int32 StartIdx = FMath::Max(0, Events.Num() - 5);
+	for (int32 i = StartIdx; i < Events.Num(); ++i)
+	{
+		EventStr += Events[i] + TEXT(" | ");
+	}
+
+	UE_LOG(LogTemp, Warning, TEXT("📊 SLATE DASHBOARD [%.1f sec] — %s — %s"), 
+		Uptime, *CounterStr, *EventStr);
 }
 
 EDashboardBackend UObserverNetworkDashboard::GetActiveBackend()
