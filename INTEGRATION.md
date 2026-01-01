@@ -61,9 +61,55 @@ IMPLEMENT_NEXUS_TEST(FSimpleTest)
 }
 ```
 
+## ✨ New Features: Foundation + Quick-Wins
+
+### FNexusTestContext - World Access
+Tests can now access the game world, game state, and player controller:
+```cpp
+NEXUS_TEST_GAMETHREAD(FMyGameTest, "MyGame.WorldAccess", ETestPriority::Normal)
+{
+    if (!Context.IsValid())
+    {
+        return true;  // World not available (OK in some scenarios)
+    }
+    
+    // Access world directly
+    ACharacter* TestChar = Context.SpawnTestCharacter(MyCharClass, FVector(0, 0, 0));
+    
+    // Actors automatically cleaned up on test end via RAII
+    return TestChar != nullptr;
+}
+```
+
+### Skip/Conditional Execution
+Skip tests based on conditions:
+```cpp
+NEXUS_TEST(FConditionalTest, "MyGame.ConditionalSkip", ETestPriority::Normal)
+{
+    // Skip on certain platforms or configurations
+    // bSkip = FPlatformProperties::IsServerOnly();
+    
+    return true;
+}
+```
+
+### Automated Retry Logic
+Automatically retry flaky tests with exponential backoff:
+```cpp
+class FFlakeyNetworkTest : public FNexusTest
+{
+public:
+    FFlakeyNetworkTest() : FNexusTest(...)
+    {
+        MaxRetries = 3;  // Retry up to 3 times with 1s, 2s, 4s delays
+    }
+    bool RunTest(const FNexusTestContext& Context);
+};
+```
+
 ## 📚 Next Steps
 - Read [PORTFOLIO.md](../PORTFOLIO.md) for architecture overview
-- Check [Docs/API_TESTING.md](../Docs/API_TESTING.md) for API testing examples
+- Check [Docs/INTEGRATION_GUIDE.md](../Docs/INTEGRATION_GUIDE.md) for complete patterns and pitfalls
 - See [README.md](../README.md) for comprehensive documentation
 
 ## 🆘 Troubleshooting
