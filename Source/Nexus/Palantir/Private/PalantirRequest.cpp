@@ -438,8 +438,13 @@ void FPalantirRequest::ExecuteAsync(TFunction<void(const FPalantirResponse&)> On
 	TSharedRef<IHttpRequest, ESPMode::ThreadSafe> Request = CreateHttpRequest();
 	FString TraceID = FPalantirTrace::GetCurrentTraceID();
 	double StartTime = FPlatformTime::Seconds();
+	
+	// Create a shared copy of this request's data to avoid dangling pointers
+	// The lambda holds a reference that keeps it alive for the entire callback duration
+	TSharedPtr<FString> VerbPtr = MakeShared<FString>(Verb);
+	TSharedPtr<FString> URLPtr = MakeShared<FString>(URL);
 
-	Request->OnProcessRequestComplete().BindLambda([OnComplete, TraceID, StartTime, this](FHttpRequestPtr Req, FHttpResponsePtr Res, bool bConnectedSuccessfully)
+	Request->OnProcessRequestComplete().BindLambda([OnComplete, TraceID, StartTime, VerbPtr, URLPtr](FHttpRequestPtr Req, FHttpResponsePtr Res, bool bConnectedSuccessfully)
 	{
 		FPalantirResponse Response;
 		Response.TraceID = TraceID;
