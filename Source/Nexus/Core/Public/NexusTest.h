@@ -29,8 +29,16 @@ public:
     ETestPriority Priority = ETestPriority::Normal;
     TFunction<bool()> TestFunc;
 
+    // Static list of all test instances - populated automatically at load time
+    // when NEXUS_TEST() static objects are constructed
+    static TArray<FNexusTest*> AllTests;
+
     FNexusTest(const FString& InName, ETestPriority InPriority, TFunction<bool()> InFunc)
-        : TestName(InName), Priority(InPriority), TestFunc(MoveTemp(InFunc)) {}
+        : TestName(InName), Priority(InPriority), TestFunc(MoveTemp(InFunc))
+    {
+        // Self-register into static list (no circular dependency!)
+        AllTests.Add(this);
+    }
 
     bool Execute() const
     {
@@ -57,14 +65,12 @@ public:
 };
 
 // Use this instead of IMPLEMENT_SIMPLE_AUTOMATION_TEST
+// Tests self-register via FNexusTest constructor - no circular dependency!
 #define NEXUS_TEST(TestClassName, PrettyName, PriorityFlags) \
 class TestClassName : public FNexusTest \
 { \
 public: \
-    TestClassName() : FNexusTest(PrettyName, PriorityFlags, [this]() -> bool { return RunTest(); }) \
-    { \
-        UNexusCore::RegisterTest(this); \
-    } \
+    TestClassName() : FNexusTest(PrettyName, PriorityFlags, [this]() -> bool { return RunTest(); }) {} \
     bool RunTest(); \
 }; \
 static TestClassName Global_##TestClassName; \

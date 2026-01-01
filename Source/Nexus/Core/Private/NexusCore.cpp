@@ -11,6 +11,9 @@
 
 DEFINE_LOG_CATEGORY(LogNexus);
 
+// Define the static test array from FNexusTest
+TArray<FNexusTest*> FNexusTest::AllTests;
+
 int32 UNexusCore::TotalTests = 0;
 int32 UNexusCore::PassedTests = 0;
 int32 UNexusCore::FailedTests = 0;
@@ -46,10 +49,11 @@ void UNexusCore::Execute(const TArray<FString>& Args)
 
 void UNexusCore::DiscoverAllTests()
 {
-    // The magic: every NEXUS_TEST() creates a static global object
-    // → its constructor adds itself to DiscoveredTests
-    // → This runs automatically at startup
-    UE_LOG(LogTemp, Display, TEXT("NEXUS: Auto-discovered %d test(s)"), DiscoveredTests.Num());
+    // Copy discovered tests from FNexusTest::AllTests into UNexusCore::DiscoveredTests
+    // FNexusTest::AllTests is populated automatically when NEXUS_TEST() static objects
+    // are constructed at module load time
+    DiscoveredTests = FNexusTest::AllTests;
+    UE_LOG(LogNexus, Display, TEXT("NEXUS: Discovered %d test(s)"), DiscoveredTests.Num());
 }
 
 void UNexusCore::RunAllTests(bool bParallel)
