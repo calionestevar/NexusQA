@@ -39,7 +39,7 @@ public:
     static TArray<FNexusTest*> AllTests;
 
     FNexusTest(const FString& InName, ETestPriority InPriority, TFunction<bool()> InFunc, bool bInRequiresGameThread = false)
-        : TestName(InName), Priority(InPriority), TestFunc(MoveTemp(InFunc)), bRequiresGameThread(bInRequiresGameThread)
+        : TestName(InName), Priority(InPriority), bRequiresGameThread(bInRequiresGameThread), TestFunc(MoveTemp(InFunc))
     {
         // Self-register into static list (no circular dependency!)
         AllTests.Add(this);
