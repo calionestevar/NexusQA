@@ -12,6 +12,7 @@
 DEFINE_LOG_CATEGORY(LogNexus);
 
 // Define the static test array from FNexusTest
+// NEXUS_API on static member ensures proper DLL export for dependent modules
 TArray<FNexusTest*> FNexusTest::AllTests;
 
 int32 UNexusCore::TotalTests = 0;

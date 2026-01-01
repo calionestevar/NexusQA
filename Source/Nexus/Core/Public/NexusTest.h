@@ -6,6 +6,10 @@
 class UNexusCore;
 DECLARE_LOG_CATEGORY_EXTERN(LogNexus, Display, All);
 
+#if !defined(NEXUS_API)
+    #define NEXUS_API
+#endif
+
 enum class ETestPriority : uint8
 {
     Normal      = 0,
@@ -22,7 +26,7 @@ inline bool NexusHasFlag(ETestPriority Flags, ETestPriority Check)
     return (static_cast<uint8>(Flags) & static_cast<uint8>(Check)) != 0;
 }
 
-class FNexusTest
+class NEXUS_API FNexusTest
 {
 public:
     FString TestName;
@@ -31,7 +35,7 @@ public:
 
     // Static list of all test instances - populated automatically at load time
     // when NEXUS_TEST() static objects are constructed
-    static TArray<FNexusTest*> AllTests;
+    static NEXUS_API TArray<FNexusTest*> AllTests;
 
     FNexusTest(const FString& InName, ETestPriority InPriority, TFunction<bool()> InFunc)
         : TestName(InName), Priority(InPriority), TestFunc(MoveTemp(InFunc))
