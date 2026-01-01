@@ -35,7 +35,7 @@ public:
 
     // Static list of all test instances - populated automatically at load time
     // when NEXUS_TEST() static objects are constructed
-    static NEXUS_API TArray<FNexusTest*> AllTests;
+    static TArray<FNexusTest*> AllTests;
 
     FNexusTest(const FString& InName, ETestPriority InPriority, TFunction<bool()> InFunc)
         : TestName(InName), Priority(InPriority), TestFunc(MoveTemp(InFunc))
