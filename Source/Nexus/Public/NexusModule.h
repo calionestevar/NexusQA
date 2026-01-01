@@ -30,3 +30,6 @@ public:
 	 */
 	static bool IsAvailable();
 };
+
+// Declare log category for use throughout the module
+DECLARE_LOG_CATEGORY_EXTERN(LogNexusModule, Log, All);
