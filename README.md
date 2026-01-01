@@ -116,7 +116,7 @@ Opens `TestReports/LCARS_Demo_Report.html` in your browser — screenshot-ready!
 ### CI/CD Integration
 GitHub Actions workflows:
 - **stone-table.yml** ✅ Active — Safety pattern detection (dangerous code patterns)
-- **lamppost-beacon.yml** ✅ Active — Template generation & HTML report generation
+- **lamppost-beacon.yml** ✅ Active — Generates ObserverNetworkDashboard template & LCARS demo report
 - **aslan-vigil.yml** — Currently disabled (can be re-enabled for test suite execution)
 - **cair-paravel.yml** — Currently disabled (can be re-enabled for dependency scanning)
 
