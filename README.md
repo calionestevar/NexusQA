@@ -277,27 +277,38 @@ Legacy → Nexus, AutomationController
 
 ## 🗺️ Roadmap
 
-**Near Term:**
-- [ ] Blueprint test coverage support
-- [ ] Integration with Unreal Insights for deeper profiling
-- [ ] Multiplayer session regression testing
-- [ ] EOS (Epic Online Services) integration testing
-- [ ] Enhanced chaos injection (CPU throttling, memory pressure)
-- [ ] Visual regression testing for UI
-- [ ] Smoke test CI workflow for quick validation
-- [ ] Test result history & trend tracking (performance baselines, regression detection)
-- [ ] Automated test retry logic (configurable, exponential backoff)
-- [ ] Real-time test execution dashboard (live pass/fail rates, test progress)
+**✅ Recently Completed:**
+- [x] Game-thread test execution (`NEXUS_TEST_GAMETHREAD` macro) — Tests can safely create actors/UObjects
+- [x] Thread-safe test observer with mutex protection (Palantir)
+- [x] Multi-backend dashboard infrastructure (ImGui/Slate/HTML)
 
-**Medium Term:**
+**Near Term (Foundation for Game Testing):**
+- [ ] Test execution context (`FNexusTestContext`) — Provide UWorld, GameState, PlayerController access
+- [ ] Test fixture/setup/teardown support (BeforeEach/AfterEach pattern) — Shared test data, faster execution
+- [ ] Test timeout handling with configurable per-test timeouts — Auto-fail hanging tests, log stack traces
+- [ ] Failure stack trace capture — Include memory state, relevant logs, actor state
+- [ ] Real-time test execution dashboard (live pass/fail rates, test progress) — Integrate with ObserverNetworkDashboard
+- [ ] Test skip/conditional execution — Skip on platform/configuration basis
+- [ ] Test dependencies & ordering system — Handle sequential test requirements beyond priority
+- [ ] Smoke test CI workflow for quick validation
+- [ ] Automated test retry logic (configurable, exponential backoff)
+- [ ] Test result history & trend tracking (performance baselines, regression detection)
+
+**Medium Term (Advanced Testing Features):**
+- [ ] Blueprint test coverage support — Leverage test context & fixtures
+- [ ] Integration with Unreal Insights for deeper profiling
+- [ ] Visual regression testing for UI — Requires game-thread screenshot/video capture
 - [ ] Screenshot/video capture automation on test failures
 - [ ] Custom assertion types & matchers for domain-specific testing
 - [ ] Test filtering & tagging system (run subsets by category/platform)
 - [ ] Live ImGui overlay during test execution (real-time status visualization)
 - [ ] Cross-platform test execution reporting (Linux/macOS in CI)
 - [ ] Test parallelization metrics & bottleneck analysis
+- [ ] Multiplayer session regression testing (requires test context for multi-actor scenarios)
+- [ ] EOS (Epic Online Services) integration testing
 
 **Under Consideration:**
+- [ ] Enhanced chaos injection (CPU throttling, memory pressure)
 - [ ] Automated test generation from Blueprint graphs
 - [ ] Integration with GameLift for cloud testing
 - [ ] Catch2/Google Test framework adapters for hybrid projects
