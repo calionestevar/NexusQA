@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "Modules/ModuleManager.h"
+#include "Logging/LogMacros.h"
 
 /**
  * NexusQA Test Framework Module
