@@ -295,12 +295,12 @@ Legacy → Nexus, AutomationController
 - [x] Test execution context (`FNexusTestContext`) — Provide UWorld, GameState, PlayerController access
 - [x] Test skip/conditional execution — Skip on platform/configuration basis
 - [x] Automated test retry logic (configurable, exponential backoff)
+- [x] **ArgusLens API Integration** — Performance assertions in test macros (`ASSERT_AVERAGE_FPS`, `ASSERT_MAX_MEMORY`, `ASSERT_MAX_HITCHES`)
+- [x] **ArgusLens Context Integration** — Performance metrics attached to `FNexusTestContext`
+- [x] **Performance Test Helper Macros** — `NEXUS_PERF_TEST` for dedicated performance benchmarking
 
 **Near Term (Foundation for Game Testing):**
 - [ ] Test fixture/setup/teardown support (BeforeEach/AfterEach pattern) — Shared test data, faster execution
-- [ ] **ArgusLens API Integration** — Performance assertions in test macros (`ASSERT_FPS`, `ASSERT_MEMORY`)
-- [ ] **ArgusLens Context Integration** — Attach performance metrics to `FNexusTestContext`
-- [ ] **Performance Test Helper Macros** — `NEXUS_PERF_TEST` for quick performance benchmarking
 - [ ] Test timeout handling with configurable per-test timeouts — Auto-fail hanging tests, log stack traces
 - [ ] Failure stack trace capture — Include memory state, relevant logs, actor state
 - [ ] Real-time test execution dashboard (live pass/fail rates, test progress) — Integrate with ObserverNetworkDashboard
