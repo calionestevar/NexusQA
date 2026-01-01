@@ -7,9 +7,42 @@
 #include "Misc/FileHelper.h"
 #include "HAL/PlatformFilemanager.h"
 #include "Misc/DateTime.h"
+#include "Engine/World.h"
+#include "GameFramework/GameStateBase.h"
+#include "GameFramework/PlayerController.h"
 #include <atomic>
 
 DEFINE_LOG_CATEGORY(LogNexus);
+
+/**
+ * Helper function to create a test context with world access when available
+ * Returns an empty context if no world is available (e.g., in dedicated test sessions)
+ */
+static FNexusTestContext CreateTestContext()
+{
+    FNexusTestContext Context;
+    
+    // Try to get the first world in the engine
+    for (TObjectIterator<UWorld> It; It; ++It)
+    {
+        UWorld* World = *It;
+        if (World && !World->bIsEditorWorld && !World->bIsTearingDown)
+        {
+            Context.World = World;
+            Context.GameState = World->GetGameState();
+            
+            // Get first player controller
+            if (APlayerController* PC = World->GetFirstPlayerController())
+            {
+                Context.PlayerController = PC;
+            }
+            
+            break;
+        }
+    }
+    
+    return Context;
+}
 
 // Define the static test array from FNexusTest
 // NEXUS_API on static member ensures proper DLL export for dependent modules
@@ -18,6 +51,7 @@ TArray<FNexusTest*> FNexusTest::AllTests;
 int32 UNexusCore::TotalTests = 0;
 int32 UNexusCore::PassedTests = 0;
 int32 UNexusCore::FailedTests = 0;
+int32 UNexusCore::SkippedTests = 0;
 int32 UNexusCore::CriticalTests = 0;
 
 TArray<FNexusTest*> UNexusCore::DiscoveredTests;
@@ -94,6 +128,14 @@ void UNexusCore::RunAllTests(bool bParallel)
         for (FNexusTest* Test : ParallelTests)
         {
             if (!Test) continue;
+            
+            // Check if test is being skipped
+            if (Test->bSkip)
+            {
+                UNexusCore::NotifyTestSkipped(Test->TestName);
+                FPalantirObserver::OnTestFinished(Test->TestName, true);
+                continue;
+            }
 
             // Early exit if critical test already failed
             if (bCriticalFailed.load())
@@ -114,7 +156,9 @@ void UNexusCore::RunAllTests(bool bParallel)
                 FPalantirObserver::OnTestStarted(Test->TestName);
                 UNexusCore::NotifyTestStarted(Test->TestName);
 
-                bool bPassed = Test->Execute();
+                // Parallel tests typically don't have world access, but we create an empty context
+                FNexusTestContext EmptyContext;
+                bool bPassed = Test->Execute(EmptyContext);
 
                 UNexusCore::NotifyTestFinished(Test->TestName, bPassed);
                 FPalantirObserver::OnTestFinished(Test->TestName, bPassed);
@@ -187,6 +231,12 @@ void UNexusCore::NotifyTestFinished(const FString& Name, bool bPassed)
     }
 }
 
+void UNexusCore::NotifyTestSkipped(const FString& Name)
+{
+    ++SkippedTests;
+    UE_LOG(LogNexus, Warning, TEXT("TEST SKIPPED: %s"), *Name);
+}
+
 FString UNexusCore::GetAbortFilePath()
 {
     return FPaths::Combine(FPaths::ProjectSavedDir(), TEXT("NexusAbort.flag"));
@@ -219,15 +269,27 @@ void UNexusCore::SignalAbort(const FString& Reason)
 
 void UNexusCore::RunSequentialWithFailFast()
 {
+    // Create context once for all sequential tests (game-thread tests especially need this)
+    FNexusTestContext TestContext = CreateTestContext();
+    
     for (FNexusTest* Test : DiscoveredTests)
     {
         if (!Test) continue;
 
         const FString Name = Test->TestName;
+        
+        // Check if test is being skipped
+        if (Test->bSkip)
+        {
+            NotifyTestSkipped(Name);
+            FPalantirObserver::OnTestFinished(Name, true);  // Skipped counts as passed for reporting
+            continue;
+        }
+
         FPalantirObserver::OnTestStarted(Name);
         NotifyTestStarted(Name);
 
-        bool bPassed = Test->Execute();
+        bool bPassed = Test->Execute(TestContext);
 
         NotifyTestFinished(Name, bPassed);
         FPalantirObserver::OnTestFinished(Name, bPassed);

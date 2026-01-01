@@ -21,11 +21,13 @@ public:
     // Reporting is now delegated
     static void NotifyTestStarted(const FString& Name);
     static void NotifyTestFinished(const FString& Name, bool bPassed);
+    static void NotifyTestSkipped(const FString& Name);
 
     // Stats
     static int32 TotalTests;
     static int32 PassedTests;
     static int32 FailedTests;
+    static int32 SkippedTests;
     static int32 CriticalTests;
     static TArray<class FNexusTest*> DiscoveredTests;
 };
