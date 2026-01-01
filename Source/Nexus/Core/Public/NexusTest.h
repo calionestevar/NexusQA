@@ -63,15 +63,9 @@ class TestClassName : public FNexusTest \
 public: \
     TestClassName() : FNexusTest(PrettyName, PriorityFlags, [this]() -> bool { return RunTest(); }) \
     { \
-        RegisterTestInstance(this); \
-        if (NexusHasFlag(PriorityFlags, ETestPriority::Critical)) IncrementCriticalTests(); \
+        UNexusCore::RegisterTest(this); \
     } \
     bool RunTest(); \
-private: \
-    static void RegisterTestInstance(FNexusTest* Test); \
-    static void IncrementCriticalTests(); \
 }; \
 static TestClassName Global_##TestClassName; \
-void TestClassName::RegisterTestInstance(FNexusTest* Test) { if (Test) {} } \
-void TestClassName::IncrementCriticalTests() {} \
 bool TestClassName::RunTest()
