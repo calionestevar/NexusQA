@@ -224,7 +224,7 @@ void UObserverNetworkDashboard::GenerateWebReport()
 FString UObserverNetworkDashboard::LoadHTMLTemplate()
 {
 	// Try loading from source directory first (development builds)
-	FString SourceTemplatePath = FPaths::ProjectSourceDir() / TEXT("Plugins/NexusQA/Source/FringeNetwork/Private/ObserverNetworkDashboard.html");
+	FString SourceTemplatePath = FPaths::ProjectDir() / TEXT("Plugins/NexusQA/Source/FringeNetwork/Private/ObserverNetworkDashboard.html");
 	FString Html;
 	
 	if (FFileHelper::LoadFileToString(Html, *SourceTemplatePath))
@@ -234,7 +234,7 @@ FString UObserverNetworkDashboard::LoadHTMLTemplate()
 	}
 
 	// Try alternate source path (if plugin is in project directly)
-	FString AltSourcePath = FPaths::ProjectSourceDir() / TEXT("Source/FringeNetwork/Private/ObserverNetworkDashboard.html");
+	FString AltSourcePath = FPaths::ProjectDir() / TEXT("Source/FringeNetwork/Private/ObserverNetworkDashboard.html");
 	if (FFileHelper::LoadFileToString(Html, *AltSourcePath))
 	{
 		UE_LOG(LogTemp, Warning, TEXT("✓ OBSERVER TEMPLATE LOADED FROM ALT SOURCE: %s"), *AltSourcePath);
@@ -253,6 +253,3 @@ FString UObserverNetworkDashboard::LoadHTMLTemplate()
 	UE_LOG(LogTemp, Warning, TEXT("⚠ OBSERVER TEMPLATE NOT FOUND ON DISK, USING EMBEDDED FALLBACK"));
 	return GetEmbeddedHTMLTemplate();
 }
-
-FString UObserverNetworkDashboard::GetEmbeddedHTMLTemplate();
-// Implementation defined in ObserverNetworkTemplate.cpp
