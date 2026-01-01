@@ -90,4 +90,3 @@ bool TestClassName::RunTest()
 // New macro for game-thread-only tests
 #define NEXUS_TEST_GAMETHREAD(TestClassName, PrettyName, PriorityFlags) \
     NEXUS_TEST_INTERNAL(TestClassName, PrettyName, PriorityFlags, true)
-bool TestClassName::RunTest()
