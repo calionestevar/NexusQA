@@ -114,11 +114,11 @@ Opens `TestReports/LCARS_Demo_Report.html` in your browser — screenshot-ready!
 - **accessibility_\<test\>.json** — Compliance check results
 
 ### CI/CD Integration
-GitHub Actions workflows automatically:
-- Run safety pattern detection (`stone-table.yml`)
-- Execute test suites (`aslan-vigil.yml`)
-- Generate coverage reports (`lamppost-beacon.yml`)
-- Upload artifacts for review
+GitHub Actions workflows:
+- **stone-table.yml** ✅ Active — Safety pattern detection (dangerous code patterns)
+- **lamppost-beacon.yml** ✅ Active — Template generation & HTML report generation
+- **aslan-vigil.yml** — Currently disabled (can be re-enabled for test suite execution)
+- **cair-paravel.yml** — Currently disabled (can be re-enabled for dependency scanning)
 
 ---
 
