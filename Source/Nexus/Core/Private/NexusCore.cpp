@@ -54,6 +54,7 @@ void UNexusCore::DiscoverAllTests()
     // FNexusTest::AllTests is populated automatically when NEXUS_TEST() static objects
     // are constructed at module load time
     DiscoveredTests = FNexusTest::AllTests;
+    TotalTests = DiscoveredTests.Num();
     UE_LOG(LogNexus, Display, TEXT("NEXUS: Discovered %d test(s)"), DiscoveredTests.Num());
 }
 
