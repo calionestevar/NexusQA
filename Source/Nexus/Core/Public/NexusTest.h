@@ -31,14 +31,15 @@ class NEXUS_API FNexusTest
 public:
     FString TestName;
     ETestPriority Priority = ETestPriority::Normal;
+    bool bRequiresGameThread = false;  // Flag for game-thread-only tests
     TFunction<bool()> TestFunc;
 
     // Static list of all test instances - populated automatically at load time
     // when NEXUS_TEST() static objects are constructed
     static TArray<FNexusTest*> AllTests;
 
-    FNexusTest(const FString& InName, ETestPriority InPriority, TFunction<bool()> InFunc)
-        : TestName(InName), Priority(InPriority), TestFunc(MoveTemp(InFunc))
+    FNexusTest(const FString& InName, ETestPriority InPriority, TFunction<bool()> InFunc, bool bInRequiresGameThread = false)
+        : TestName(InName), Priority(InPriority), TestFunc(MoveTemp(InFunc)), bRequiresGameThread(bInRequiresGameThread)
     {
         // Self-register into static list (no circular dependency!)
         AllTests.Add(this);
@@ -70,12 +71,23 @@ public:
 
 // Use this instead of IMPLEMENT_SIMPLE_AUTOMATION_TEST
 // Tests self-register via FNexusTest constructor - no circular dependency!
-#define NEXUS_TEST(TestClassName, PrettyName, PriorityFlags) \
+
+// Internal macro implementation - handles both parallel-safe and game-thread-only tests
+#define NEXUS_TEST_INTERNAL(TestClassName, PrettyName, PriorityFlags, bGameThreadOnly) \
 class TestClassName : public FNexusTest \
 { \
 public: \
-    TestClassName() : FNexusTest(PrettyName, PriorityFlags, [this]() -> bool { return RunTest(); }) {} \
+    TestClassName() : FNexusTest(PrettyName, PriorityFlags, [this]() -> bool { return RunTest(); }, bGameThreadOnly) {} \
     bool RunTest(); \
 }; \
 static TestClassName Global_##TestClassName; \
+bool TestClassName::RunTest()
+
+// Original macro - defaults to false (parallel-safe)
+#define NEXUS_TEST(TestClassName, PrettyName, PriorityFlags) \
+    NEXUS_TEST_INTERNAL(TestClassName, PrettyName, PriorityFlags, false)
+
+// New macro for game-thread-only tests
+#define NEXUS_TEST_GAMETHREAD(TestClassName, PrettyName, PriorityFlags) \
+    NEXUS_TEST_INTERNAL(TestClassName, PrettyName, PriorityFlags, true)
 bool TestClassName::RunTest()

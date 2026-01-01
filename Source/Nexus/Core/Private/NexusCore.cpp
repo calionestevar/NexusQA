@@ -65,66 +65,96 @@ void UNexusCore::RunAllTests(bool bParallel)
         return (int32)A.Priority > (int32)B.Priority;
     });
 
-    if (!bParallel || DiscoveredTests.Num() <= 1)
-    {
-        RunSequentialWithFailFast();
-        return;
-    }
-
-    // PARALLEL EXECUTION using Unreal's async task system
-    UE_LOG(LogNexus, Display, TEXT("NEXUS: Running %d tests in parallel"), DiscoveredTests.Num());
-
-    TArray<TFuture<bool>> Futures;
-    std::atomic<bool> bCriticalFailed{false};
-
+    // Separate game-thread tests from parallel-safe tests
+    TArray<FNexusTest*> GameThreadTests;
+    TArray<FNexusTest*> ParallelTests;
+    
     for (FNexusTest* Test : DiscoveredTests)
     {
         if (!Test) continue;
-
-        // Early exit if critical test already failed
-        if (bCriticalFailed.load())
+        
+        if (Test->bRequiresGameThread)
         {
-            UE_LOG(LogNexus, Warning, TEXT("Skipping test %s due to critical failure"), *Test->TestName);
-            continue;
+            GameThreadTests.Add(Test);
         }
-
-        // Launch test on thread pool
-        Futures.Add(Async(EAsyncExecution::ThreadPool, [Test, &bCriticalFailed]() -> bool
+        else
         {
-            // Check again inside task in case failure happened during launch
+            ParallelTests.Add(Test);
+        }
+    }
+
+    // Run parallel-safe tests with parallel execution (if enabled)
+    if (bParallel && ParallelTests.Num() > 1)
+    {
+        UE_LOG(LogNexus, Display, TEXT("NEXUS: Running %d parallel-safe tests in parallel"), ParallelTests.Num());
+
+        TArray<TFuture<bool>> Futures;
+        std::atomic<bool> bCriticalFailed{false};
+
+        for (FNexusTest* Test : ParallelTests)
+        {
+            if (!Test) continue;
+
+            // Early exit if critical test already failed
             if (bCriticalFailed.load())
             {
-                return false;
+                UE_LOG(LogNexus, Warning, TEXT("Skipping test %s due to critical failure"), *Test->TestName);
+                continue;
             }
 
-            FPalantirObserver::OnTestStarted(Test->TestName);
-            UNexusCore::NotifyTestStarted(Test->TestName);
-
-            bool bPassed = Test->Execute();
-
-            UNexusCore::NotifyTestFinished(Test->TestName, bPassed);
-            FPalantirObserver::OnTestFinished(Test->TestName, bPassed);
-
-            // Signal critical failure for fail-fast behavior
-            if (!bPassed && NexusHasFlag(Test->Priority, ETestPriority::Critical))
+            // Launch test on thread pool
+            Futures.Add(Async(EAsyncExecution::ThreadPool, [Test, &bCriticalFailed]() -> bool
             {
-                bCriticalFailed.store(true);
-                UE_LOG(LogNexus, Error, TEXT("CRITICAL TEST FAILED: %s — Aborting remaining tests"), *Test->TestName);
-            }
+                // Check again inside task in case failure happened during launch
+                if (bCriticalFailed.load())
+                {
+                    return false;
+                }
 
-            return bPassed;
-        }));
+                FPalantirObserver::OnTestStarted(Test->TestName);
+                UNexusCore::NotifyTestStarted(Test->TestName);
+
+                bool bPassed = Test->Execute();
+
+                UNexusCore::NotifyTestFinished(Test->TestName, bPassed);
+                FPalantirObserver::OnTestFinished(Test->TestName, bPassed);
+
+                // Signal critical failure for fail-fast behavior
+                if (!bPassed && NexusHasFlag(Test->Priority, ETestPriority::Critical))
+                {
+                    bCriticalFailed.store(true);
+                    UE_LOG(LogNexus, Error, TEXT("CRITICAL TEST FAILED: %s — Aborting remaining tests"), *Test->TestName);
+                }
+
+                return bPassed;
+            }));
+        }
+
+        // Wait for all async tasks to complete
+        for (auto& Future : Futures)
+        {
+            Future.Get();
+        }
+
+        if (bCriticalFailed.load())
+        {
+            UE_LOG(LogNexus, Error, TEXT("CRITICAL FAILURE DETECTED — Test suite aborted"));
+        }
+    }
+    else if (ParallelTests.Num() > 0)
+    {
+        // Run parallel-safe tests sequentially
+        UE_LOG(LogNexus, Display, TEXT("NEXUS: Running %d parallel-safe tests sequentially"), ParallelTests.Num());
+        DiscoveredTests = ParallelTests;
+        RunSequentialWithFailFast();
     }
 
-    // Wait for all async tasks to complete
-    for (auto& Future : Futures)
+    // Run game-thread tests sequentially on game thread
+    if (GameThreadTests.Num() > 0)
     {
-        Future.Get();
-    }
-
-    if (bCriticalFailed.load())
-    {
-        UE_LOG(LogNexus, Error, TEXT("CRITICAL FAILURE DETECTED — Test suite aborted"));
+        UE_LOG(LogNexus, Display, TEXT("NEXUS: Running %d game-thread tests on main thread"), GameThreadTests.Num());
+        DiscoveredTests = GameThreadTests;
+        RunSequentialWithFailFast();
     }
 
     FPalantirObserver::GenerateFinalReport();
