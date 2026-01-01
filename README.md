@@ -285,11 +285,22 @@ Legacy → Nexus, AutomationController
 - [ ] Enhanced chaos injection (CPU throttling, memory pressure)
 - [ ] Visual regression testing for UI
 - [ ] Smoke test CI workflow for quick validation
+- [ ] Test result history & trend tracking (performance baselines, regression detection)
+- [ ] Automated test retry logic (configurable, exponential backoff)
+- [ ] Real-time test execution dashboard (live pass/fail rates, test progress)
+
+**Medium Term:**
+- [ ] Screenshot/video capture automation on test failures
+- [ ] Custom assertion types & matchers for domain-specific testing
+- [ ] Test filtering & tagging system (run subsets by category/platform)
+- [ ] Live ImGui overlay during test execution (real-time status visualization)
+- [ ] Cross-platform test execution reporting (Linux/macOS in CI)
+- [ ] Test parallelization metrics & bottleneck analysis
 
 **Under Consideration:**
 - [ ] Automated test generation from Blueprint graphs
 - [ ] Integration with GameLift for cloud testing
-- [ ] Performance baseline tracking and regression detection
+- [ ] Catch2/Google Test framework adapters for hybrid projects
 - [ ] Separate Unity QA framework project (future exploration)
 
 ---
