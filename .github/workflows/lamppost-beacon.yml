@@ -17,12 +17,18 @@ jobs:
         with:
           dotnet-version: '7.0.x'
 
+      - name: Generate Observer Network HTML template
+        shell: bash
+        run: ./Scripts/generate-observer-network-template.sh
+
       - name: Generate demo LCARS report
         shell: pwsh
         run: pwsh -NoProfile -ExecutionPolicy Bypass ./Scripts/Generate-LCARSReport.ps1
 
-      - name: Upload LCARS artifacts
+      - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: lcars-demo-report
-          path: TestReports/LCARS_Demo_Report.html
+          name: demo-reports
+          path: |
+            TestReports/LCARS_Demo_Report.html
+            Source/FringeNetwork/Private/ObserverNetworkDashboard.html
