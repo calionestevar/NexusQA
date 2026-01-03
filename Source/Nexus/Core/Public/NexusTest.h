@@ -252,8 +252,8 @@ public:
     uint32 MaxRetries = 0;  // Number of times to retry on failure (default: 0 = no retries)
     double MaxDurationSeconds = 0.0;  // Maximum test duration in seconds (0 = unlimited)
     TFunction<bool(const FNexusTestContext&)> TestFunc;
-    TFunction<bool(FNexusTestContext&)> BeforeEach;  // Setup/fixture - called before each test attempt
-    TFunction<void(FNexusTestContext&)> AfterEach;   // Teardown/cleanup - called after each test attempt
+    TFunction<bool(const FNexusTestContext&)> BeforeEach;  // Setup/fixture - called before each test attempt
+    TFunction<void(const FNexusTestContext&)> AfterEach;   // Teardown/cleanup - called after each test attempt
     mutable FNexusTestResult LastResult;  // Result of last execution (mutable for const Execute())
 
     // Static list of all test instances - populated automatically at load time
@@ -411,7 +411,7 @@ public:
             
             // Manual line splitting since ParseIntoLines not available in UE 5.7
             TArray<FString> Lines;
-            CallStack.Split(TEXT("\n"), &Lines);
+            CallStack.Split(TEXT("\n"), &Lines, false);  // false = don't include empty final element
             LastResult.StackTrace = Lines;
         }
         
