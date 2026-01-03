@@ -408,3 +408,173 @@ void UNexusCore::RunSequentialWithFailFast()
         }
     }
 }
+
+double UNexusCore::GetAverageTestDuration(const FString& TestName)
+{
+    if (FNexusTest::AllResults.Num() == 0)
+    {
+        return 0.0;
+    }
+    
+    double TotalDuration = 0.0;
+    int32 Count = 0;
+    
+    for (const FNexusTestResult& Result : FNexusTest::AllResults)
+    {
+        if (TestName.IsEmpty() || Result.TestName == TestName)
+        {
+            TotalDuration += Result.DurationSeconds;
+            ++Count;
+        }
+    }
+    
+    return Count > 0 ? TotalDuration / Count : 0.0;
+}
+
+double UNexusCore::GetMedianTestDuration(const FString& TestName)
+{
+    TArray<double> Durations;
+    
+    for (const FNexusTestResult& Result : FNexusTest::AllResults)
+    {
+        if (TestName.IsEmpty() || Result.TestName == TestName)
+        {
+            Durations.Add(Result.DurationSeconds);
+        }
+    }
+    
+    if (Durations.Num() == 0)
+    {
+        return 0.0;
+    }
+    
+    Durations.Sort();
+    int32 MiddleIndex = Durations.Num() / 2;
+    return Durations[MiddleIndex];
+}
+
+int32 UNexusCore::DetectRegressions(double MaxAllowedDurationMs)
+{
+    if (MaxAllowedDurationMs <= 0.0)
+    {
+        // Use median * 1.5 as baseline if not specified
+        MaxAllowedDurationMs = GetMedianTestDuration() * 1500.0;  // Convert to ms
+    }
+    
+    int32 RegressionCount = 0;
+    TMap<FString, TArray<double>> TestDurations;
+    
+    // Group results by test name
+    for (const FNexusTestResult& Result : FNexusTest::AllResults)
+    {
+        TestDurations.FindOrAdd(Result.TestName).Add(Result.DurationSeconds * 1000.0);  // Convert to ms
+    }
+    
+    // Check each test for regressions
+    for (const auto& Pair : TestDurations)
+    {
+        const FString& TestName = Pair.Key;
+        const TArray<double>& Durations = Pair.Value;
+        
+        if (Durations.Num() >= 2)
+        {
+            // Compare latest to median of previous runs
+            double LatestDuration = Durations.Last();
+            double Baseline = 0.0;
+            
+            if (Durations.Num() >= 3)
+            {
+                // Use median of all but last run as baseline
+                TArray<double> PreviousDurations(Durations.GetData(), Durations.Num() - 1);
+                PreviousDurations.Sort();
+                Baseline = PreviousDurations[PreviousDurations.Num() / 2];
+            }
+            else
+            {
+                Baseline = Durations[0];  // First run is baseline
+            }
+            
+            // Flag regression if latest is 50% slower than baseline
+            if (LatestDuration > Baseline * 1.5)
+            {
+                UE_LOG(LogNexus, Warning, TEXT("REGRESSION: %s took %.2fms (baseline: %.2fms)"), 
+                    *TestName, LatestDuration, Baseline);
+                ++RegressionCount;
+            }
+        }
+    }
+    
+    return RegressionCount;
+}
+
+void UNexusCore::ExportTestTrends(const FString& OutputPath)
+{
+    FString ExportPath = OutputPath.IsEmpty() ? 
+        FPaths::Combine(FPaths::ProjectSavedDir(), TEXT("TestTrends")) : OutputPath;
+    
+    if (!FPlatformFileManager::Get().GetPlatformFile().DirectoryExists(*ExportPath))
+    {
+        FPlatformFileManager::Get().GetPlatformFile().CreateDirectoryTree(*ExportPath);
+    }
+    
+    // Export CSV with all results
+    FString CSVPath = FPaths::Combine(ExportPath, TEXT("test_trends.csv"));
+    FString CSVContent = TEXT("TestName,Timestamp,DurationSeconds,Passed,Attempts\n");
+    
+    for (const FNexusTestResult& Result : FNexusTest::AllResults)
+    {
+        CSVContent += FString::Printf(TEXT("%s,%s,%.4f,%d,%d\n"), 
+            *Result.TestName,
+            *Result.Timestamp.ToIso8601(),
+            Result.DurationSeconds,
+            Result.bPassed ? 1 : 0,
+            Result.Attempts);
+    }
+    
+    FFileHelper::SaveStringToFile(CSVContent, *CSVPath);
+    UE_LOG(LogNexus, Display, TEXT("Exported test trends to %s"), *CSVPath);
+    
+    // Export summary JSON
+    FString JSONPath = FPaths::Combine(ExportPath, TEXT("test_trends_summary.json"));
+    FString JSONContent = TEXT("{\n  \"tests\": [\n");
+    
+    TMap<FString, int32> TestPassCounts;
+    TMap<FString, double> TestAvgDurations;
+    
+    for (const FNexusTestResult& Result : FNexusTest::AllResults)
+    {
+        if (Result.bPassed)
+        {
+            TestPassCounts.FindOrAdd(Result.TestName)++;
+        }
+        TestAvgDurations.FindOrAdd(Result.TestName) += Result.DurationSeconds;
+    }
+    
+    // Calculate averages
+    for (auto& Pair : TestAvgDurations)
+    {
+        Pair.Value /= FNexusTest::AllResults.Num();
+    }
+    
+    bool bFirst = true;
+    for (const auto& Pair : TestAvgDurations)
+    {
+        if (!bFirst) JSONContent += TEXT(",\n");
+        
+        int32 PassCount = TestPassCounts.FindRef(Pair.Key);
+        JSONContent += FString::Printf(TEXT("    {\n      \"name\": \"%s\",\n      \"avg_duration_s\": %.4f,\n      \"pass_rate\": %.1f%%\n    }"),
+            *Pair.Key, Pair.Value, (PassCount * 100.0) / FNexusTest::AllResults.Num());
+        
+        bFirst = false;
+    }
+    
+    JSONContent += TEXT("\n  ]\n}\n");
+    FFileHelper::SaveStringToFile(JSONContent, *JSONPath);
+    UE_LOG(LogNexus, Display, TEXT("Exported test trends summary to %s"), *JSONPath);
+}
+
+void UNexusCore::ClearTestHistory()
+{
+    FNexusTest::AllResults.Empty();
+    UE_LOG(LogNexus, Display, TEXT("Cleared all test result history"));
+}

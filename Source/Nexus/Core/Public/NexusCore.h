@@ -27,6 +27,13 @@ public:
     // Test filtering
     static TArray<class FNexusTest*> GetTestsWithTags(ETestTag Tags);  // Get all tests matching tags
     static int32 CountTestsWithTags(ETestTag Tags);  // Count tests matching tags
+    
+    // Test result history & trend analysis
+    static double GetAverageTestDuration(const FString& TestName = TEXT(""));  // Average duration for all tests or specific test
+    static double GetMedianTestDuration(const FString& TestName = TEXT(""));   // Median duration for trend detection
+    static int32 DetectRegressions(double MaxAllowedDurationMs = 0.0);         // Detect tests slower than baseline
+    static void ExportTestTrends(const FString& OutputPath = TEXT(""));        // Export trend report to JSON/CSV
+    static void ClearTestHistory();                                             // Clear all stored test results
 
     // Stats
     static int32 TotalTests;
