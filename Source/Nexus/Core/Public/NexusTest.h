@@ -409,10 +409,8 @@ public:
             FString CallStack(StackBuffer);
             FMemory::Free(StackBuffer);
             
-            // Manual line splitting since ParseIntoLines not available in UE 5.7
-            TArray<FString> Lines;
-            CallStack.Split(TEXT("\n"), &Lines);
-            LastResult.StackTrace = Lines;
+            // Parse call stack into lines (UE 5.7 API)
+            LastResult.StackTrace = CallStack.ParseIntoArray(TEXT("\n"), true);
         }
         
         // Store in global history for trend analysis
