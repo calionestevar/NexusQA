@@ -77,8 +77,10 @@ struct NEXUS_API FNexusTestContext
      * @param Location Spawn location
      * @param Rotation Spawn rotation (default zero)
      * @return Spawned character, or nullptr if spawn failed
+     * 
+     * Note: const method - stored reference is tracked in mutable SpawnedActors array
      */
-    ACharacter* SpawnTestCharacter(TSubclassOf<ACharacter> CharClass, FVector Location, FRotator Rotation = FRotator::ZeroRotator)
+    ACharacter* SpawnTestCharacter(TSubclassOf<ACharacter> CharClass, FVector Location, FRotator Rotation = FRotator::ZeroRotator) const
     {
         if (!IsValid() || CharClass == nullptr)
         {
@@ -91,7 +93,8 @@ struct NEXUS_API FNexusTestContext
         ACharacter* Character = World->SpawnActor<ACharacter>(CharClass, Location, Rotation, SpawnParams);
         if (Character)
         {
-            SpawnedActors.Add(Character);
+            // Cast to const method version to add actor to mutable array
+            const_cast<FNexusTestContext*>(this)->SpawnedActors.Add(Character);
         }
         return Character;
     }

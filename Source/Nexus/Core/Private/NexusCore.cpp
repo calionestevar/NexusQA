@@ -26,7 +26,8 @@ static FNexusTestContext CreateTestContext()
     for (TObjectIterator<UWorld> It; It; ++It)
     {
         UWorld* World = *It;
-        if (World && !World->bIsEditorWorld && !World->bIsTearingDown)
+        // Skip editor worlds using WorldType (bIsEditorWorld removed in UE 5.7)
+        if (World && World->WorldType != EWorldType::Editor && !World->bIsTearingDown)
         {
             Context.World = World;
             Context.GameState = World->GetGameState();
@@ -52,7 +53,8 @@ static void PopulatePerformanceMetrics(FTestPerformanceMetrics& OutMetrics)
 {
     // ArgusLens is optional - only populate if module is loaded
     // Use reflection to check if UArgusLens class exists (avoids hard dependency)
-    UClass* ArgusLensClass = FindObject<UClass>(ANY_PACKAGE, TEXT("ArgusLens"), true);
+    // Use nullptr instead of ANY_PACKAGE (removed in UE 5.7)
+    UClass* ArgusLensClass = FindObject<UClass>(nullptr, TEXT("ArgusLens"), true);
     
     if (!ArgusLensClass)
     {
