@@ -10,4 +10,10 @@ public:
                                                  const TMap<FString, double>& Durations,
                                                  const TMap<FString, TArray<FString>>& Artifacts,
                                                  const FString& OutputPath);
+
+    /**
+     * Get the embedded HTML template for LCARS reports
+     * Follows the same pattern as UObserverNetworkDashboard::GetEmbeddedHTMLTemplate()
+     */
+    static FString GetEmbeddedHTMLTemplate();
 };

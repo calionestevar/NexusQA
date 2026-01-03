@@ -405,7 +405,6 @@ TArray<FString> UNexusCore::GetAllCustomTags()
     AllTags.Sort();
     return AllTags;
 }
-}
 
 void UNexusCore::RunTestsWithTags(ETestTag Tags, bool bParallel)
 {

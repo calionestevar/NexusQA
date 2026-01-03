@@ -5,14 +5,6 @@
 #include "HAL/PlatformFileManager.h"
 #include "Misc/DateTime.h"
 
-// Define WITH_IMGUI if not already defined by the build system
-#ifndef WITH_IMGUI
-#define WITH_IMGUI 0
-#endif
-
-// Include LCARS template from LCARSBridge
-#include "../../../LCARSBridge/Private/LCARSTemplate.cpp"
-
 #if WITH_IMGUI
 #include "imgui.h"
 #endif
@@ -324,8 +316,8 @@ void FPalantirObserver::GenerateFinalReport()
     const FString Timestamp = FDateTime::Now().ToString(TEXT("%Y%m%d_%H%M%S"));
     const FString HtmlPath = ReportDir / FString::Printf(TEXT("LCARS_Report_%s.html"), *Timestamp);
 
-    // Start with the template
-    FString Html(LCARS_REPORT_TEMPLATE);
+    // Start with the template (same pattern as UObserverNetworkDashboard)
+    FString Html = LCARSReporter::GetEmbeddedHTMLTemplate();
 
     // Calculate system integrity percentage
     double IntegrityPercent = (UNexusCore::TotalTests > 0) ? 

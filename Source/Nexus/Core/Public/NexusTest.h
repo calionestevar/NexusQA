@@ -411,7 +411,7 @@ public:
             
             // Manual line splitting since ParseIntoLines not available in UE 5.7
             TArray<FString> Lines;
-            CallStack.Split(TEXT("\n"), &Lines, false);  // false = don't include empty final element
+            CallStack.Split(TEXT("\n"), &Lines);
             LastResult.StackTrace = Lines;
         }
         

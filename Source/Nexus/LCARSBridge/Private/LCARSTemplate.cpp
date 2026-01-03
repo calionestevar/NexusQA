@@ -5,7 +5,7 @@
 
 #pragma once
 
-static const char* LCARS_REPORT_TEMPLATE = R"(<!DOCTYPE html>
+const char* LCARS_REPORT_TEMPLATE = R"(<!DOCTYPE html>
 <html>
 <head>
     <meta charset="UTF-8">
