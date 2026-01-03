@@ -203,6 +203,8 @@ public:
     uint32 MaxRetries = 0;  // Number of times to retry on failure (default: 0 = no retries)
     double MaxDurationSeconds = 0.0;  // Maximum test duration in seconds (0 = unlimited)
     TFunction<bool(const FNexusTestContext&)> TestFunc;
+    TFunction<bool(FNexusTestContext&)> BeforeEach;  // Setup/fixture - called before each test attempt
+    TFunction<void(FNexusTestContext&)> AfterEach;   // Teardown/cleanup - called after each test attempt
 
     // Static list of all test instances - populated automatically at load time
     // when NEXUS_TEST() static objects are constructed
@@ -240,18 +242,40 @@ public:
         {
             ++Attempt;
             
-            double StartTime = FPlatformTime::Seconds();
-            bResult = TestFunc(Context);
-            double Duration = FPlatformTime::Seconds() - StartTime;
-            
-            // Check if test exceeded timeout
-            if (MaxDurationSeconds > 0.0 && Duration > MaxDurationSeconds)
+            // Call setup fixture (BeforeEach) if provided
+            bool bSetupSuccess = true;
+            if (BeforeEach)
             {
-                UE_LOG(LogNexus, Error, TEXT("TIMEOUT: %s exceeded max duration: %.2fs > %.2fs"), 
-                    *TestName, Duration, MaxDurationSeconds);
-                PALANTIR_BREADCRUMB(TEXT("Timeout"), 
-                    FString::Printf(TEXT("Duration: %.2fs, Limit: %.2fs"), Duration, MaxDurationSeconds));
-                bResult = false;  // Timeout = test failure
+                bSetupSuccess = BeforeEach(Context);
+                if (!bSetupSuccess)
+                {
+                    UE_LOG(LogNexus, Error, TEXT("Setup fixture failed for %s"), *TestName);
+                    bResult = false;
+                }
+            }
+            
+            // Run test only if setup succeeded
+            if (bSetupSuccess)
+            {
+                double StartTime = FPlatformTime::Seconds();
+                bResult = TestFunc(Context);
+                double Duration = FPlatformTime::Seconds() - StartTime;
+                
+                // Check if test exceeded timeout
+                if (MaxDurationSeconds > 0.0 && Duration > MaxDurationSeconds)
+                {
+                    UE_LOG(LogNexus, Error, TEXT("TIMEOUT: %s exceeded max duration: %.2fs > %.2fs"), 
+                        *TestName, Duration, MaxDurationSeconds);
+                    PALANTIR_BREADCRUMB(TEXT("Timeout"), 
+                        FString::Printf(TEXT("Duration: %.2fs, Limit: %.2fs"), Duration, MaxDurationSeconds));
+                    bResult = false;  // Timeout = test failure
+                }
+            }
+            
+            // Call teardown fixture (AfterEach) if provided - always called regardless of test result
+            if (AfterEach)
+            {
+                AfterEach(Context);
             }
             
             if (bResult)
