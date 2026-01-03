@@ -2,6 +2,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "Nexus/Palantir/Public/PalantirTrace.h"
+#include "HAL/PlatformStackWalk.h"
 
 // Forward declarations
 class UNexusCore;
@@ -25,6 +26,32 @@ struct NEXUS_API FTestPerformanceMetrics
         return AverageFPS > 0.0f || PeakMemoryMb > 0.0f;
     }
 };
+
+/**
+ * Test execution result with diagnostic information
+ * Captured for every test execution and used for reporting/analysis
+ */
+struct NEXUS_API FNexusTestResult
+{
+    FString TestName;
+    bool bPassed = false;
+    double DurationSeconds = 0.0;
+    uint32 Attempts = 1;
+    FString ErrorMessage;        // Error message if test failed
+    TArray<FString> StackTrace;  // Stack trace on failure (diagnostic info)
+    FDateTime Timestamp = FDateTime::Now();
+    
+    bool HasStackTrace() const
+    {
+        return StackTrace.Num() > 0;
+    }
+    
+    FString GetStackTraceString() const
+    {
+        return FString::Join(StackTrace, TEXT("\n"));
+    }
+};
+
 #if !defined(NEXUS_API)
     #define NEXUS_API
 #endif
@@ -226,10 +253,12 @@ public:
     TFunction<bool(const FNexusTestContext&)> TestFunc;
     TFunction<bool(FNexusTestContext&)> BeforeEach;  // Setup/fixture - called before each test attempt
     TFunction<void(FNexusTestContext&)> AfterEach;   // Teardown/cleanup - called after each test attempt
+    mutable FNexusTestResult LastResult;  // Result of last execution (mutable for const Execute())
 
     // Static list of all test instances - populated automatically at load time
     // when NEXUS_TEST() static objects are constructed
     static TArray<FNexusTest*> AllTests;
+    static TArray<FNexusTestResult> AllResults;  // History of all test results for trend analysis
 
     FNexusTest(const FString& InName, ETestPriority InPriority, TFunction<bool(const FNexusTestContext&)> InFunc, bool bInRequiresGameThread = false)
         : TestName(InName), Priority(InPriority), bRequiresGameThread(bInRequiresGameThread), TestFunc(MoveTemp(InFunc))
@@ -324,6 +353,30 @@ public:
         
         UE_LOG_TRACE(LogNexus, Display, TEXT("COMPLETED: %s [%s] (attempt %d/%d)"), 
             *TestName, bResult ? TEXT("PASS") : TEXT("FAIL"), Attempt, MaxAttempts);
+        
+        // Capture result for history tracking and failure diagnostics
+        LastResult.TestName = TestName;
+        LastResult.bPassed = bResult;
+        LastResult.Attempts = Attempt;
+        LastResult.Timestamp = FDateTime::Now();
+        
+        // Capture stack trace on failure for diagnostics
+        if (!bResult)
+        {
+            LastResult.ErrorMessage = FString::Printf(TEXT("Test failed after %d attempt(s)"), Attempt);
+            
+            // Capture stack trace (if available on this platform)
+            FString CallStack;
+            FPlatformStackWalk::StackWalkAndDump(CallStack, 32, nullptr);  // Capture up to 32 frames
+            
+            // Parse stack trace into individual frames
+            TArray<FString> Lines;
+            CallStack.ParseIntoLines(Lines);
+            LastResult.StackTrace = Lines;
+        }
+        
+        // Store in global history for trend analysis
+        AllResults.Add(LastResult);
         
         return bResult;
     }
