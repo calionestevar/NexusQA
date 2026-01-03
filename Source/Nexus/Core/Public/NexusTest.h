@@ -409,8 +409,10 @@ public:
             FString CallStack(StackBuffer);
             FMemory::Free(StackBuffer);
             
-            // Parse call stack into lines (UE 5.7 API)
-            LastResult.StackTrace = CallStack.ParseIntoArray(TEXT("\n"), true);
+            // Parse call stack into lines (UE 5.7 API: array passed by reference)
+            TArray<FString> Lines;
+            CallStack.ParseIntoArray(Lines, TEXT("\n"), true);
+            LastResult.StackTrace = Lines;
         }
         
         // Store in global history for trend analysis
