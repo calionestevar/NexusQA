@@ -1,150 +1,16 @@
-#!/usr/bin/env pwsh
-# Generate LCARS Enhanced Report
-# Generates a Starfleet-themed LCARS dashboard with metrics, test grouping, and collapsible sections
-# Cross-platform compatible (Windows, macOS, Linux with PowerShell 7+)
+/**
+ * LCARS Report HTML Template
+ * Enhanced Starfleet-themed dashboard with metrics, test grouping, and collapsible sections
+ */
 
-param(
-    [string]$ReportPath = (Join-Path "Saved" "NexusReports" "LCARS_Report_$(Get-Date -Format 'yyyyMMdd_HHmmss').html"),
-    [switch]$OpenInBrowser
-)
+#pragma once
 
-$ReportDir = Split-Path $ReportPath -Parent
-
-# Create directory if it doesn't exist
-if (-not (Test-Path $ReportDir)) {
-    New-Item -ItemType Directory -Path $ReportDir -Force | Out-Null
-}
-
-Write-Host "Generating enhanced LCARS report..." -ForegroundColor Cyan
-
-# Define test data for sample report
-$sampleTests = @(
-    @{ Name = "Test_NetworkRequest_Basic"; Passed = $true; Tag = "Networking"; Duration = 0.245 },
-    @{ Name = "Test_NetworkRequest_Timeout"; Passed = $true; Tag = "Networking"; Duration = 0.312 },
-    @{ Name = "Test_NetworkRequest_Retry"; Passed = $false; Tag = "Networking"; Duration = 2.145 },
-    @{ Name = "Test_PerformanceBaseline"; Passed = $true; Tag = "Performance"; Duration = 0.089 },
-    @{ Name = "Test_PerformanceStress"; Passed = $false; Tag = "Performance"; Duration = 5.234 },
-    @{ Name = "Test_GameplayMovement"; Passed = $true; Tag = "Gameplay"; Duration = 0.123 },
-    @{ Name = "Test_GameplayCollision"; Passed = $true; Tag = "Gameplay"; Duration = 0.156 },
-    @{ Name = "Test_GameplayAI"; Passed = $true; Tag = "Gameplay"; Duration = 0.198 },
-    @{ Name = "Test_ComplianceGDPR"; Passed = $true; Tag = "Compliance"; Duration = 0.045 },
-    @{ Name = "Test_ComplianceCOPPA"; Passed = $true; Tag = "Compliance"; Duration = 0.052 },
-    @{ Name = "Test_IntegrationDatabase"; Passed = $true; Tag = "Integration"; Duration = 0.334 },
-    @{ Name = "Test_IntegrationCache"; Passed = $true; Tag = "Integration"; Duration = 0.267 },
-    @{ Name = "Test_StressLoad"; Passed = $false; Tag = "Stress"; Duration = 8.912 },
-    @{ Name = "Test_StressMemory"; Passed = $true; Tag = "Stress"; Duration = 3.456 },
-    @{ Name = "Test_EditorPlugin"; Passed = $true; Tag = "Editor"; Duration = 0.523 },
-    @{ Name = "Test_RenderingMesh"; Passed = $true; Tag = "Rendering"; Duration = 0.678 },
-    @{ Name = "Test_RenderingShader"; Passed = $true; Tag = "Rendering"; Duration = 0.234 }
-)
-
-# Calculate metrics
-$totalTests = $sampleTests.Count
-$passedTests = ($sampleTests | Where-Object { $_.Passed }).Count
-$failedTests = $totalTests - $passedTests
-$integrityPercent = [math]::Round(($passedTests / $totalTests) * 100, 1)
-$integrityClass = if ($integrityPercent -lt 70) { "critical" } elseif ($integrityPercent -lt 85) { "warning" } else { "" }
-$avgDuration = [math]::Round(($sampleTests.Duration | Measure-Object -Average).Average * 1000, 0)
-$perfStatus = if ($avgDuration -lt 100) { "Excellent" } elseif ($avgDuration -lt 200) { "Good" } else { "Needs review" }
-$regressionCount = ($sampleTests | Where-Object { $_.Duration -gt 1000 }).Count
-$regressionStatus = if ($regressionCount -eq 0) { "All clear" } else { "Investigate" }
-$criticalTests = 5
-
-# Group tests by tag
-$tagGroups = @{
-    "Networking" = @()
-    "Performance" = @()
-    "Gameplay" = @()
-    "Compliance" = @()
-    "Integration" = @()
-    "Stress" = @()
-    "Editor" = @()
-    "Rendering" = @()
-}
-
-foreach ($test in $sampleTests) {
-    if ($tagGroups.ContainsKey($test.Tag)) {
-        $tagGroups[$test.Tag] += $test
-    }
-}
-
-# Build tag distribution cards
-$tagCards = ""
-foreach ($tag in $tagGroups.Keys) {
-    $count = $tagGroups[$tag].Count
-    $tagCards += @"
-                <div class="tag-card">
-                    <div class="count">$count</div>
-                    <div class="label">$tag</div>
-                </div>
-"@
-}
-
-# Build grouped test sections (collapsible)
-$groupedSections = ""
-foreach ($tag in $tagGroups.Keys) {
-    $tests = $tagGroups[$tag]
-    if ($tests.Count -gt 0) {
-        $tagPassCount = ($tests | Where-Object { $_.Passed }).Count
-        $passPercent = [math]::Round(($tagPassCount / $tests.Count) * 100, 1)
-        $hasFailures = ($tests | Where-Object { -not $_.Passed }).Count -gt 0
-        $openClass = if ($hasFailures) { " open" } else { "" }
-        
-        $groupedSections += @"
-        <div class="tag-section">
-            <div class="tag-section-header" onclick="toggleSection(this)">
-                <span>$tag Tests</span>
-                <span class="toggle-icon$openClass">&#x25BC;</span>
-            </div>
-            <div class="tag-section-stats">$($tests.Count) tests - $passPercent% passed</div>
-            <div class="tag-section-content$openClass">
-                <table class="tag-test-table">
-"@
-        
-        foreach ($test in $tests) {
-            $statusClass = if ($test.Passed) { "test-passed" } else { "test-failed" }
-            $statusText = if ($test.Passed) { "PASSED" } else { "FAILED" }
-            $groupedSections += @"
-                    <tr>
-                        <td class="$statusClass">$($test.Name) - $statusText</td>
-                    </tr>
-"@
-        }
-        
-        $groupedSections += @"
-                </table>
-            </div>
-        </div>
-"@
-    }
-}
-
-# Build flat test table rows
-$tableRows = ""
-foreach ($test in $sampleTests) {
-    $statusClass = if ($test.Passed) { "test-passed" } else { "test-failed" }
-    $statusText = if ($test.Passed) { "PASSED" } else { "FAILED" }
-    $tableRows += "                <tr><td class='test-name'>$($test.Name)</td><td class='$statusClass'>$statusText</td></tr>`n"
-}
-
-# For now, create a simple standalone HTML version using PowerShell
-# (Later this will be generated via UE5 commandlet)
-
-$html = @"
-<!DOCTYPE html>
-<html lang="en">
+static const char* LCARS_REPORT_TEMPLATE = R"(<!DOCTYPE html>
+<html>
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nexus Demo Suite - API & Integration Tests</title>
+    <title>LCARS NEXUS FINAL REPORT</title>
     <style>
-        }
-        .chart-title {
-            color: #ff9900;
-            font-size: 1.5em;
-            margin-bottom: 15px;
-            text-align: center;
-        }
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             background: linear-gradient(135deg, #000033 0%, #001a66 100%);
@@ -380,62 +246,30 @@ $html = @"
         .tag-test-table .test-failed {
             color: #ff3333;
         }
-        .status-code-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 15px;
-            margin-top: 20px;
-        }
-        .status-code-item {
-            background: #000033;
-            border: 2px solid #ffcc00;
-            border-radius: 8px;
-            padding: 15px;
-            text-align: center;
-        }
-        .status-code-item.success { border-color: #00ff00; }
-        .status-code-item.error { border-color: #ff0000; }
-        .status-code { font-size: 2em; font-weight: bold; color: #ffcc00; }
-        .status-code-item.success .status-code { color: #00ff00; }
-        .status-code-item.error .status-code { color: #ff0000; }
-        .status-count { font-size: 1.5em; color: #ffffff; margin-top: 5px; }
-        .endpoint-list { list-style: none; padding: 0; }
-        .endpoint-item {
-            background: #000033;
-            border-left: 5px solid #00ff00;
-            padding: 15px;
-            margin: 10px 0;
-            border-radius: 5px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .endpoint-name { color: #ffffff; font-size: 1.1em; }
-        .endpoint-time { color: #00ccff; font-size: 1.2em; font-weight: bold; }
     </style>
 </head>
 <body>
     <div class="lcars-frame">
         <div class="lcars-header">
             <h1>LCARS NEXUS FINAL REPORT</h1>
-            <div class="stardate">$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')</div>
+            <div class="stardate">{STARDATE}</div>
         </div>
         
         <!-- PRIMARY STATUS: System Integrity + Key Indicators -->
         <div class="primary-status">
             <div class="card large-card">
                 <div class="card-label">System Integrity</div>
-                <div class="card-value">$integrityPercent%</div>
+                <div class="card-value">{INTEGRITY_PERCENT}%</div>
                 <div class="status-bar-container">
                     <div class="status-bar">
-                        <div class="status-bar-fill $integrityClass" style="width: $integrityPercent%;"></div>
+                        <div class="status-bar-fill {INTEGRITY_CLASS}" style="width: {INTEGRITY_PERCENT}%;"></div>
                     </div>
                 </div>
-                <div class="card-secondary">$passedTests of $totalTests tests passed</div>
+                <div class="card-secondary">{PASSED_TESTS} of {TOTAL_TESTS} tests passed</div>
             </div>
             <div class="card">
                 <div class="card-label">Critical Systems</div>
-                <div class="card-value">$criticalTests</div>
+                <div class="card-value">{CRITICAL_TESTS}</div>
                 <div class="card-secondary">Core systems validated</div>
                 <div class="card-secondary">Status: Active</div>
             </div>
@@ -451,15 +285,15 @@ $html = @"
         <div class="metrics-grid">
             <div class="card">
                 <div class="card-label">Performance Matrix</div>
-                <div class="card-value">${avgDuration}ms</div>
+                <div class="card-value">{AVG_DURATION}ms</div>
                 <div class="card-secondary">Avg duration</div>
-                <div class="card-secondary">$perfStatus</div>
+                <div class="card-secondary">{PERF_STATUS}</div>
             </div>
             <div class="card">
                 <div class="card-label">Regression Alert</div>
-                <div class="card-value">$regressionCount</div>
+                <div class="card-value">{REGRESSION_COUNT}</div>
                 <div class="card-secondary">Tests slower than baseline</div>
-                <div class="card-secondary">$regressionStatus</div>
+                <div class="card-secondary">{REGRESSION_STATUS}</div>
             </div>
             <div class="card">
                 <div class="card-label">Memory Allocation</div>
@@ -479,14 +313,14 @@ $html = @"
         <div class="distribution-section">
             <div class="card-label" style="padding: 0 0 15px 0;">Test Distribution by Category</div>
             <div class="distribution-grid">
-$tagCards
+                {TAG_DISTRIBUTION_CARDS}
             </div>
         </div>
 
         <!-- TEST RESULTS BY CATEGORY (COLLAPSIBLE) -->
         <div style="margin-top: 50px; margin-bottom: 40px;">
             <div class="card-label" style="padding: 0 0 15px 0;">Test Results by Category</div>
-$groupedSections
+            {GROUPED_TEST_SECTIONS}
         </div>
 
         <!-- FLAT TEST TABLE (For reference) -->
@@ -500,7 +334,7 @@ $groupedSections
                 </tr>
             </thead>
             <tbody>
-$tableRows
+                {ALL_TESTS_TABLE_ROWS}
             </tbody>
             </table>
         </div>
@@ -536,27 +370,4 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 </script>
-</html>
-"@
-
-$html | Out-File -FilePath $ReportPath -Encoding UTF8
-
-Write-Host "[SUCCESS] Report generated successfully!" -ForegroundColor Green
-Write-Host "Location: $ReportPath" -ForegroundColor Yellow
-Write-Host ""
-
-if ($OpenInBrowser) {
-    Start-Process $ReportPath
-    Write-Host "Opening in browser..." -ForegroundColor Cyan
-} else {
-    Write-Host "To open in browser, run:" -ForegroundColor Cyan
-    Write-Host "   Start-Process '$ReportPath'" -ForegroundColor White
-}
-
-Write-Host ""
-Write-Host "Enhanced LCARS dashboard features:" -ForegroundColor Magenta
-Write-Host "  - System Integrity card with status bar" -ForegroundColor Gray
-Write-Host "  - 4-column metrics grid (Performance, Regression, Memory, Frames)" -ForegroundColor Gray
-Write-Host "  - Test distribution by category" -ForegroundColor Gray
-Write-Host "  - Collapsible test sections with auto-expand for failures" -ForegroundColor Gray
-Write-Host "  - Complete flat test listing for reference" -ForegroundColor Gray
+</html>)";

@@ -1,5 +1,7 @@
 # NexusQA Integration Checklist
 
+> **Latest Updates (Jan 2, 2026):** Auto-PIE world detection, enhanced LCARS HTML reporting with Star Trek-inspired styling, and fixed encoding issues in logging systems.
+
 Before integrating NexusQA into your demo game, verify the following.
 
 > **After integration is complete**, see [Docs/INTEGRATION_GUIDE.md](Docs/INTEGRATION_GUIDE.md) for guidance on using multiple modules together, choosing between NEXUS_TEST and NEXUS_TEST_GAMETHREAD, and avoiding common pitfalls.

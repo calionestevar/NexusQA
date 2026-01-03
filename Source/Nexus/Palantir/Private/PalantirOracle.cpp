@@ -10,6 +10,9 @@
 #define WITH_IMGUI 0
 #endif
 
+// Include LCARS template from LCARSBridge
+#include "../../../LCARSBridge/Private/LCARSTemplate.cpp"
+
 #if WITH_IMGUI
 #include "imgui.h"
 #endif
@@ -321,327 +324,118 @@ void FPalantirObserver::GenerateFinalReport()
     const FString Timestamp = FDateTime::Now().ToString(TEXT("%Y%m%d_%H%M%S"));
     const FString HtmlPath = ReportDir / FString::Printf(TEXT("LCARS_Report_%s.html"), *Timestamp);
 
-    FString Html = R"(<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="UTF-8">
-    <title>LCARS NEXUS FINAL REPORT</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            background: linear-gradient(135deg, #000033 0%, #001a66 100%);
-            color: #ffcc00;
-            font-family: 'Courier New', monospace;
-            padding: 40px 20px;
-            line-height: 1.6;
-        }
-        .lcars-frame {
-            max-width: 1400px;
-            margin: 0 auto;
-            border: 3px solid #ff9900;
-            border-radius: 30px;
-            padding: 50px;
-            background: radial-gradient(ellipse at center, #000066 0%, #000033 100%);
-            box-shadow: 0 0 40px rgba(255, 153, 0, 0.5), inset 0 0 20px rgba(255, 153, 0, 0.1);
-        }
-        .lcars-header {
-            text-align: center;
-            margin-bottom: 50px;
-            border-bottom: 2px solid #ff9900;
-            padding-bottom: 30px;
-        }
-        h1 {
-            color: #ff9900;
-            font-size: 3.5em;
-            text-shadow: 0 0 20px #ff9900, 0 0 40px rgba(255, 153, 0, 0.5);
-            letter-spacing: 3px;
-            margin-bottom: 10px;
-        }
-        .stardate {
-            color: #ffff66;
-            font-size: 1.1em;
-            font-style: italic;
-        }
-        .primary-status {
-            display: grid;
-            grid-template-columns: 2fr 1fr 1fr;
-            gap: 20px;
-            margin-bottom: 40px;
-        }
-        .metrics-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr 1fr;
-            gap: 20px;
-            margin-bottom: 40px;
-        }
-        .distribution-section {
-            margin-bottom: 40px;
-        }
-        .card {
-            background: #001f4d;
-            border: 2px solid #ff9900;
-            border-radius: 10px;
-            padding: 25px;
-            box-shadow: inset 0 0 15px rgba(255, 153, 0, 0.2);
-        }
-        .card-label {
-            color: #ffff66;
-            font-size: 0.8em;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 15px;
-            opacity: 0.9;
-        }
-        .card-value {
-            font-size: 2.5em;
-            font-weight: bold;
-            color: #ffcc00;
-            margin-bottom: 10px;
-        }
-        .card-secondary {
-            font-size: 0.9em;
-            color: #99ff99;
-            margin-bottom: 8px;
-        }
-        .status-bar-container {
-            margin-top: 15px;
-        }
-        .status-bar {
-            width: 100%;
-            height: 20px;
-            background: #000011;
-            border: 1px solid #ff9900;
-            border-radius: 3px;
-            overflow: hidden;
-        }
-        .status-bar-fill {
-            height: 100%;
-            background: linear-gradient(90deg, #00ff00, #00cc00);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 0.7em;
-            color: #000000;
-            font-weight: bold;
-        }
-        .status-bar-fill.warning {
-            background: linear-gradient(90deg, #ffcc00, #ff9900);
-        }
-        .status-bar-fill.critical {
-            background: linear-gradient(90deg, #ff3333, #cc0000);
-        }
-        .large-card {
-            grid-column: 1 / 3;
-        }
-        .large-card .card-value {
-            font-size: 4em;
-        }
-        .distribution-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 15px;
-        }
-        .tag-card {
-            background: #001f4d;
-            border: 1px solid #ff9900;
-            border-radius: 5px;
-            padding: 15px;
-            text-align: center;
-            font-size: 0.9em;
-        }
-        .tag-card .count {
-            font-size: 1.8em;
-            font-weight: bold;
-            color: #00ff00;
-            margin-bottom: 5px;
-        }
-        .tag-card .label {
-            color: #ffff66;
-            text-transform: uppercase;
-            font-size: 0.75em;
-            letter-spacing: 0.5px;
-        }
-        .test-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin: 40px 0;
-            border: 2px solid #ff9900;
-        }
-        .test-table thead {
-            background: linear-gradient(90deg, #003366, #004d99);
-        }
-        .test-table th {
-            color: #ffff66;
-            padding: 15px;
-            text-align: left;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            font-size: 0.95em;
-            border-bottom: 2px solid #ff9900;
-        }
-        .test-table td {
-            padding: 12px 15px;
-            border-bottom: 1px solid rgba(255, 153, 0, 0.3);
-        }
-        .test-table tr:hover {
-            background: rgba(255, 153, 0, 0.1);
-        }
-        .test-name { color: #ffcc00; font-weight: bold; }
-        .test-passed { color: #00ff00; text-transform: uppercase; font-weight: bold; }
-        .test-failed { color: #ff3333; text-transform: uppercase; font-weight: bold; }
-        .footer {
-            margin-top: 50px;
-            padding-top: 30px;
-            border-top: 2px solid #ff9900;
-            text-align: center;
-            color: #ffff66;
-            font-size: 0.9em;
-        }
-        .footer-divider {
-            color: #ff9900;
-            margin: 0 10px;
-        }
-    </style>
-</head>
-<body>
-    <div class="lcars-frame">
-        <div class="lcars-header">
-            <h1>LCARS NEXUS FINAL REPORT</h1>
-            <div class="stardate">Stardate )" + FDateTime::Now().ToString() + R"(</div>
-        </div>
-        
-        <!-- PRIMARY STATUS: System Integrity + Key Indicators -->
-        <div class="primary-status">
-            <div class="card large-card">
-                <div class="card-label">System Integrity</div>
-                <div class="card-value">)";
-    
+    // Start with the template
+    FString Html(LCARS_REPORT_TEMPLATE);
+
     // Calculate system integrity percentage
     double IntegrityPercent = (UNexusCore::TotalTests > 0) ? 
         (static_cast<double>(UNexusCore::PassedTests) / UNexusCore::TotalTests) * 100.0 : 0.0;
-    Html += FString::Printf(TEXT("%.1f%%"), IntegrityPercent);
-    Html += R"(</div>
-                <div class="status-bar-container">
-                    <div class="status-bar">
-                        <div class="status-bar-fill)" + (IntegrityPercent < 70 ? FString(TEXT(" critical")) : 
-                            IntegrityPercent < 85 ? FString(TEXT(" warning")) : FString(TEXT(""))) + 
-                        TEXT(R"(" style="width: )") + FString::Printf(TEXT("%.1f"), IntegrityPercent) + TEXT(R"(%;"></div>
-                    </div>
-                </div>
-                <div class="card-secondary">)") + FString::FromInt(UNexusCore::PassedTests) + TEXT(" of ") + 
-                FString::FromInt(UNexusCore::TotalTests) + TEXT(R"( tests passed</div>
-            </div>
-            <div class="card">
-                <div class="card-label">Critical Systems</div>
-                <div class="card-value">)") + FString::FromInt(UNexusCore::CriticalTests) + TEXT(R"(</div>
-                <div class="card-secondary">Core systems validated</div>
-                <div class="card-secondary">Status: Active</div>
-            </div>
-            <div class="card">
-                <div class="card-label">Execution Status</div>
-                <div class="card-value">Ready</div>
-                <div class="card-secondary">All phases complete</div>
-                <div class="card-secondary">Deployment ready</div>
-            </div>
-        </div>
-
-        <!-- METRICS GRID: Performance, Regression, Memory, Frames -->
-        <div class="metrics-grid">
-            <div class="card">
-                <div class="card-label">Performance Matrix</div>
-                <div class="card-value">)";
     
-    // Calculate average test duration
+    FString IntegrityClass = IntegrityPercent < 70 ? TEXT("critical") : 
+                             IntegrityPercent < 85 ? TEXT("warning") : TEXT("");
+    
+    // Replace placeholders with actual data
+    Html.ReplaceInline(TEXT("{STARDATE}"), *FDateTime::Now().ToString());
+    Html.ReplaceInline(TEXT("{INTEGRITY_PERCENT}"), *FString::Printf(TEXT("%.1f"), IntegrityPercent));
+    Html.ReplaceInline(TEXT("{INTEGRITY_CLASS}"), *IntegrityClass);
+    Html.ReplaceInline(TEXT("{PASSED_TESTS}"), *FString::FromInt(UNexusCore::PassedTests));
+    Html.ReplaceInline(TEXT("{TOTAL_TESTS}"), *FString::FromInt(UNexusCore::TotalTests));
+    Html.ReplaceInline(TEXT("{CRITICAL_TESTS}"), *FString::FromInt(UNexusCore::CriticalTests));
+    
+    // Performance metrics
     double AvgDuration = UNexusCore::GetAverageTestDuration();
-    Html += FString::Printf(TEXT("%.0f"), AvgDuration) + TEXT(R"(ms</div>
-                <div class="card-secondary">Avg duration</div>
-                <div class="card-secondary">)") + (AvgDuration < 100 ? TEXT("Excellent") : 
-                    AvgDuration < 200 ? TEXT("Good") : TEXT("Needs review")) + TEXT(R"(</div>
-            </div>
-            <div class="card">
-                <div class="card-label">Regression Alert</div>
-                <div class="card-value">)");
+    FString PerfStatus = AvgDuration < 100 ? TEXT("Excellent") : 
+                         AvgDuration < 200 ? TEXT("Good") : TEXT("Needs review");
+    Html.ReplaceInline(TEXT("{AVG_DURATION}"), *FString::Printf(TEXT("%.0f"), AvgDuration));
+    Html.ReplaceInline(TEXT("{PERF_STATUS}"), *PerfStatus);
     
-    // Count regressions
+    // Regression metrics
     int32 RegressionCount = UNexusCore::DetectRegressions(0);
-    Html += FString::FromInt(RegressionCount) + TEXT(R"(</div>
-                <div class="card-secondary">Tests slower than baseline</div>
-                <div class="card-secondary">)") + (RegressionCount == 0 ? TEXT("All clear") : TEXT("Investigate")) + TEXT(R"(</div>
-            </div>
-            <div class="card">
-                <div class="card-label">Memory Allocation</div>
-                <div class="card-value">)");
+    FString RegressionStatus = RegressionCount == 0 ? TEXT("All clear") : TEXT("Investigate");
+    Html.ReplaceInline(TEXT("{REGRESSION_COUNT}"), *FString::FromInt(RegressionCount));
+    Html.ReplaceInline(TEXT("{REGRESSION_STATUS}"), *RegressionStatus);
     
-    // Memory data (placeholder - would need to implement ArgusLens hook)
-    Html += TEXT(R"(N/A</div>
-                <div class="card-secondary">Peak usage tracking</div>
-                <div class="card-secondary">Requires ArgusLens</div>
-            </div>
-            <div class="card">
-                <div class="card-label">Frame Diagnostics</div>
-                <div class="card-value">)") + TEXT(R"(N/A</div>
-                <div class="card-secondary">Game-thread performance</div>
-                <div class="card-secondary">Requires PIE execution</div>
-            </div>
-        </div>
-
-        <!-- TEST DISTRIBUTION BY TAG -->
-        <div class="distribution-section">
-            <div class="card-label" style="padding: 0 0 15px 0;">Test Distribution by Category</div>
-            <div class="distribution-grid">)";
-    
-    // Add tag distribution cards
+    // Generate tag distribution cards
+    FString TagCards;
     const char* TagNames[] = { "Networking", "Performance", "Gameplay", "Compliance", "Integration", "Stress", "Editor", "Rendering" };
     ETestTag TagValues[] = { ETestTag::Networking, ETestTag::Performance, ETestTag::Gameplay, 
-                              ETestTag::Compliance, ETestTag::Integration, ETestTag::Stress, 
-                              ETestTag::Editor, ETestTag::Rendering };
+                             ETestTag::Compliance, ETestTag::Integration, ETestTag::Stress, 
+                             ETestTag::Editor, ETestTag::Rendering };
     
     for (int32 i = 0; i < 8; ++i)
     {
         int32 TagCount = UNexusCore::CountTestsWithTags(TagValues[i]);
-        Html += FString(TEXT(R"(
-                <div class="tag-card">
-                    <div class="count">)")) + FString::FromInt(TagCount) + TEXT(R"(</div>
-                    <div class="label">)") + FString(TagNames[i]) + TEXT(R"(</div>
-                </div>)");
+        TagCards += FString::Printf(
+            TEXT("<div class=\"tag-card\">\n")
+            TEXT("    <div class=\"count\">%d</div>\n")
+            TEXT("    <div class=\"label\">%s</div>\n")
+            TEXT("</div>\n"),
+            TagCount,
+            ANSI_TO_TCHAR(TagNames[i]));
     }
+    Html.ReplaceInline(TEXT("{TAG_DISTRIBUTION_CARDS}"), *TagCards);
     
-    Html += TEXT(R"(
-            </div>
-        </div>
-
-        <!-- TEST RESULTS TABLE -->
-        <table class="test-table">
-            <thead>
-                <tr>
-                    <th style="width: 60%;">Test Name</th>
-                    <th style="width: 40%;">Status</th>
-                </tr>
-            </thead>
-            <tbody>)");
-
-    // Use recorded results from OnTestFinished (more accurate than index math)
+    // Generate grouped test sections
+    FString GroupedSections;
+    for (int32 i = 0; i < 8; ++i)
+    {
+        TArray<FNexusTest*> TagTests = UNexusCore::GetTestsWithTags(TagValues[i]);
+        int32 TagPassCount = 0;
+        for (FNexusTest* Test : TagTests)
+        {
+            if (GPalantirTestResults.Contains(Test->TestName) && GPalantirTestResults[Test->TestName])
+            {
+                TagPassCount++;
+            }
+        }
+        
+        FString PassPercent = TagTests.Num() > 0 ? 
+            FString::Printf(TEXT("%.1f"), (static_cast<double>(TagPassCount) / TagTests.Num()) * 100.0) : 
+            TEXT("0.0");
+        
+        GroupedSections += FString::Printf(
+            TEXT("<div class=\"tag-section\">\n")
+            TEXT("    <div class=\"tag-section-header\" onclick=\"toggleSection(this)\">\n")
+            TEXT("        <span>%s Tests</span>\n")
+            TEXT("        <span class=\"toggle-icon\">&#x25BC;</span>\n")
+            TEXT("    </div>\n")
+            TEXT("    <div class=\"tag-section-stats\">")
+            TEXT("%d tests - %s%% passed</div>\n")
+            TEXT("    <div class=\"tag-section-content\">\n")
+            TEXT("        <table class=\"tag-test-table\">\n"),
+            ANSI_TO_TCHAR(TagNames[i]),
+            TagTests.Num(),
+            *PassPercent);
+        
+        for (FNexusTest* Test : TagTests)
+        {
+            bool bPassed = GPalantirTestResults.Contains(Test->TestName) && GPalantirTestResults[Test->TestName];
+            GroupedSections += FString::Printf(
+                TEXT("            <tr>\n")
+                TEXT("                <td class=\"%s\">%s</td>\n")
+                TEXT("            </tr>\n"),
+                bPassed ? TEXT("test-passed") : TEXT("test-failed"),
+                *Test->TestName);
+        }
+        
+        GroupedSections += TEXT("        </table>\n    </div>\n</div>\n");
+    }
+    Html.ReplaceInline(TEXT("{GROUPED_TEST_SECTIONS}"), *GroupedSections);
+    
+    // Generate flat test table rows
+    FString TableRows;
     for (const auto& Pair : GPalantirTestResults)
     {
         const FString& TestName = Pair.Key;
         bool bPassed = Pair.Value;
-        Html += FString::Printf(TEXT("<tr><td class='test-name'>%s</td><td class='%s'>%s</td></tr>\n"),
+        TableRows += FString::Printf(
+            TEXT("<tr><td class='test-name'>%s</td><td class='%s'>%s</td></tr>\n"),
             *TestName,
             bPassed ? TEXT("test-passed") : TEXT("test-failed"),
             bPassed ? TEXT("PASSED") : TEXT("FAILED"));
     }
-
-    Html += R"(            </tbody>
-        </table>
-        
-        <div class="footer">
-            Generated by NEXUS <span class="footer-divider">|</span> Palantir Observer <span class="footer-divider">|</span> Quantum Observer Network<br>
-            <span style="margin-top: 15px; display: block; color: #ffcc00; font-style: italic;">May the data be with you.</span>
-        </div>
-    </div>
-</body>
-</html>)";
-
+    Html.ReplaceInline(TEXT("{ALL_TESTS_TABLE_ROWS}"), *TableRows);
+    
     // Protect all file writes with mutex to prevent race conditions
     FScopeLock _lock(&GPalantirMutex);
     
