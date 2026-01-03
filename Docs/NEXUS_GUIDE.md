@@ -173,12 +173,6 @@ void AMyGameMode::BeginPlay()
 }
 ```
 
-**What it does:**
-- Reflects all `NEXUS_TEST` functions in memory
-- Registers them in `DiscoveredTests` array
-- Sorts by priority (Critical first)
-- Updates `TotalTests` count
-
 ---
 
 ### Run All Tests
@@ -201,13 +195,6 @@ UNexusCore::RunAllTests(false);
 // Parallel execution (faster, thread-safe)
 UNexusCore::RunAllTests(true);
 ```
-
-**What it does:**
-- Sorts tests by priority
-- Critical tests run first
-- On critical test failure, stops execution (fail-fast)
-- Records timing, result, and error message per test
-- Updates `PassedTests` and `FailedTests` counters
 
 ---
 
@@ -254,13 +241,6 @@ Runs all discovered tests and generates report.
 ~ (press to open console)
 Nexus.RunTests
 ```
-
-**What it does:**
-- Discovers all tests
-- Runs them in parallel
-- Logs pass/fail count
-- Generates LCARS report to `Saved/NexusReports/`
-- Outputs report location to console
 
 **Example output:**
 ```
