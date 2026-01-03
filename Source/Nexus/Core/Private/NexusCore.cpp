@@ -345,6 +345,68 @@ int32 UNexusCore::CountTestsWithTags(ETestTag Tags)
     return Count;
 }
 
+TArray<FNexusTest*> UNexusCore::GetTestsWithCustomTag(const FString& CustomTag)
+{
+    TArray<FNexusTest*> FilteredTests;
+    
+    if (CustomTag.IsEmpty())
+    {
+        return FilteredTests;
+    }
+    
+    for (FNexusTest* Test : DiscoveredTests)
+    {
+        if (Test && Test->HasCustomTag(CustomTag))
+        {
+            FilteredTests.Add(Test);
+        }
+    }
+    
+    return FilteredTests;
+}
+
+int32 UNexusCore::CountTestsWithCustomTag(const FString& CustomTag)
+{
+    int32 Count = 0;
+    
+    if (CustomTag.IsEmpty())
+    {
+        return 0;
+    }
+    
+    for (FNexusTest* Test : DiscoveredTests)
+    {
+        if (Test && Test->HasCustomTag(CustomTag))
+        {
+            ++Count;
+        }
+    }
+    return Count;
+}
+
+TArray<FString> UNexusCore::GetAllCustomTags()
+{
+    TArray<FString> AllTags;
+    
+    for (FNexusTest* Test : DiscoveredTests)
+    {
+        if (Test)
+        {
+            for (const FString& CustomTag : Test->GetCustomTags())
+            {
+                if (!AllTags.Contains(CustomTag))
+                {
+                    AllTags.Add(CustomTag);
+                }
+            }
+        }
+    }
+    
+    AllTags.Sort();
+    return AllTags;
+}
+}
+
 void UNexusCore::RunTestsWithTags(ETestTag Tags, bool bParallel)
 {
     TArray<FNexusTest*> FilteredTests = GetTestsWithTags(Tags);

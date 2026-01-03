@@ -28,6 +28,9 @@ public:
     // Test filtering
     static TArray<class FNexusTest*> GetTestsWithTags(ETestTag Tags);  // Get all tests matching tags
     static int32 CountTestsWithTags(ETestTag Tags);  // Count tests matching tags
+    static TArray<class FNexusTest*> GetTestsWithCustomTag(const FString& CustomTag);  // Get all tests with custom tag
+    static int32 CountTestsWithCustomTag(const FString& CustomTag);  // Count tests with custom tag
+    static TArray<FString> GetAllCustomTags();  // Get all unique custom tags across tests
     
     // Test result history & trend analysis
     static double GetAverageTestDuration(const FString& TestName = TEXT(""));  // Average duration for all tests or specific test

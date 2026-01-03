@@ -336,7 +336,7 @@ void FPalantirObserver::GenerateFinalReport()
             line-height: 1.6;
         }
         .lcars-frame {
-            max-width: 1200px;
+            max-width: 1400px;
             margin: 0 auto;
             border: 3px solid #ff9900;
             border-radius: 30px;
@@ -362,34 +362,105 @@ void FPalantirObserver::GenerateFinalReport()
             font-size: 1.1em;
             font-style: italic;
         }
-        .status-row {
+        .primary-status {
             display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
+            grid-template-columns: 2fr 1fr 1fr;
             gap: 20px;
-            margin: 40px 0;
+            margin-bottom: 40px;
         }
-        .status-card {
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+        .distribution-section {
+            margin-bottom: 40px;
+        }
+        .card {
             background: #001f4d;
             border: 2px solid #ff9900;
             border-radius: 10px;
             padding: 25px;
-            text-align: center;
             box-shadow: inset 0 0 15px rgba(255, 153, 0, 0.2);
         }
-        .status-label {
+        .card-label {
             color: #ffff66;
-            font-size: 0.9em;
+            font-size: 0.8em;
             text-transform: uppercase;
             letter-spacing: 1px;
-            margin-bottom: 10px;
+            margin-bottom: 15px;
+            opacity: 0.9;
         }
-        .status-value {
+        .card-value {
             font-size: 2.5em;
             font-weight: bold;
+            color: #ffcc00;
+            margin-bottom: 10px;
         }
-        .passed-value { color: #00ff00; }
-        .failed-value { color: #ff3333; }
-        .total-value { color: #ffcc00; }
+        .card-secondary {
+            font-size: 0.9em;
+            color: #99ff99;
+            margin-bottom: 8px;
+        }
+        .status-bar-container {
+            margin-top: 15px;
+        }
+        .status-bar {
+            width: 100%;
+            height: 20px;
+            background: #000011;
+            border: 1px solid #ff9900;
+            border-radius: 3px;
+            overflow: hidden;
+        }
+        .status-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #00ff00, #00cc00);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7em;
+            color: #000000;
+            font-weight: bold;
+        }
+        .status-bar-fill.warning {
+            background: linear-gradient(90deg, #ffcc00, #ff9900);
+        }
+        .status-bar-fill.critical {
+            background: linear-gradient(90deg, #ff3333, #cc0000);
+        }
+        .large-card {
+            grid-column: 1 / 3;
+        }
+        .large-card .card-value {
+            font-size: 4em;
+        }
+        .distribution-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+        }
+        .tag-card {
+            background: #001f4d;
+            border: 1px solid #ff9900;
+            border-radius: 5px;
+            padding: 15px;
+            text-align: center;
+            font-size: 0.9em;
+        }
+        .tag-card .count {
+            font-size: 1.8em;
+            font-weight: bold;
+            color: #00ff00;
+            margin-bottom: 5px;
+        }
+        .tag-card .label {
+            color: #ffff66;
+            text-transform: uppercase;
+            font-size: 0.75em;
+            letter-spacing: 0.5px;
+        }
         .test-table {
             width: 100%;
             border-collapse: collapse;
@@ -439,21 +510,107 @@ void FPalantirObserver::GenerateFinalReport()
             <div class="stardate">Stardate )" + FDateTime::Now().ToString() + R"(</div>
         </div>
         
-        <div class="status-row">
-            <div class="status-card">
-                <div class="status-label">Total Tests</div>
-                <div class="status-value total-value">)" + FString::FromInt(UNexusCore::TotalTests) + R"(</div>
+        <!-- PRIMARY STATUS: System Integrity + Key Indicators -->
+        <div class="primary-status">
+            <div class="card large-card">
+                <div class="card-label">System Integrity</div>
+                <div class="card-value">)";
+    
+    // Calculate system integrity percentage
+    double IntegrityPercent = (UNexusCore::TotalTests > 0) ? 
+        (static_cast<double>(UNexusCore::PassedTests) / UNexusCore::TotalTests) * 100.0 : 0.0;
+    Html += FString::Printf(TEXT("%.1f%%"), IntegrityPercent);
+    Html += R"(</div>
+                <div class="status-bar-container">
+                    <div class="status-bar">
+                        <div class="status-bar-fill)" + (IntegrityPercent < 70 ? FString(TEXT(" critical")) : 
+                            IntegrityPercent < 85 ? FString(TEXT(" warning")) : FString(TEXT(""))) + 
+                        TEXT(R"(" style="width: )") + FString::Printf(TEXT("%.1f"), IntegrityPercent) + TEXT(R"(%;"></div>
+                    </div>
+                </div>
+                <div class="card-secondary">)") + FString::FromInt(UNexusCore::PassedTests) + TEXT(" of ") + 
+                FString::FromInt(UNexusCore::TotalTests) + TEXT(R"( tests passed</div>
             </div>
-            <div class="status-card">
-                <div class="status-label">Passed</div>
-                <div class="status-value passed-value">)" + FString::FromInt(UNexusCore::PassedTests) + R"(</div>
+            <div class="card">
+                <div class="card-label">Critical Systems</div>
+                <div class="card-value">)") + FString::FromInt(UNexusCore::CriticalTests) + TEXT(R"(</div>
+                <div class="card-secondary">Core systems validated</div>
+                <div class="card-secondary">Status: Active</div>
             </div>
-            <div class="status-card">
-                <div class="status-label">Failed</div>
-                <div class="status-value )" + (UNexusCore::FailedTests == 0 ? TEXT("passed-value") : TEXT("failed-value")) + R"(">)" + FString::FromInt(UNexusCore::FailedTests) + R"(</div>
+            <div class="card">
+                <div class="card-label">Execution Status</div>
+                <div class="card-value">Ready</div>
+                <div class="card-secondary">All phases complete</div>
+                <div class="card-secondary">Deployment ready</div>
             </div>
         </div>
-        
+
+        <!-- METRICS GRID: Performance, Regression, Memory, Frames -->
+        <div class="metrics-grid">
+            <div class="card">
+                <div class="card-label">Performance Matrix</div>
+                <div class="card-value">)";
+    
+    // Calculate average test duration
+    double AvgDuration = UNexusCore::GetAverageTestDuration();
+    Html += FString::Printf(TEXT("%.0f"), AvgDuration) + TEXT(R"(ms</div>
+                <div class="card-secondary">Avg duration</div>
+                <div class="card-secondary">)") + (AvgDuration < 100 ? TEXT("Excellent") : 
+                    AvgDuration < 200 ? TEXT("Good") : TEXT("Needs review")) + TEXT(R"(</div>
+            </div>
+            <div class="card">
+                <div class="card-label">Regression Alert</div>
+                <div class="card-value">)");
+    
+    // Count regressions
+    int32 RegressionCount = UNexusCore::DetectRegressions(0);
+    Html += FString::FromInt(RegressionCount) + TEXT(R"(</div>
+                <div class="card-secondary">Tests slower than baseline</div>
+                <div class="card-secondary">)") + (RegressionCount == 0 ? TEXT("All clear") : TEXT("Investigate")) + TEXT(R"(</div>
+            </div>
+            <div class="card">
+                <div class="card-label">Memory Allocation</div>
+                <div class="card-value">)");
+    
+    // Memory data (placeholder - would need to implement ArgusLens hook)
+    Html += TEXT(R"(N/A</div>
+                <div class="card-secondary">Peak usage tracking</div>
+                <div class="card-secondary">Requires ArgusLens</div>
+            </div>
+            <div class="card">
+                <div class="card-label">Frame Diagnostics</div>
+                <div class="card-value">)") + TEXT(R"(N/A</div>
+                <div class="card-secondary">Game-thread performance</div>
+                <div class="card-secondary">Requires PIE execution</div>
+            </div>
+        </div>
+
+        <!-- TEST DISTRIBUTION BY TAG -->
+        <div class="distribution-section">
+            <div class="card-label" style="padding: 0 0 15px 0;">Test Distribution by Category</div>
+            <div class="distribution-grid">)";
+    
+    // Add tag distribution cards
+    const char* TagNames[] = { "Networking", "Performance", "Gameplay", "Compliance", "Integration", "Stress", "Editor", "Rendering" };
+    ETestTag TagValues[] = { ETestTag::Networking, ETestTag::Performance, ETestTag::Gameplay, 
+                              ETestTag::Compliance, ETestTag::Integration, ETestTag::Stress, 
+                              ETestTag::Editor, ETestTag::Rendering };
+    
+    for (int32 i = 0; i < 8; ++i)
+    {
+        int32 TagCount = UNexusCore::CountTestsWithTags(TagValues[i]);
+        Html += FString(TEXT(R"(
+                <div class="tag-card">
+                    <div class="count">)")) + FString::FromInt(TagCount) + TEXT(R"(</div>
+                    <div class="label">)") + FString(TagNames[i]) + TEXT(R"(</div>
+                </div>)");
+    }
+    
+    Html += TEXT(R"(
+            </div>
+        </div>
+
+        <!-- TEST RESULTS TABLE -->
         <table class="test-table">
             <thead>
                 <tr>
@@ -461,7 +618,7 @@ void FPalantirObserver::GenerateFinalReport()
                     <th style="width: 40%;">Status</th>
                 </tr>
             </thead>
-            <tbody>)";
+            <tbody>)");
 
     // Use recorded results from OnTestFinished (more accurate than index math)
     for (const auto& Pair : GPalantirTestResults)

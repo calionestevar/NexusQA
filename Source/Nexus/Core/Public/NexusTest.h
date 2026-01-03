@@ -246,6 +246,7 @@ public:
     FString TestName;
     ETestPriority Priority = ETestPriority::Normal;
     ETestTag Tags = ETestTag::None;  // Tags for filtering tests (Networking, Performance, etc.)
+    TArray<FString> CustomTags;  // Custom string-based tags for project-specific categorization
     bool bRequiresGameThread = false;  // Flag for game-thread-only tests
     bool bSkip = false;  // Flag to skip test execution
     uint32 MaxRetries = 0;  // Number of times to retry on failure (default: 0 = no retries)
@@ -265,6 +266,37 @@ public:
     {
         // Self-register into static list (no circular dependency!)
         AllTests.Add(this);
+    }
+
+    /**
+     * Add a custom tag to this test for project-specific categorization
+     * @param CustomTag Tag string (e.g., "NexusTrials", "CinematicSequence", "MustPass")
+     */
+    void AddCustomTag(const FString& CustomTag)
+    {
+        if (!CustomTag.IsEmpty() && !CustomTags.Contains(CustomTag))
+        {
+            CustomTags.Add(CustomTag);
+        }
+    }
+
+    /**
+     * Check if test has a specific custom tag
+     * @param CustomTag Tag string to search for
+     * @return true if test has this custom tag, false otherwise
+     */
+    bool HasCustomTag(const FString& CustomTag) const
+    {
+        return CustomTags.Contains(CustomTag);
+    }
+
+    /**
+     * Get all custom tags for this test
+     * @return const reference to custom tags array
+     */
+    const TArray<FString>& GetCustomTags() const
+    {
+        return CustomTags;
     }
 
     bool Execute(const FNexusTestContext& Context = FNexusTestContext()) const
