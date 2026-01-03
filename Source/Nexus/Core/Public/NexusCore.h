@@ -13,6 +13,7 @@ public:
     static void Execute(const TArray<FString>& Args);
     static void DiscoverAllTests();
     static void RunAllTests(bool bParallel = true);
+    static void RunTestsWithTags(ETestTag Tags, bool bParallel = true);  // Run only tests matching tags
     static void RegisterTest(class FNexusTest* Test);
     static void RunSequentialWithFailFast();
     static FString GetAbortFilePath();
@@ -22,6 +23,10 @@ public:
     static void NotifyTestStarted(const FString& Name);
     static void NotifyTestFinished(const FString& Name, bool bPassed);
     static void NotifyTestSkipped(const FString& Name);
+    
+    // Test filtering
+    static TArray<class FNexusTest*> GetTestsWithTags(ETestTag Tags);  // Get all tests matching tags
+    static int32 CountTestsWithTags(ETestTag Tags);  // Count tests matching tags
 
     // Stats
     static int32 TotalTests;

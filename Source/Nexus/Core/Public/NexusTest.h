@@ -45,6 +45,26 @@ inline bool NexusHasFlag(ETestPriority Flags, ETestPriority Check)
     return (static_cast<uint8>(Flags) & static_cast<uint8>(Check)) != 0;
 }
 
+enum class ETestTag : uint8
+{
+    None            = 0,
+    Networking      = 1,     // Network/multiplayer tests
+    Performance     = 2,     // Performance/benchmark tests
+    Gameplay        = 4,     // Gameplay/mechanics tests
+    Compliance      = 8,     // Compliance/regulation tests (COPPA/GDPR/DSA)
+    Integration     = 16,    // Integration tests across modules
+    Stress          = 32,    // Stress/load tests
+    Editor          = 64,    // Editor-only tests
+    Rendering       = 128    // Rendering/graphics tests
+};
+
+ENUM_CLASS_FLAGS(ETestTag);
+
+inline bool NexusHasTag(ETestTag Tags, ETestTag Check)
+{
+    return (static_cast<uint8>(Tags) & static_cast<uint8>(Check)) != 0;
+}
+
 /**
  * FNexusTestContext - Provides test with access to game world, game state, and player controller
  * 
@@ -198,6 +218,7 @@ class NEXUS_API FNexusTest
 public:
     FString TestName;
     ETestPriority Priority = ETestPriority::Normal;
+    ETestTag Tags = ETestTag::None;  // Tags for filtering tests (Networking, Performance, etc.)
     bool bRequiresGameThread = false;  // Flag for game-thread-only tests
     bool bSkip = false;  // Flag to skip test execution
     uint32 MaxRetries = 0;  // Number of times to retry on failure (default: 0 = no retries)
@@ -305,6 +326,22 @@ public:
             *TestName, bResult ? TEXT("PASS") : TEXT("FAIL"), Attempt, MaxAttempts);
         
         return bResult;
+    }
+    
+    /**
+     * Check if this test has all specified tags
+     * @param RequiredTags Tags to check for
+     * @return true if test has all required tags, false otherwise
+     */
+    bool HasTags(ETestTag RequiredTags) const
+    {
+        if (RequiredTags == ETestTag::None)
+        {
+            return true;  // No filtering
+        }
+        
+        // Check if test has all required tags
+        return NexusHasTag(Tags, RequiredTags);
     }
 };
 

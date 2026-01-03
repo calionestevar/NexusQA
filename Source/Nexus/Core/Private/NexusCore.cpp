@@ -264,6 +264,56 @@ void UNexusCore::RegisterTest(FNexusTest* Test)
     }
 }
 
+TArray<FNexusTest*> UNexusCore::GetTestsWithTags(ETestTag Tags)
+{
+    TArray<FNexusTest*> FilteredTests;
+    
+    for (FNexusTest* Test : DiscoveredTests)
+    {
+        if (Test && Test->HasTags(Tags))
+        {
+            FilteredTests.Add(Test);
+        }
+    }
+    
+    return FilteredTests;
+}
+
+int32 UNexusCore::CountTestsWithTags(ETestTag Tags)
+{
+    int32 Count = 0;
+    for (FNexusTest* Test : DiscoveredTests)
+    {
+        if (Test && Test->HasTags(Tags))
+        {
+            ++Count;
+        }
+    }
+    return Count;
+}
+
+void UNexusCore::RunTestsWithTags(ETestTag Tags, bool bParallel)
+{
+    TArray<FNexusTest*> FilteredTests = GetTestsWithTags(Tags);
+    
+    if (FilteredTests.Num() == 0)
+    {
+        UE_LOG(LogNexus, Warning, TEXT("NEXUS: No tests found matching the specified tags"));
+        return;
+    }
+    
+    UE_LOG(LogNexus, Display, TEXT("NEXUS: Running %d tests matching tags"), FilteredTests.Num());
+    
+    // Temporarily replace DiscoveredTests with filtered tests
+    TArray<FNexusTest*> OriginalTests = DiscoveredTests;
+    DiscoveredTests = FilteredTests;
+    
+    RunAllTests(bParallel);
+    
+    // Restore original tests
+    DiscoveredTests = OriginalTests;
+}
+
 void UNexusCore::NotifyTestStarted(const FString& Name)
 {
     UE_LOG(LogNexus, Display, TEXT("TEST STARTED: %s"), *Name);
