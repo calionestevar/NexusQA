@@ -298,15 +298,19 @@ Legacy → Nexus, AutomationController
 - [x] **ArgusLens API Integration** — Performance assertions in test macros (`ASSERT_AVERAGE_FPS`, `ASSERT_MAX_MEMORY`, `ASSERT_MAX_HITCHES`)
 - [x] **ArgusLens Context Integration** — Performance metrics attached to `FNexusTestContext`
 - [x] **Performance Test Helper Macros** — `NEXUS_PERF_TEST` for dedicated performance benchmarking
+- [x] **Test Timeout Handling** — Per-test timeout with `MaxDurationSeconds`, auto-fail on timeout
+- [x] **Test Fixture/Setup/Teardown** — `BeforeEach`/`AfterEach` callbacks for shared test data
+- [x] **Test Filtering/Tagging System** — `ETestTag` enum, `RunTestsWithTags()` for CI/CD workflows
+- [x] **Failure Stack Trace Capture** — Automatic diagnostics on test failure in `FNexusTestResult`
+- [x] **Test Result History & Trend Analysis** — `DetectRegressions()`, `ExportTestTrends()` for performance baselines
 
 **Near Term (Foundation for Game Testing):**
-- [ ] Test fixture/setup/teardown support (BeforeEach/AfterEach pattern) — Shared test data, faster execution
-- [ ] Test timeout handling with configurable per-test timeouts — Auto-fail hanging tests, log stack traces
-- [ ] Failure stack trace capture — Include memory state, relevant logs, actor state
 - [ ] Real-time test execution dashboard (live pass/fail rates, test progress) — Integrate with ObserverNetworkDashboard
 - [ ] Test dependencies & ordering system — Handle sequential test requirements beyond priority
 - [ ] Smoke test CI workflow for quick validation
-- [ ] Test result history & trend tracking (performance baselines, regression detection)
+- [ ] PIE Auto-Launch — Automatically start Play-in-Editor before game-thread tests
+- [ ] LCARS Report Write Race Condition Fix — Resolve file locking issues in report generation
+- [ ] Test Counting Bug Fix — Resolve 36/34 double-counting issue in parallel execution
 
 **Medium Term (Advanced Testing Features):**
 - [ ] Blueprint test coverage support — Leverage test context & fixtures

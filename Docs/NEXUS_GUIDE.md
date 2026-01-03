@@ -383,6 +383,149 @@ This is expected behavior. World-dependent tests are skipped, and world-independ
 
 ---
 
+## Advanced Features
+
+### Test Timeout Handling
+
+Prevent tests from running indefinitely by setting maximum duration:
+
+```cpp
+NEXUS_TEST(FLongRunningTest, "Performance.Timeout.LongOp", ETestPriority::Normal)
+{
+    // Configure 30-second timeout
+    // (in test class constructor or via test setup)
+    // MaxDurationSeconds = 30.0;
+    
+    // If this takes > 30 seconds, test auto-fails with timeout error
+    SimulateExpensiveOperation();
+    return true;
+}
+```
+
+Timeouts are reported in logs with actual vs allowed duration for debugging.
+
+### Test Fixtures (Setup/Teardown)
+
+Share test data and perform setup/cleanup with `BeforeEach` and `AfterEach`:
+
+```cpp
+NEXUS_TEST(FFixtureExample, "Gameplay.Fixture.SharedState", ETestPriority::Normal)
+{
+    // BeforeEach runs before the test (and before each retry)
+    // Perfect for spawning actors, initializing state
+    BeforeEach = [this](FNexusTestContext& Context) -> bool {
+        if (!Context.IsValid()) return false;
+        // Setup: Create test character
+        Context.SpawnTestCharacter();
+        return true;
+    };
+    
+    // AfterEach runs after the test, even if it fails
+    // Perfect for cleanup
+    AfterEach = [this](FNexusTestContext& Context) {
+        // Teardown: Automatic via context RAII
+        // But you can do custom cleanup here
+        Context.CleanupSpawnedActors();
+    };
+    
+    return true;
+}
+```
+
+### Test Filtering by Tags
+
+Run specific test subsets using tags (useful for CI/CD workflows):
+
+```cpp
+// Tag your tests
+NEXUS_TEST(FNetworkTest, "Network.Multiplayer.Sync", ETestPriority::Normal)
+{
+    // In test class, set tags:
+    // Tags = ETestTag::Networking | ETestTag::Integration;
+    return true;
+}
+
+// Run only networking tests
+UNexusCore::RunTestsWithTags(ETestTag::Networking);
+
+// Available tags:
+// - Networking: Network/multiplayer tests
+// - Performance: Benchmark/perf tests
+// - Gameplay: Mechanics tests
+// - Compliance: Regulation tests (COPPA/GDPR/DSA)
+// - Integration: Multi-module tests
+// - Stress: Load/stress tests
+// - Editor: Editor-only tests
+// - Rendering: Graphics tests
+```
+
+### Automatic Test Retry with Exponential Backoff
+
+Flaky network tests automatically retry on failure:
+
+```cpp
+NEXUS_TEST(FFlakeyNetworkTest, "Network.Flaky.Retry", ETestPriority::Normal)
+{
+    // Configure 3 retries
+    // MaxRetries = 3;  // Will retry up to 3 times: 1s, 2s, 4s delays
+    
+    // If test fails, retry with exponential backoff
+    // 1st attempt fails → wait 1s → 2nd attempt
+    // 2nd attempt fails → wait 2s → 3rd attempt
+    // 3rd attempt fails → wait 4s → 4th attempt
+    return TestFlakeyNetwork();  // If any attempt passes, test passes
+}
+```
+
+### Test Result History & Trend Analysis
+
+Detect performance regressions automatically:
+
+```cpp
+// After running tests, analyze trends
+int32 Regressions = UNexusCore::DetectRegressions();
+
+if (Regressions > 0)
+{
+    UE_LOG(LogTemp, Warning, TEXT("⚠️ Performance regression detected: %d tests slower than baseline"), Regressions);
+}
+
+// Export detailed trend reports
+UNexusCore::ExportTestTrends(TEXT("Saved/TestTrends/"));
+
+// Get statistics
+double AvgDuration = UNexusCore::GetAverageTestDuration();
+double MedianDuration = UNexusCore::GetMedianTestDuration();
+
+UE_LOG(LogTemp, Display, TEXT("Average test duration: %.2fms"), AvgDuration * 1000);
+UE_LOG(LogTemp, Display, TEXT("Median test duration: %.2fms"), MedianDuration * 1000);
+```
+
+**Outputs:**
+- `test_trends.csv` — Frame-by-frame history (TestName, Timestamp, Duration, Passed)
+- `test_trends_summary.json` — Summary with pass rates and average durations
+
+### Stack Traces on Failure
+
+Failed tests automatically capture diagnostic stack traces:
+
+```cpp
+// When a test fails, a stack trace is captured for debugging
+// Access via: FNexusTest::LastResult.StackTrace
+// Or export to reports automatically
+
+for (const FNexusTestResult& Result : FNexusTest::AllResults)
+{
+    if (!Result.bPassed && Result.HasStackTrace())
+    {
+        UE_LOG(LogTemp, Error, TEXT("Test failure stack trace:\n%s"), 
+            *Result.GetStackTraceString());
+    }
+}
+```
+
+---
+
 ## Integration Examples
 
 ### Example 1: Test Suite for Game Features
