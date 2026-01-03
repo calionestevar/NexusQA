@@ -114,6 +114,53 @@ void UNexusCore::Execute(const TArray<FString>& Args)
     FPalantirObserver::GenerateFinalReport();
 }
 
+bool UNexusCore::EnsurePIEWorldActive()
+{
+    UWorld* World = nullptr;
+    
+    // Check if we're already in a PIE/game world
+    if (GEngine && GEngine->GetWorldContexts().Num() > 0)
+    {
+        for (const FWorldContext& Context : GEngine->GetWorldContexts())
+        {
+            if (Context.World() && Context.World()->IsGameWorld())
+            {
+                World = Context.World();
+                break;
+            }
+        }
+    }
+    
+    if (World)
+    {
+        UE_LOG(LogNexus, Display, TEXT("NEXUS: Active game world detected [%s]"), *World->GetMapName());
+        return true;
+    }
+    
+    // Try to read test map from config
+#if WITH_EDITOR
+    FString TestMapPath = TEXT("");
+    if (GConfig)
+    {
+        GConfig->GetString(TEXT("/Script/Nexus.NexusSettings"), TEXT("TestMapPath"), TestMapPath, GGameIni);
+    }
+    
+    if (!TestMapPath.IsEmpty())
+    {
+        UE_LOG(LogNexus, Warning, TEXT("NEXUS: No active game world - attempting to launch PIE with map: %s"), *TestMapPath);
+        if (GEditor)
+        {
+            GEditor->PlayMap();
+            return true;
+        }
+    }
+#endif
+    
+    UE_LOG(LogNexus, Error, TEXT("NEXUS: No game world active and no TestMapPath configured. Game-thread tests will fail."));
+    UE_LOG(LogNexus, Error, TEXT("NEXUS: Configure TestMapPath in DefaultGame.ini under [/Script/Nexus.NexusSettings]"));
+    return false;
+}
+
 void UNexusCore::DiscoverAllTests()
 {
     // Copy discovered tests from FNexusTest::AllTests into UNexusCore::DiscoveredTests

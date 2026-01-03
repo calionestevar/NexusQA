@@ -105,7 +105,7 @@ static FCriticalSection GPalantirMutex;
 // Pluggable provider (set during Initialize)
 static TUniquePtr<ILCARSResultsProvider> GLCARSProvider;
 
-// Palantír-backed provider implementation (accesses the static maps above)
+// Palantir-backed provider implementation (accesses the static maps above)
 class FPalantirInMemoryProvider : public ILCARSResultsProvider
 {
 public:
@@ -182,7 +182,7 @@ public:
 
 void FPalantirObserver::Initialize()
 {
-    UE_LOG(LogTemp, Warning, TEXT("PALANTÍR ONLINE — OBSERVING ALL REALITIES"));
+    UE_LOG(LogTemp, Warning, TEXT("PALANTIR ONLINE -- OBSERVING ALL REALITIES"));
     // Select LCARS provider via config: section [/Script/Nexus.Palantir], key LCARSSource
     FString Source;
     if (GConfig)
@@ -200,15 +200,15 @@ void FPalantirObserver::Initialize()
     }
     else
     {
-        // Default to Palantír in-memory provider
+        // Default to Palantir in-memory provider
         GLCARSProvider.Reset(new FPalantirInMemoryProvider());
-        UE_LOG(LogTemp, Display, TEXT("LCARS provider: Palantír (in-memory) selected"));
+        UE_LOG(LogTemp, Display, TEXT("LCARS provider: Palantir (in-memory) selected"));
     }
 }
 
 void FPalantirObserver::OnTestStarted(const FString& Name)
 {
-    UE_LOG(LogTemp, Display, TEXT("Palantír: Test started: %s"), *Name);
+    UE_LOG(LogTemp, Display, TEXT("Palantir: Test started: %s"), *Name);
     UNexusCore::NotifyTestStarted(Name);
     // Record start time for duration measurement
     {
@@ -225,12 +225,12 @@ void FPalantirObserver::RegisterArtifact(const FString& TestName, const FString&
         GPalantirArtifactPaths.Add(TestName, TArray<FString>());
     }
     GPalantirArtifactPaths[TestName].Add(ArtifactPath);
-    UE_LOG(LogTemp, Display, TEXT("Palantír: Registered artifact for %s -> %s"), *TestName, *ArtifactPath);
+    UE_LOG(LogTemp, Display, TEXT("Palantir: Registered artifact for %s -> %s"), *TestName, *ArtifactPath);
 }
 
 void FPalantirObserver::OnTestFinished(const FString& Name, bool bPassed)
 {
-    UE_LOG(LogTemp, Display, TEXT("Palantír: Test finished: %s -> %s"), *Name, bPassed ? TEXT("PASSED") : TEXT("FAILED"));
+    UE_LOG(LogTemp, Display, TEXT("Palantir: Test finished: %s -> %s"), *Name, bPassed ? TEXT("PASSED") : TEXT("FAILED"));
     UNexusCore::NotifyTestFinished(Name, bPassed);
 
     // Record the result for final reporting (JUnit, HTML)
@@ -301,7 +301,7 @@ void FPalantirObserver::UpdateLiveOverlay()
     if (!GEngine || !GEngine->GameViewport) return;
 
 #if WITH_IMGUI
-    ImGui::Begin("PALANTÍR LIVE", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
+    ImGui::Begin("PALANTIR LIVE", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
     ImGui::TextColored(ImVec4(1, 0.8f, 0, 1), "NEXUS STATUS");
     ImGui::Separator();
     ImGui::Text("Tests Run: %d / %d", UNexusCore::PassedTests + UNexusCore::FailedTests, UNexusCore::TotalTests);
@@ -324,47 +324,162 @@ void FPalantirObserver::GenerateFinalReport()
     FString Html = R"(<!DOCTYPE html>
 <html>
 <head>
-    <meta charset="utf-8">
+    <meta charset="UTF-8">
     <title>LCARS NEXUS FINAL REPORT</title>
     <style>
-        body { background: #000033; color: #ffcc00; font-family: 'Courier New', monospace; margin: 40px; }
-        .lcars { border: 4px solid #ff9900; border-radius: 20px; padding: 30px; max-width: 1000px; margin: auto; background: #000066; }
-        h1 { color: #ff9900; text-align: center; font-size: 3.5em; text-shadow: 0 0 15px #ff9900; }
-        .status { font-size: 2.2em; text-align: center; margin: 30px 0; }
-        .passed { color: #00ff00; }
-        .failed { color: #ff3333; }
-        table { width: 100%; border-collapse: collapse; margin-top: 40px; }
-        th, td { padding: 15px; text-align: left; border-bottom: 2px solid #ff9900; }
-        th { background: #003366; color: #ffff66; }
-        .footer { margin-top: 60px; text-align: center; color: #cccc00; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: linear-gradient(135deg, #000033 0%, #001a66 100%);
+            color: #ffcc00;
+            font-family: 'Courier New', monospace;
+            padding: 40px 20px;
+            line-height: 1.6;
+        }
+        .lcars-frame {
+            max-width: 1200px;
+            margin: 0 auto;
+            border: 3px solid #ff9900;
+            border-radius: 30px;
+            padding: 50px;
+            background: radial-gradient(ellipse at center, #000066 0%, #000033 100%);
+            box-shadow: 0 0 40px rgba(255, 153, 0, 0.5), inset 0 0 20px rgba(255, 153, 0, 0.1);
+        }
+        .lcars-header {
+            text-align: center;
+            margin-bottom: 50px;
+            border-bottom: 2px solid #ff9900;
+            padding-bottom: 30px;
+        }
+        h1 {
+            color: #ff9900;
+            font-size: 3.5em;
+            text-shadow: 0 0 20px #ff9900, 0 0 40px rgba(255, 153, 0, 0.5);
+            letter-spacing: 3px;
+            margin-bottom: 10px;
+        }
+        .stardate {
+            color: #ffff66;
+            font-size: 1.1em;
+            font-style: italic;
+        }
+        .status-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 20px;
+            margin: 40px 0;
+        }
+        .status-card {
+            background: #001f4d;
+            border: 2px solid #ff9900;
+            border-radius: 10px;
+            padding: 25px;
+            text-align: center;
+            box-shadow: inset 0 0 15px rgba(255, 153, 0, 0.2);
+        }
+        .status-label {
+            color: #ffff66;
+            font-size: 0.9em;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+        }
+        .status-value {
+            font-size: 2.5em;
+            font-weight: bold;
+        }
+        .passed-value { color: #00ff00; }
+        .failed-value { color: #ff3333; }
+        .total-value { color: #ffcc00; }
+        .test-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 40px 0;
+            border: 2px solid #ff9900;
+        }
+        .test-table thead {
+            background: linear-gradient(90deg, #003366, #004d99);
+        }
+        .test-table th {
+            color: #ffff66;
+            padding: 15px;
+            text-align: left;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-size: 0.95em;
+            border-bottom: 2px solid #ff9900;
+        }
+        .test-table td {
+            padding: 12px 15px;
+            border-bottom: 1px solid rgba(255, 153, 0, 0.3);
+        }
+        .test-table tr:hover {
+            background: rgba(255, 153, 0, 0.1);
+        }
+        .test-name { color: #ffcc00; font-weight: bold; }
+        .test-passed { color: #00ff00; text-transform: uppercase; font-weight: bold; }
+        .test-failed { color: #ff3333; text-transform: uppercase; font-weight: bold; }
+        .footer {
+            margin-top: 50px;
+            padding-top: 30px;
+            border-top: 2px solid #ff9900;
+            text-align: center;
+            color: #ffff66;
+            font-size: 0.9em;
+        }
+        .footer-divider {
+            color: #ff9900;
+            margin: 0 10px;
+        }
     </style>
 </head>
 <body>
-    <div class="lcars">
-        <h1>LCARS NEXUS REPORT</h1>
-        <div class="status passed">TOTAL TESTS: )" + FString::FromInt(UNexusCore::TotalTests) + R"(</div>
-        <div class="status passed">PASSED: )" + FString::FromInt(UNexusCore::PassedTests) + R"(</div>
-        <div class="status )" + (UNexusCore::FailedTests == 0 ? TEXT("passed") : TEXT("failed")) + R"(">FAILED: )" + FString::FromInt(UNexusCore::FailedTests) + R"(</div>
-
-        <table>
-            <tr><th>Test Name</th><th>Status</th></tr>)";
+    <div class="lcars-frame">
+        <div class="lcars-header">
+            <h1>LCARS NEXUS FINAL REPORT</h1>
+            <div class="stardate">Stardate )" + FDateTime::Now().ToString() + R"(</div>
+        </div>
+        
+        <div class="status-row">
+            <div class="status-card">
+                <div class="status-label">Total Tests</div>
+                <div class="status-value total-value">)" + FString::FromInt(UNexusCore::TotalTests) + R"(</div>
+            </div>
+            <div class="status-card">
+                <div class="status-label">Passed</div>
+                <div class="status-value passed-value">)" + FString::FromInt(UNexusCore::PassedTests) + R"(</div>
+            </div>
+            <div class="status-card">
+                <div class="status-label">Failed</div>
+                <div class="status-value )" + (UNexusCore::FailedTests == 0 ? TEXT("passed-value") : TEXT("failed-value")) + R"(">)" + FString::FromInt(UNexusCore::FailedTests) + R"(</div>
+            </div>
+        </div>
+        
+        <table class="test-table">
+            <thead>
+                <tr>
+                    <th style="width: 60%;">Test Name</th>
+                    <th style="width: 40%;">Status</th>
+                </tr>
+            </thead>
+            <tbody>)";
 
     // Use recorded results from OnTestFinished (more accurate than index math)
     for (const auto& Pair : GPalantirTestResults)
     {
         const FString& TestName = Pair.Key;
         bool bPassed = Pair.Value;
-        Html += FString::Printf(TEXT("<tr><td>%s</td><td class='%s'>%s</td></tr>"),
+        Html += FString::Printf(TEXT("<tr><td class='test-name'>%s</td><td class='%s'>%s</td></tr>\n"),
             *TestName,
-            bPassed ? TEXT("passed") : TEXT("failed"),
+            bPassed ? TEXT("test-passed") : TEXT("test-failed"),
             bPassed ? TEXT("PASSED") : TEXT("FAILED"));
     }
 
-    Html += R"(
+    Html += R"(            </tbody>
         </table>
+        
         <div class="footer">
-            Generated by NEXUS • Palantír Observer • Stardate )" + FDateTime::Now().ToString() + R"(
-            <br>May the Great Link guide us.
+            Generated by NEXUS <span class="footer-divider">|</span> Palantir Observer <span class="footer-divider">|</span> Quantum Observer Network<br>
+            <span style="margin-top: 15px; display: block; color: #ffcc00; font-style: italic;">May the data be with you.</span>
         </div>
     </div>
 </body>
@@ -374,7 +489,7 @@ void FPalantirObserver::GenerateFinalReport()
     FScopeLock _lock(&GPalantirMutex);
     
     FFileHelper::SaveStringToFile(Html, *HtmlPath);
-    UE_LOG(LogTemp, Warning, TEXT("LCARS FINAL REPORT GENERATED → %s"), *HtmlPath);
+    UE_LOG(LogTemp, Warning, TEXT("LCARS FINAL REPORT GENERATED --> %s"), *HtmlPath);
     
     const int32 Total = GPalantirTestResults.Num();
     int32 Failures = 0;
@@ -421,11 +536,11 @@ void FPalantirObserver::GenerateFinalReport()
     const FString XmlPath = ReportDir / TEXT("nexus-results.xml");
     if (FFileHelper::SaveStringToFile(Xml, *XmlPath))
     {
-        UE_LOG(LogTemp, Warning, TEXT("JUnit XML report written → %s"), *XmlPath);
+        UE_LOG(LogTemp, Warning, TEXT("JUnit XML report written --> %s"), *XmlPath);
     }
     else
     {
-        UE_LOG(LogTemp, Error, TEXT("Failed to write JUnit XML report → %s"), *XmlPath);
+        UE_LOG(LogTemp, Error, TEXT("Failed to write JUnit XML report --> %s"), *XmlPath);
     }
 
     // Optionally export LCARS JSON via configured provider and register as an artifact
@@ -438,7 +553,7 @@ void FPalantirObserver::GenerateFinalReport()
         }
         else
         {
-            // Fallback: copy the in-memory Palantír maps
+            // Fallback: copy the in-memory Palantir maps
             FScopeLock _lock2(&GPalantirMutex);
             for (const auto& P : GPalantirTestResults) Results.Results.Add(P.Key, P.Value);
             for (const auto& P : GPalantirTestDurations) Results.Durations.Add(P.Key, P.Value);
@@ -446,7 +561,7 @@ void FPalantirObserver::GenerateFinalReport()
         }
 
         LCARSReporter::ExportResultsToLCARSFromPalantir(Results.Results, Results.Durations, Results.Artifacts, LcarsPath);
-        // Register with Palantír so CI and artifact collectors pick it up
+        // Register with Palantir so CI and artifact collectors pick it up
         FPalantirObserver::RegisterArtifact(TEXT("LCARS_Final"), LcarsPath);
     }
 }

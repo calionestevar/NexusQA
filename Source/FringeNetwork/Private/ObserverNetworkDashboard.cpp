@@ -54,7 +54,7 @@ void UObserverNetworkDashboard::Initialize(EDashboardBackend Backend)
 			break;
 	}
 	
-	UE_LOG(LogTemp, Warning, TEXT("🔍 OBSERVER NETWORK DASHBOARD ONLINE [Backend: %s] — WATCHING ALL REALITIES"), BackendName);
+	UE_LOG(LogTemp, Warning, TEXT("[INFO] OBSERVER NETWORK DASHBOARD ONLINE [Backend: %s] -- WATCHING ALL REALITIES"), BackendName);
 }
 
 void UObserverNetworkDashboard::LogSafetyEvent(const FString& EventType, const FString& Details)
@@ -64,7 +64,7 @@ void UObserverNetworkDashboard::LogSafetyEvent(const FString& EventType, const F
 	FString Entry = FString::Printf(TEXT("[%8.2f] %s: %s"),
 		FPlatformTime::Seconds() - SessionStartTime, *EventType, *Details);
 	EventLog.Add(Entry);
-	UE_LOG(LogTemp, Warning, TEXT("📍 OBSERVER EVENT: %s"), *Entry);
+	UE_LOG(LogTemp, Warning, TEXT("[EVENT] OBSERVER: %s"), *Entry);
 }
 
 void UObserverNetworkDashboard::UpdateLiveDashboard()
@@ -107,7 +107,7 @@ static void RenderImGuiDashboard(const TMap<FString, int32>& Counters, const TAr
 #if WITH_IMGUI
 	if (!GEngine || !GEngine->GameViewport) return;
 
-	ImGui::Begin("🔍 OBSERVER NETWORK — LIVE AUDIT", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
+	ImGui::Begin("[OBSERVER] NETWORK LIVE AUDIT", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
 	ImGui::TextColored(ImVec4(1, 0.8f, 0, 1), "REALITY STATUS: STABLE");
 	ImGui::Separator();
 
@@ -155,7 +155,7 @@ static void RenderSlateDashboard(const TMap<FString, int32>& Counters, const TAr
 		EventStr += Events[i] + TEXT(" | ");
 	}
 
-	UE_LOG(LogTemp, Warning, TEXT("📊 SLATE DASHBOARD [%.1f sec] — %s — %s"), 
+	UE_LOG(LogTemp, Warning, TEXT("[SLATE] DASHBOARD [%.1f sec] -- %s -- %s"), 
 		Uptime, *CounterStr, *EventStr);
 }
 
@@ -194,7 +194,7 @@ void UObserverNetworkDashboard::GenerateWebReport()
 	FString Html = LoadHTMLTemplate();
 	if (Html.IsEmpty())
 	{
-		UE_LOG(LogTemp, Error, TEXT("❌ OBSERVER NETWORK FAILED TO LOAD HTML TEMPLATE"));
+		UE_LOG(LogTemp, Error, TEXT("[FAIL] OBSERVER NETWORK FAILED TO LOAD HTML TEMPLATE"));
 		return;
 	}
 
@@ -218,7 +218,7 @@ void UObserverNetworkDashboard::GenerateWebReport()
 
 	FString Path = ReportDir / FString::Printf(TEXT("Observer_Report_%s.html"), *FDateTime::Now().ToString(TEXT("%Y%m%d_%H%M%S")));
 	FFileHelper::SaveStringToFile(Html, *Path);
-	UE_LOG(LogTemp, Warning, TEXT("📊 OBSERVER FINAL REPORT → %s"), *Path);
+	UE_LOG(LogTemp, Warning, TEXT("[INFO] OBSERVER FINAL REPORT --> %s"), *Path);
 }
 
 FString UObserverNetworkDashboard::LoadHTMLTemplate()
@@ -229,7 +229,7 @@ FString UObserverNetworkDashboard::LoadHTMLTemplate()
 	
 	if (FFileHelper::LoadFileToString(Html, *SourceTemplatePath))
 	{
-		UE_LOG(LogTemp, Warning, TEXT("✓ OBSERVER TEMPLATE LOADED FROM SOURCE: %s"), *SourceTemplatePath);
+		UE_LOG(LogTemp, Warning, TEXT("[OK] OBSERVER TEMPLATE LOADED FROM SOURCE: %s"), *SourceTemplatePath);
 		return Html;
 	}
 
@@ -237,7 +237,7 @@ FString UObserverNetworkDashboard::LoadHTMLTemplate()
 	FString AltSourcePath = FPaths::ProjectDir() / TEXT("Source/FringeNetwork/Private/ObserverNetworkDashboard.html");
 	if (FFileHelper::LoadFileToString(Html, *AltSourcePath))
 	{
-		UE_LOG(LogTemp, Warning, TEXT("✓ OBSERVER TEMPLATE LOADED FROM ALT SOURCE: %s"), *AltSourcePath);
+		UE_LOG(LogTemp, Warning, TEXT("[OK] OBSERVER TEMPLATE LOADED FROM ALT SOURCE: %s"), *AltSourcePath);
 		return Html;
 	}
 
@@ -245,11 +245,11 @@ FString UObserverNetworkDashboard::LoadHTMLTemplate()
 	FString ContentPath = FPaths::ProjectContentDir() / TEXT("ObserverNetwork/ObserverNetworkDashboard.html");
 	if (FFileHelper::LoadFileToString(Html, *ContentPath))
 	{
-		UE_LOG(LogTemp, Warning, TEXT("✓ OBSERVER TEMPLATE LOADED FROM CONTENT: %s"), *ContentPath);
+		UE_LOG(LogTemp, Warning, TEXT("[OK] OBSERVER TEMPLATE LOADED FROM CONTENT: %s"), *ContentPath);
 		return Html;
 	}
 
 	// Fallback: use embedded template (works in all build configurations)
-	UE_LOG(LogTemp, Warning, TEXT("⚠ OBSERVER TEMPLATE NOT FOUND ON DISK, USING EMBEDDED FALLBACK"));
+	UE_LOG(LogTemp, Warning, TEXT("[WARN] OBSERVER TEMPLATE NOT FOUND ON DISK, USING EMBEDDED FALLBACK"));
 	return GetEmbeddedHTMLTemplate();
 }
