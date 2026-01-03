@@ -201,6 +201,7 @@ public:
     bool bRequiresGameThread = false;  // Flag for game-thread-only tests
     bool bSkip = false;  // Flag to skip test execution
     uint32 MaxRetries = 0;  // Number of times to retry on failure (default: 0 = no retries)
+    double MaxDurationSeconds = 0.0;  // Maximum test duration in seconds (0 = unlimited)
     TFunction<bool(const FNexusTestContext&)> TestFunc;
 
     // Static list of all test instances - populated automatically at load time
@@ -230,7 +231,7 @@ public:
         UE_LOG_TRACE(LogNexus, Display, TEXT("RUNNING: %s [%s]"), *TestName, PriorityStr);
         PALANTIR_BREADCRUMB(TEXT("TestStart"), TestName);
         
-        // Execute test with retry logic
+        // Execute test with retry logic and timeout handling
         bool bResult = false;
         uint32 Attempt = 0;
         uint32 MaxAttempts = 1 + MaxRetries;  // Total attempts = 1 initial + retries
@@ -242,6 +243,16 @@ public:
             double StartTime = FPlatformTime::Seconds();
             bResult = TestFunc(Context);
             double Duration = FPlatformTime::Seconds() - StartTime;
+            
+            // Check if test exceeded timeout
+            if (MaxDurationSeconds > 0.0 && Duration > MaxDurationSeconds)
+            {
+                UE_LOG(LogNexus, Error, TEXT("TIMEOUT: %s exceeded max duration: %.2fs > %.2fs"), 
+                    *TestName, Duration, MaxDurationSeconds);
+                PALANTIR_BREADCRUMB(TEXT("Timeout"), 
+                    FString::Printf(TEXT("Duration: %.2fs, Limit: %.2fs"), Duration, MaxDurationSeconds));
+                bResult = false;  // Timeout = test failure
+            }
             
             if (bResult)
             {
