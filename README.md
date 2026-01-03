@@ -106,10 +106,12 @@ Copy the entire `Plugins/NexusQA/` folder to your project's `Plugins/` directory
 ### Generate Enhanced LCARS Report
 ```powershell
 # Windows (PowerShell)
-.\Scripts\Generate-LCARSReport.ps1 -OpenInBrowser
+.\Scripts\Generate-LCARSTemplate.ps1              # Extract template from C++ source (one-time)
+.\Scripts\Generate-LCARSReport.ps1 -OpenInBrowser # Generate sample demo report
 
 # macOS/Linux (Bash)
-./Scripts/generate-lcars-report.sh --open
+./Scripts/generate-lcars-template.sh              # Extract template from C++ source (one-time)
+./Scripts/generate-lcars-report.sh --open         # Generate sample demo report
 ```
 
 Opens `Saved/NexusReports/LCARS_Report_<timestamp>.html` in your browser with:
@@ -120,6 +122,30 @@ Opens `Saved/NexusReports/LCARS_Report_<timestamp>.html` in your browser with:
 - **Complete Test Listing** — Flat table reference of all results
 
 Both scripts generate production-ready sample reports demonstrating all dashboard features.
+
+#### Template Synchronization Architecture
+To keep templates synchronized without manual duplication, we use a **Single Source of Truth** pattern:
+
+1. **LCARSTemplate.cpp** (Source/Nexus/LCARSBridge/Private/)
+   - Authoritative HTML template as C++ raw string literal
+   - Used by compiled/shipped builds (embedded in binary)
+
+2. **Extract Step** (Build-time or development)
+   - Run `Generate-LCARSTemplate.ps1` or `generate-lcars-template.sh`
+   - Extracts template to `LCARSTemplate.html` (same folder as C++ source)
+   - Both report generation scripts then reference this extracted file
+
+3. **Report Generation Scripts**
+   - `Generate-LCARSReport.ps1` and `generate-lcars-report.sh`
+   - Read the extracted `LCARSTemplate.html`
+   - Inject test data via placeholder token replacement
+
+**Update Workflow:**
+- Edit template in `LCARSTemplate.cpp`
+- Run template extraction: `Generate-LCARSTemplate.ps1` or `generate-lcars-template.sh`
+- No need to manually update scripts — they auto-sync via extracted template
+
+This approach mirrors the proven pattern used by ObserverNetworkTemplate for the network dashboard.
 
 ---
 

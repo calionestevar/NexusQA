@@ -398,12 +398,20 @@ public:
             LastResult.ErrorMessage = FString::Printf(TEXT("Test failed after %d attempt(s)"), Attempt);
             
             // Capture stack trace (if available on this platform)
-            FString CallStack;
-            FPlatformStackWalk::StackWalkAndDump(CallStack, 32, nullptr);  // Capture up to 32 frames
+            // UE 5.7 API: StackWalkAndDump expects ANSICHAR buffer
+            const int32 MaxFrames = 32;
+            const int32 BufferSize = MaxFrames * 256;  // Each frame ~256 chars
+            ANSICHAR* StackBuffer = static_cast<ANSICHAR*>(FMemory::Malloc(BufferSize));
             
-            // Parse stack trace into individual frames
+            FPlatformStackWalk::StackWalkAndDump(StackBuffer, BufferSize, nullptr);
+            
+            // Convert ANSI buffer to FString and parse into lines
+            FString CallStack(StackBuffer);
+            FMemory::Free(StackBuffer);
+            
+            // Manual line splitting since ParseIntoLines not available in UE 5.7
             TArray<FString> Lines;
-            CallStack.ParseIntoLines(Lines);
+            CallStack.Split(TEXT("\n"), &Lines);
             LastResult.StackTrace = Lines;
         }
         
