@@ -229,6 +229,26 @@ void UNexusCore::RunAllTests(bool bParallel)
     if (GameThreadTests.Num() > 0)
     {
         UE_LOG(LogNexus, Display, TEXT("NEXUS: Running %d game-thread tests on main thread"), GameThreadTests.Num());
+        
+        // Auto-detect if PIE world is available before running game-thread tests
+        // Game-thread tests require an active world context to function properly
+        bool bHasActiveWorld = false;
+        for (TObjectIterator<UWorld> It; It; ++It)
+        {
+            UWorld* World = *It;
+            if (World && World->WorldType != EWorldType::Editor && !World->bIsTearingDown)
+            {
+                bHasActiveWorld = true;
+                break;
+            }
+        }
+        
+        if (!bHasActiveWorld)
+        {
+            UE_LOG(LogNexus, Warning, TEXT("⚠️  No active game world detected — Game-thread tests will gracefully skip"));
+            UE_LOG(LogNexus, Display, TEXT("💡 To run game-thread tests with full world context, click 'Play' in the editor first"));
+        }
+        
         DiscoveredTests = GameThreadTests;
         RunSequentialWithFailFast();
     }
