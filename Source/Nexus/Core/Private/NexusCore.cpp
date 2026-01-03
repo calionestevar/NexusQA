@@ -126,6 +126,12 @@ void UNexusCore::DiscoverAllTests()
 
 void UNexusCore::RunAllTests(bool bParallel)
 {
+    // Reset counters for this test run
+    PassedTests = 0;
+    FailedTests = 0;
+    SkippedTests = 0;
+    CriticalTests = 0;
+    
     // Sort: Critical first, then Smoke, then Normal
     DiscoveredTests.Sort([](const FNexusTest& A, const FNexusTest& B) {
         return (int32)A.Priority > (int32)B.Priority;
@@ -304,14 +310,18 @@ void UNexusCore::RunTestsWithTags(ETestTag Tags, bool bParallel)
     
     UE_LOG(LogNexus, Display, TEXT("NEXUS: Running %d tests matching tags"), FilteredTests.Num());
     
-    // Temporarily replace DiscoveredTests with filtered tests
+    // Temporarily replace DiscoveredTests and TotalTests with filtered tests
     TArray<FNexusTest*> OriginalTests = DiscoveredTests;
+    int32 OriginalTotalTests = TotalTests;
+    
     DiscoveredTests = FilteredTests;
+    TotalTests = FilteredTests.Num();
     
     RunAllTests(bParallel);
     
-    // Restore original tests
+    // Restore original tests and counters
     DiscoveredTests = OriginalTests;
+    TotalTests = OriginalTotalTests;
 }
 
 void UNexusCore::NotifyTestStarted(const FString& Name)

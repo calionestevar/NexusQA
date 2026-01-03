@@ -370,11 +370,11 @@ void FPalantirObserver::GenerateFinalReport()
 </body>
 </html>)";
 
+    // Protect all file writes with mutex to prevent race conditions
+    FScopeLock _lock(&GPalantirMutex);
+    
     FFileHelper::SaveStringToFile(Html, *HtmlPath);
     UE_LOG(LogTemp, Warning, TEXT("LCARS FINAL REPORT GENERATED → %s"), *HtmlPath);
-
-    // Emit a JUnit-style XML report for CI systems
-    FScopeLock _lock(&GPalantirMutex);
     
     const int32 Total = GPalantirTestResults.Num();
     int32 Failures = 0;
