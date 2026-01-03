@@ -519,6 +519,111 @@ Self-contained dashboard with:
 
 ---
 
+## Integration with Nexus Testing Framework
+
+**New in Nexus 2.0:** ArgusLens metrics are automatically captured during game-thread tests and provided in the test context for assertions.
+
+### Using NEXUS_PERF_TEST Macro
+
+```cpp
+#include "Nexus/Core/Public/NexusCore.h"
+
+// Performance test with automatic ArgusLens integration
+NEXUS_PERF_TEST(FNetworkLatencyTest, "Network.Performance.Latency", ETestPriority::High)
+{
+    const FNexusTestContext& Context = /* provided by macro */;
+    
+    // Simulate network traffic
+    SimulateNetworkLoad(100);  // 100 requests/sec
+    FPlatformProcess::Sleep(5.0f);  // Run for 5 seconds
+    
+    // Assert performance metrics from ArgusLens
+    return Context.AssertAverageFPS(30.0f) &&
+           Context.AssertMaxMemory(1024.0f) &&
+           Context.AssertMaxHitches(100, 33.0f);
+}
+```
+
+### Performance Assertion Helpers
+
+Available on `FNexusTestContext` when using `NEXUS_PERF_TEST`:
+
+```cpp
+// Assert minimum average FPS
+bool bFPSGood = Context.AssertAverageFPS(60.0f);
+
+// Assert maximum memory usage (MB)
+bool bMemoryGood = Context.AssertMaxMemory(2048.0f);
+
+// Assert maximum hitch count with threshold (ms)
+bool bHitchesGood = Context.AssertMaxHitches(5, 33.0f);
+
+// Check if performance data was collected
+bool bHasData = Context.HAS_PERF_DATA();
+```
+
+### Complete Example: Performance Gate Test
+
+```cpp
+// PerformanceGateWithNexus.cpp
+NEXUS_PERF_TEST(FComplexSceneTest, "Performance.Scene.MaxActors", ETestPriority::High)
+{
+    const FNexusTestContext& Context = /* auto-provided */;
+    
+    // Verify we're in a valid game world
+    if (!Context.IsValid()) {
+        UE_LOG(LogTemp, Warning, TEXT("Skipping: No game world context"));
+        return true;  // Gracefully skip
+    }
+    
+    // Spawn a complex scene
+    for (int32 i = 0; i < 500; ++i) {
+        AActor* Actor = Context.SpawnTestCharacter();
+        if (!Actor) break;  // Reached spawn limit
+    }
+    
+    // Wait for physics and rendering to stabilize
+    FPlatformProcess::Sleep(2.0f);
+    
+    // Assert performance under load
+    bool bPassed = 
+        Context.AssertAverageFPS(30.0f) &&        // Minimum 30 FPS
+        Context.AssertMaxMemory(2048.0f) &&       // Under 2GB
+        Context.AssertMaxHitches(10, 50.0f);      // Max 10 hitches
+    
+    // Automatic cleanup of spawned actors happens when context goes out of scope
+    return bPassed;
+}
+```
+
+### Migration from Manual ArgusLens to NEXUS_PERF_TEST
+
+**Before:**
+```cpp
+NEXUS_TEST(FTest, "Performance.Test", ETestPriority::Normal)
+{
+    FPerformanceThreshold Thresholds;
+    Thresholds.MinFPS = 60.0f;
+    UArgusLens::SetPerformanceThresholds(Thresholds);
+    UArgusLens::StartPerformanceMonitoring(30.0f);
+    // ... test code ...
+    UArgusLens::StopPerformanceMonitoring();
+    return UArgusLens::DidPassPerformanceGates();
+}
+```
+
+**After:**
+```cpp
+NEXUS_PERF_TEST(FTest, "Performance.Test", ETestPriority::Normal)
+{
+    const FNexusTestContext& Context = /* auto-provided */;
+    // ... test code ...
+    return Context.AssertAverageFPS(60.0f);  // Simpler!
+}
+```
+
+---
+
 ## Performance Considerations
 
 ### Sampling Overhead

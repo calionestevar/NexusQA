@@ -38,15 +38,35 @@ NEXUS_TEST(FComplexMathTest, "Complex Math Validation", ETestPriority::Normal)
 - Executes on main game thread
 - Sequential (one test at a time)
 - 🔒 Safe for actor/object creation
-- Required for `GWorld->SpawnActor<>()`
-- Required for `NewObject<>()`
+- Provides `FNexusTestContext` with World, GameState, PlayerController
+- Automatic cleanup of spawned actors via `SpawnTestCharacter()`
 - Must check `IsInAsyncLoadingThread()` before running
 
-**Example:**
+**Example (Recommended - Using Test Context):**
 ```cpp
 NEXUS_TEST_GAMETHREAD(FActorSpawningTest, "Actor Spawning Test", ETestPriority::Normal)
 {
-    // Safe to spawn actors on game thread
+    const FNexusTestContext& Context = /* auto-provided */;
+    
+    if (!Context.IsValid()) {
+        return true;  // Gracefully skip if no world available
+    }
+    
+    // Spawn using context (automatic cleanup)
+    AActor* TestCharacter = Context.SpawnTestCharacter();
+    
+    bool bSuccess = TestCharacter != nullptr;
+    
+    // Automatic cleanup happens when context is destroyed
+    return bSuccess;
+}
+```
+
+**Alternative (Direct GWorld Access):**
+```cpp
+NEXUS_TEST_GAMETHREAD(FActorSpawningTest, "Actor Spawning Test", ETestPriority::Normal)
+{
+    // Direct world access (manual cleanup required)
     ACharacter* TestCharacter = GWorld->SpawnActor<ACharacter>(
         ACharacter::StaticClass(),
         FVector(0, 0, 0),
@@ -54,10 +74,16 @@ NEXUS_TEST_GAMETHREAD(FActorSpawningTest, "Actor Spawning Test", ETestPriority::
     );
     
     bool bSuccess = TestCharacter != nullptr;
-    TestCharacter->Destroy();
+    TestCharacter->Destroy();  // Manual cleanup
     return bSuccess;
 }
 ```
+
+**⚠️ Prefer Test Context:** The test context approach is recommended because it:
+- Automatically tracks spawned actors for cleanup
+- Provides graceful degradation when no world is available
+- Integrates with performance monitoring (if using NEXUS_PERF_TEST)
+- Safer for concurrent test execution
 
 ### Decision Tree
 
@@ -127,27 +153,39 @@ NEXUS_TEST(FCompleteComplianceTest, "Full Compliance Validation", ETestPriority:
 ```cpp
 NEXUS_TEST_GAMETHREAD(FNetworkGameplayTest, "Network Impact on Gameplay", ETestPriority::Critical)
 {
+    const FNexusTestContext& Context = /* auto-provided */;
+    
+    if (!Context.IsValid()) {
+        return true;  // Skip if no world
+    }
+    
     FPalantirTraceGuard TraceGuard;  // Auto trace context
     
-    // Create test character
-    ACharacter* TestChar = GWorld->SpawnActor<ACharacter>();
+    // Create test character using context
+    AActor* TestChar = Context.SpawnTestCharacter();
     
     // Inject network chaos
     UFringeNetwork* FringeNet = NewObject<UFringeNetwork>();
     FringeNet->InjectLatency(100.0f);  // 100ms lag
     
     // Test game behavior under network stress
-    FVector InitialPos = TestChar->GetActorLocation();
-    TestChar->AddMovementInput(FVector::ForwardVector, 1.0f);
+    if (ACharacter* Character = Cast<ACharacter>(TestChar))
+    {
+        FVector InitialPos = Character->GetActorLocation();
+        Character->AddMovementInput(FVector::ForwardVector, 1.0f);
+        
+        // Verify movement still works despite lag
+        FVector FinalPos = Character->GetActorLocation();
+        bool bMovedDespiteLag = !FinalPos.Equals(InitialPos);
+        
+        FringeNet->RestoreNetwork();
+        return bMovedDespiteLag;
+    }
     
-    // Verify movement still works despite lag
-    FVector FinalPos = TestChar->GetActorLocation();
-    bool bMovedDespiteLag = !FinalPos.Equals(InitialPos);
-    
-    // Cleanup
-    FringeNet->RestoreNetwork();
-    TestChar->Destroy();
-    
+    // Automatic cleanup of spawned actors
+    return false;
+}
+```
     return bMovedDespiteLag;
 }
 ```
@@ -480,38 +518,53 @@ NEXUS_TEST(FPerformanceTest, "FPS Threshold", ETestPriority::Normal)
 // Game-world test (sequential, game-thread only)
 NEXUS_TEST_GAMETHREAD(FGameplayTest, "Actor Spawning", ETestPriority::Normal)
 {
-    if (!GWorld || GWorld->bIsTearingDown) return false;
-    if (IsInAsyncLoadingThread()) return false;
+    const FNexusTestContext& Context = /* auto-provided */;
     
-    ACharacter* TestChar = GWorld->SpawnActor<ACharacter>();
+    if (!Context.IsValid()) {
+        return true;  // Gracefully skip if no world
+    }
+    
+    AActor* TestChar = Context.SpawnTestCharacter();
     bool bSuccess = TestChar != nullptr;
-    if (TestChar) TestChar->Destroy();
     
     PALANTIR_BREADCRUMB(TEXT("GameplayTest"), 
         bSuccess ? TEXT("✅ Passed") : TEXT("❌ Failed"));
     
+    // Automatic cleanup when context is destroyed
     return bSuccess;
 }
 
 // Network test with game impact (sequential, game-thread)
 NEXUS_TEST_GAMETHREAD(FNetworkStressTest, "Network Under Load", ETestPriority::Critical)
 {
+    const FNexusTestContext& Context = /* auto-provided */;
+    
+    if (!Context.IsValid()) {
+        return true;  // Skip if no world
+    }
+    
     FPalantirTraceGuard TraceGuard;
     
     UFringeNetwork* Network = NewObject<UFringeNetwork>();
     Network->InjectLatency(200.0f);
     
-    ACharacter* TestChar = GWorld->SpawnActor<ACharacter>();
-    FVector StartPos = TestChar->GetActorLocation();
+    AActor* TestActor = Context.SpawnTestCharacter();
+    ACharacter* TestChar = Cast<ACharacter>(TestActor);
     
+    if (!TestChar) {
+        Network->RestoreNetwork();
+        return false;
+    }
+    
+    FVector StartPos = TestChar->GetActorLocation();
     TestChar->AddMovementInput(FVector::ForwardVector, 1.0f);
     FVector EndPos = TestChar->GetActorLocation();
     
     bool bMovedDespiteLag = !EndPos.Equals(StartPos);
     
     Network->RestoreNetwork();
-    TestChar->Destroy();
     
+    // Automatic cleanup when context is destroyed
     return bMovedDespiteLag;
 }
 ```

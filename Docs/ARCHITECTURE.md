@@ -61,12 +61,22 @@ This document explains the high-level design philosophy, module interdependencie
 - Critical test fail-fast logic
 - Result aggregation & reporting
 - PalantírObserver integration (live dashboards)
+- Test context provisioning (world, game state, player controller access)
+- Optional performance metrics collection from ArgusLens
 
 **Key Classes:**
 - `UNexusCore` — Main orchestration engine
-- `UNexusTest` — Base class for all tests
+- `UNexusTest` — Base class for all tests with skip/retry support
+- `FNexusTestContext` — Provides game world access, actor spawning, cleanup, and performance metrics
+- `FTestPerformanceMetrics` — ArgusLens integration for FPS/memory/hitch assertions
 - `UPalantirObserver` — In-memory result map & live reporting
 - `ILCARSResultsProvider` — Pluggable report backend
+
+**Test Macros:**
+- `NEXUS_TEST()` — Standard unit/integration test
+- `NEXUS_TEST_GAMETHREAD()` — Game-thread test with world context
+- `NEXUS_PERF_TEST()` — Performance test with ArgusLens metrics
+- Built-in support for `bSkip` flag and `MaxRetries` with exponential backoff
 
 **Entry Point:** `Nexus.Execute` command in `Config/DefaultEngine.ini`
 

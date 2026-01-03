@@ -272,6 +272,137 @@ Nexus.RunTests
 
 ---
 
+## Test Context and World Access
+
+Game-thread tests (`NEXUS_TEST_GAMETHREAD`) automatically receive a `FNexusTestContext` containing access to the game world, game state, and player controller. This enables comprehensive gameplay testing.
+
+### FNexusTestContext Structure
+
+```cpp
+struct FNexusTestContext
+{
+    // Game world access
+    UWorld* World = nullptr;
+    AGameStateBase* GameState = nullptr;
+    APlayerController* PlayerController = nullptr;
+    
+    // Test utilities
+    AActor* SpawnTestCharacter() const;
+    bool IsValid() const;
+    
+    // Performance metrics (when using NEXUS_PERF_TEST)
+    FTestPerformanceMetrics PerformanceMetrics;
+    bool HAS_PERF_DATA() const;
+    bool AssertAverageFPS(float MinFPS) const;
+    bool AssertMaxMemory(float MaxMB) const;
+    bool AssertMaxHitches(uint32 MaxCount, float ThresholdMs) const;
+};
+```
+
+### Game-Thread Tests with Context
+
+```cpp
+#include "Nexus/Core/Public/NexusCore.h"
+
+NEXUS_TEST_GAMETHREAD(FWorldAccessTest, "Gameplay.World.Access", ETestPriority::High)
+{
+    const FNexusTestContext& Context = /* auto-provided */;
+    
+    // Check context is valid (world is available)
+    if (!Context.IsValid()) {
+        UE_LOG(LogTemp, Warning, TEXT("No game world - test skipped"));
+        return true;  // Gracefully skip
+    }
+    
+    // Access game world
+    if (!Context.World) {
+        return false;
+    }
+    
+    // Access game state
+    if (!Context.GameState) {
+        return false;
+    }
+    
+    // Spawn a test character
+    AActor* TestActor = Context.SpawnTestCharacter();
+    if (!TestActor) {
+        return false;
+    }
+    
+    // Test character properties
+    float Health = 100.0f;  // Example property
+    
+    // Automatic cleanup of spawned actors
+    return Health > 0.0f;
+}
+```
+
+### Spawning Test Actors
+
+```cpp
+NEXUS_TEST_GAMETHREAD(FSpawnTest, "Gameplay.Spawn.Multiple", ETestPriority::Normal)
+{
+    const FNexusTestContext& Context = /* auto-provided */;
+    
+    if (!Context.IsValid()) {
+        return true;  // Skip if no world
+    }
+    
+    // Spawn multiple test characters
+    TArray<AActor*> TestActors;
+    for (int32 i = 0; i < 10; ++i) {
+        AActor* Actor = Context.SpawnTestCharacter();
+        if (!Actor) {
+            break;  // Reached spawn limit or other error
+        }
+        TestActors.Add(Actor);
+    }
+    
+    bool bResult = TestActors.Num() == 10;
+    
+    // Automatic cleanup happens when context is destroyed
+    return bResult;
+}
+```
+
+### Testing Game State
+
+```cpp
+NEXUS_TEST_GAMETHREAD(FGameStateTest, "Gameplay.GameState.Access", ETestPriority::Normal)
+{
+    const FNexusTestContext& Context = /* auto-provided */;
+    
+    if (!Context.IsValid()) {
+        return true;  // Skip
+    }
+    
+    // Query game state
+    if (!Context.GameState) {
+        return false;
+    }
+    
+    // Check game state properties
+    uint32 PlayerCount = Context.GameState->PlayerArray.Num();
+    float GameTime = Context.GameState->GetServerWorldTimeSeconds();
+    
+    return PlayerCount >= 0 && GameTime >= 0.0f;
+}
+```
+
+### Auto-Detection: No World Available?
+
+When running tests in headless/command-line mode (no PIE), game-thread tests gracefully skip:
+
+```
+⚠️  No active game world detected
+💡 Tip: Click 'Play' in the editor to start PIE mode before running tests
+```
+
+This is expected behavior. World-dependent tests are skipped, and world-independent tests continue.
+
+---
+
 ## Integration Examples
 
 ### Example 1: Test Suite for Game Features

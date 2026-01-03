@@ -50,6 +50,23 @@ NexusQA requires these engine modules (should be available in all UE5.6+ project
 
 If you have compilation errors, verify these modules are enabled in your project.
 
+## 🔄 UE 5.7 Compatibility
+
+NexusQA is fully compatible with Unreal Engine 5.7+. Recent updates include:
+
+**API Fixes Applied:**
+- ✅ Fixed `bIsEditorWorld` deprecation (now uses `WorldType != EWorldType::Editor`)
+- ✅ Fixed `ANY_PACKAGE` macro removal (now uses `nullptr`)
+- ✅ Added explicit type casting for ACharacter→AActor conversion
+- ✅ Included GameFramework/Character.h for full type definitions
+
+**Game-World Auto-Detection:**
+- Game-thread tests automatically detect if PIE world is available
+- If no world is found, tests gracefully skip with helpful user guidance
+- Logs suggest clicking "Play" in editor to enable full world context
+
+No additional configuration needed - just add NexusQA as a submodule and build!
+
 ## 🧪 Testing Integration
 Once integrated, try running a simple test:
 ```cpp
@@ -107,6 +124,31 @@ public:
 };
 ```
 
+### Performance Monitoring with ArgusLens
+Monitor FPS, memory, and hitches during test execution:
+```cpp
+NEXUS_PERF_TEST(FPerformanceTest, "Perf.Rendering.60FPS", ETestPriority::Normal, 60.0f)
+{
+    // Test runs for 60 seconds with ArgusLens monitoring
+    
+    if (HAS_PERF_DATA(Context))
+    {
+        // Assert performance gates
+        ASSERT_AVERAGE_FPS(Context, 60.0f);      // Minimum 60 FPS
+        ASSERT_MAX_MEMORY(Context, 2048.0f);     // Maximum 2GB memory
+        ASSERT_MAX_HITCHES(Context, 5);          // No more than 5 frame hitches
+    }
+    
+    return true;
+}
+```
+
+**Performance Assertion Helpers:**
+- `ASSERT_AVERAGE_FPS(Context, MinFPS)` - Verify minimum average FPS
+- `ASSERT_MAX_MEMORY(Context, MaxMb)` - Verify memory stays under limit
+- `ASSERT_MAX_HITCHES(Context, MaxCount)` - Verify hitch count stays low
+- `HAS_PERF_DATA(Context)` - Check if performance data is available
+
 ## 📚 Next Steps
 - Read [PORTFOLIO.md](../PORTFOLIO.md) for architecture overview
 - Check [Docs/INTEGRATION_GUIDE.md](../Docs/INTEGRATION_GUIDE.md) for complete patterns and pitfalls
@@ -116,15 +158,28 @@ public:
 
 **Plugin not loading?**
 - Verify NexusQA.uplugin exists in Plugins/NexusQA/
-- Check Engine version matches (5.6.0+)
+- Check Engine version matches (5.7.0+)
 - Regenerate project files and rebuild
 
 **Compilation errors?**
 - Ensure all required modules are present
 - Check that your game .Build.cs files reference NexusQA modules
 - Clean and rebuild solution
+- Verify GameFramework module is included in your project
 
 **Tests not discovered?**
-- Verify test macros use IMPLEMENT_NEXUS_TEST correctly
+- Verify test macros use NEXUS_TEST, NEXUS_TEST_GAMETHREAD, or NEXUS_PERF_TEST
 - Check that test code compiles without errors
 - See Docs/TestingFramework.md for examples
+
+**Game-thread tests have no world context?**
+- This is normal when running in headless/command-line mode
+- Click "Play" in the editor to start PIE mode before running tests
+- Check logs for "No active game world detected" warning
+- Performance tests and assertions gracefully skip without world context
+
+**Performance assertions always pass?**
+- Verify ArgusLens module is loaded (optional dependency)
+- Make sure `NEXUS_PERF_TEST` macro is used instead of `NEXUS_TEST`
+- Check that tests run long enough for metrics to be collected
+- Use `HAS_PERF_DATA(Context)` to verify if metrics are available
