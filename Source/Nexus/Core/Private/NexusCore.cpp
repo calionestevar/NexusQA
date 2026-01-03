@@ -14,6 +14,9 @@
 
 DEFINE_LOG_CATEGORY(LogNexus);
 
+// Define static members
+TArray<FNexusTestResult> FNexusTest::AllResults;
+
 /**
  * Helper function to create a test context with world access when available
  * Returns an empty context if no world is available (e.g., in dedicated test sessions)
