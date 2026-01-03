@@ -1,5 +1,6 @@
 #pragma once
 #include "CoreMinimal.h"
+#include "GameFramework/Character.h"
 #include "Nexus/Palantir/Public/PalantirTrace.h"
 
 // Forward declarations
