@@ -93,8 +93,8 @@ struct NEXUS_API FNexusTestContext
         ACharacter* Character = World->SpawnActor<ACharacter>(CharClass, Location, Rotation, SpawnParams);
         if (Character)
         {
-            // Cast to const method version to add actor to mutable array
-            const_cast<FNexusTestContext*>(this)->SpawnedActors.Add(Character);
+            // Explicitly cast ACharacter* to AActor* for storage in polymorphic array
+            const_cast<FNexusTestContext*>(this)->SpawnedActors.Add(static_cast<AActor*>(Character));
         }
         return Character;
     }
