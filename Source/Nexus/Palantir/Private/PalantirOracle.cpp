@@ -352,16 +352,65 @@ void FPalantirObserver::GenerateFinalReport()
     Html.ReplaceInline(TEXT("{REGRESSION_COUNT}"), *FString::FromInt(RegressionCount));
     Html.ReplaceInline(TEXT("{REGRESSION_STATUS}"), *RegressionStatus);
     
-    // Generate tag distribution cards
-    FString TagCards;
+    // Generate tag distribution cards and grouped test sections
+    // Define tag names and values for consistent categorization
     const char* TagNames[] = { "Networking", "Performance", "Gameplay", "Compliance", "Integration", "Stress", "Editor", "Rendering" };
     ETestTag TagValues[] = { ETestTag::Networking, ETestTag::Performance, ETestTag::Gameplay, 
                              ETestTag::Compliance, ETestTag::Integration, ETestTag::Stress, 
                              ETestTag::Editor, ETestTag::Rendering };
     
+    // Build maps of results by tag for accurate reporting
+    TMap<ETestTag, int32> TagCountMap;
+    TMap<ETestTag, int32> TagPassCountMap;
+    TMap<ETestTag, TArray<FString>> TagTestsMap;
+    
+    // Initialize tag maps
     for (int32 i = 0; i < 8; ++i)
     {
-        int32 TagCount = UNexusCore::CountTestsWithTags(TagValues[i]);
+        TagCountMap.Add(TagValues[i], 0);
+        TagPassCountMap.Add(TagValues[i], 0);
+    }
+    
+    // Iterate through actual test results and categorize by tags
+    {
+        FScopeLock _lock(&GPalantirMutex);
+        for (const auto& ResultPair : GPalantirTestResults)
+        {
+            const FString& TestName = ResultPair.Key;
+            bool bPassed = ResultPair.Value;
+            
+            // Find the test definition to get its tags
+            FNexusTest* TestDef = nullptr;
+            for (FNexusTest* Test : UNexusCore::DiscoveredTests)
+            {
+                if (Test && Test->TestName == TestName)
+                {
+                    TestDef = Test;
+                    break;
+                }
+            }
+            
+            if (TestDef)
+            {
+                // Tag this test with each applicable tag
+                for (int32 i = 0; i < 8; ++i)
+                {
+                    if (TestDef->HasTags(TagValues[i]))
+                    {
+                        TagCountMap[TagValues[i]]++;
+                        if (bPassed) TagPassCountMap[TagValues[i]]++;
+                        TagTestsMap.FindOrAdd(TagValues[i]).Add(TestName);
+                    }
+                }
+            }
+        }
+    }
+    
+    // Generate tag distribution cards
+    FString TagCards;
+    for (int32 i = 0; i < 8; ++i)
+    {
+        int32 TagCount = TagCountMap[TagValues[i]];
         TagCards += FString::Printf(
             TEXT("<div class=\"tag-card\">\n")
             TEXT("    <div class=\"count\">%d</div>\n")
@@ -372,22 +421,16 @@ void FPalantirObserver::GenerateFinalReport()
     }
     Html.ReplaceInline(TEXT("{TAG_DISTRIBUTION_CARDS}"), *TagCards);
     
-    // Generate grouped test sections
+    // Generate grouped test sections with actual categorized results
     FString GroupedSections;
     for (int32 i = 0; i < 8; ++i)
     {
-        TArray<FNexusTest*> TagTests = UNexusCore::GetTestsWithTags(TagValues[i]);
-        int32 TagPassCount = 0;
-        for (FNexusTest* Test : TagTests)
-        {
-            if (GPalantirTestResults.Contains(Test->TestName) && GPalantirTestResults[Test->TestName])
-            {
-                TagPassCount++;
-            }
-        }
+        int32 TotalInTag = TagCountMap[TagValues[i]];
+        int32 PassedInTag = TagPassCountMap[TagValues[i]];
+        TArray<FString>& TestsInTag = TagTestsMap.FindOrAdd(TagValues[i]);
         
-        FString PassPercent = TagTests.Num() > 0 ? 
-            FString::Printf(TEXT("%.1f"), (static_cast<double>(TagPassCount) / TagTests.Num()) * 100.0) : 
+        FString PassPercent = TotalInTag > 0 ? 
+            FString::Printf(TEXT("%.1f"), (static_cast<double>(PassedInTag) / TotalInTag) * 100.0) : 
             TEXT("0.0");
         
         GroupedSections += FString::Printf(
@@ -401,18 +444,22 @@ void FPalantirObserver::GenerateFinalReport()
             TEXT("    <div class=\"tag-section-content\">\n")
             TEXT("        <table class=\"tag-test-table\">\n"),
             ANSI_TO_TCHAR(TagNames[i]),
-            TagTests.Num(),
+            TotalInTag,
             *PassPercent);
         
-        for (FNexusTest* Test : TagTests)
+        // Add test rows for this tag
         {
-            bool bPassed = GPalantirTestResults.Contains(Test->TestName) && GPalantirTestResults[Test->TestName];
-            GroupedSections += FString::Printf(
-                TEXT("            <tr>\n")
-                TEXT("                <td class=\"%s\">%s</td>\n")
-                TEXT("            </tr>\n"),
-                bPassed ? TEXT("test-passed") : TEXT("test-failed"),
-                *Test->TestName);
+            FScopeLock _lock(&GPalantirMutex);
+            for (const FString& TestName : TestsInTag)
+            {
+                bool bPassed = GPalantirTestResults.Contains(TestName) && GPalantirTestResults[TestName];
+                GroupedSections += FString::Printf(
+                    TEXT("            <tr>\n")
+                    TEXT("                <td class=\"%s\">%s</td>\n")
+                    TEXT("            </tr>\n"),
+                    bPassed ? TEXT("test-passed") : TEXT("test-failed"),
+                    *TestName);
+            }
         }
         
         GroupedSections += TEXT("        </table>\n    </div>\n</div>\n");
