@@ -353,25 +353,13 @@ void FPalantirObserver::GenerateFinalReport()
     Html.ReplaceInline(TEXT("{REGRESSION_STATUS}"), *RegressionStatus);
     
     // Generate tag distribution cards and grouped test sections
-    // Define tag names and values for consistent categorization
-    const char* TagNames[] = { "Networking", "Performance", "Gameplay", "Compliance", "Integration", "Stress", "Editor", "Rendering" };
-    ETestTag TagValues[] = { ETestTag::Networking, ETestTag::Performance, ETestTag::Gameplay, 
-                             ETestTag::Compliance, ETestTag::Integration, ETestTag::Stress, 
-                             ETestTag::Editor, ETestTag::Rendering };
+    // Collect unique tags dynamically from test results instead of hardcoding
+    TArray<FString> UniqueTags;
+    TMap<FString, int32> TagCountMap;
+    TMap<FString, int32> TagPassCountMap;
+    TMap<FString, TArray<FString>> TagTestsMap;
     
-    // Build maps of results by tag for accurate reporting
-    TMap<ETestTag, int32> TagCountMap;
-    TMap<ETestTag, int32> TagPassCountMap;
-    TMap<ETestTag, TArray<FString>> TagTestsMap;
-    
-    // Initialize tag maps
-    for (int32 i = 0; i < 8; ++i)
-    {
-        TagCountMap.Add(TagValues[i], 0);
-        TagPassCountMap.Add(TagValues[i], 0);
-    }
-    
-    // Iterate through actual test results and categorize by tags
+    // Iterate through actual test results and categorize by custom tags
     {
         FScopeLock _lock(&GPalantirMutex);
         for (const auto& ResultPair : GPalantirTestResults)
@@ -379,7 +367,7 @@ void FPalantirObserver::GenerateFinalReport()
             const FString& TestName = ResultPair.Key;
             bool bPassed = ResultPair.Value;
             
-            // Find the test definition to get its tags
+            // Find the test definition to get its custom tags
             FNexusTest* TestDef = nullptr;
             for (FNexusTest* Test : UNexusCore::DiscoveredTests)
             {
@@ -390,44 +378,49 @@ void FPalantirObserver::GenerateFinalReport()
                 }
             }
             
-            if (TestDef)
+            if (TestDef && TestDef->GetCustomTags().Num() > 0)
             {
-                // Tag this test with each applicable tag
-                for (int32 i = 0; i < 8; ++i)
+                // Categorize by all custom tags
+                for (const FString& Tag : TestDef->GetCustomTags())
                 {
-                    if (TestDef->HasTags(TagValues[i]))
+                    if (!UniqueTags.Contains(Tag))
                     {
-                        TagCountMap[TagValues[i]]++;
-                        if (bPassed) TagPassCountMap[TagValues[i]]++;
-                        TagTestsMap.FindOrAdd(TagValues[i]).Add(TestName);
+                        UniqueTags.Add(Tag);
                     }
+                    
+                    TagCountMap.FindOrAdd(Tag, 0)++;
+                    if (bPassed) TagPassCountMap.FindOrAdd(Tag, 0)++;
+                    TagTestsMap.FindOrAdd(Tag).Add(TestName);
                 }
             }
         }
     }
     
+    // Sort tags for consistent ordering
+    UniqueTags.Sort();
+    
     // Generate tag distribution cards
     FString TagCards;
-    for (int32 i = 0; i < 8; ++i)
+    for (const FString& Tag : UniqueTags)
     {
-        int32 TagCount = TagCountMap[TagValues[i]];
+        int32 TagCount = TagCountMap[Tag];
         TagCards += FString::Printf(
             TEXT("<div class=\"tag-card\">\n")
             TEXT("    <div class=\"count\">%d</div>\n")
             TEXT("    <div class=\"label\">%s</div>\n")
             TEXT("</div>\n"),
             TagCount,
-            ANSI_TO_TCHAR(TagNames[i]));
+            *Tag);
     }
     Html.ReplaceInline(TEXT("{TAG_DISTRIBUTION_CARDS}"), *TagCards);
     
     // Generate grouped test sections with actual categorized results
     FString GroupedSections;
-    for (int32 i = 0; i < 8; ++i)
+    for (const FString& Tag : UniqueTags)
     {
-        int32 TotalInTag = TagCountMap[TagValues[i]];
-        int32 PassedInTag = TagPassCountMap[TagValues[i]];
-        TArray<FString>& TestsInTag = TagTestsMap.FindOrAdd(TagValues[i]);
+        int32 TotalInTag = TagCountMap[Tag];
+        int32 PassedInTag = TagPassCountMap[Tag];
+        TArray<FString>& TestsInTag = TagTestsMap[Tag];
         
         FString PassPercent = TotalInTag > 0 ? 
             FString::Printf(TEXT("%.1f"), (static_cast<double>(PassedInTag) / TotalInTag) * 100.0) : 
@@ -443,7 +436,7 @@ void FPalantirObserver::GenerateFinalReport()
             TEXT("%d tests - %s%% passed</div>\n")
             TEXT("    <div class=\"tag-section-content\">\n")
             TEXT("        <table class=\"tag-test-table\">\n"),
-            ANSI_TO_TCHAR(TagNames[i]),
+            *Tag,
             TotalInTag,
             *PassPercent);
         

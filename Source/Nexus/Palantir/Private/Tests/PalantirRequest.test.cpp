@@ -21,7 +21,7 @@
 // Basic REST API Tests
 //------------------------------------------------------------------------------
 
-NEXUS_TEST(FPalantirRequest_HealthCheck, "Palantir.Request.HealthCheck", (ETestPriority::Normal | ETestPriority::OnlineOnly))
+NEXUS_TEST(FPalantirRequest_HealthCheck, "Palantir.Request.HealthCheck", (ETestPriority::Normal | ETestPriority::OnlineOnly), {"Networking", "Integration"})
 {
 	// Health check endpoint (example.com always returns 200)
 	FPalantirResponse Res = FPalantirRequest::Get(TEXT("https://www.example.com/"))
@@ -39,7 +39,7 @@ NEXUS_TEST(FPalantirRequest_HealthCheck, "Palantir.Request.HealthCheck", (ETestP
 	return true;
 }
 
-NEXUS_TEST(FPalantirRequest_JSONValidation, "Palantir.Request.JSONValidation", (ETestPriority::Normal | ETestPriority::OnlineOnly))
+NEXUS_TEST(FPalantirRequest_JSONValidation, "Palantir.Request.JSONValidation", (ETestPriority::Normal | ETestPriority::OnlineOnly), {"Networking", "Integration"})
 {
 	// Test JSONPlaceholder API (public test API)
 	FPalantirResponse Res = FPalantirRequest::Get(TEXT("https://jsonplaceholder.typicode.com/users/1"))

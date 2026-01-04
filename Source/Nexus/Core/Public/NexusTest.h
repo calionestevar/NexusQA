@@ -261,11 +261,17 @@ public:
     static TArray<FNexusTest*> AllTests;
     static TArray<FNexusTestResult> AllResults;  // History of all test results for trend analysis
 
-    FNexusTest(const FString& InName, ETestPriority InPriority, TFunction<bool(const FNexusTestContext&)> InFunc, bool bInRequiresGameThread = false)
+    FNexusTest(const FString& InName, ETestPriority InPriority, TFunction<bool(const FNexusTestContext&)> InFunc, bool bInRequiresGameThread = false, std::initializer_list<FString> Tags = {})
         : TestName(InName), Priority(InPriority), bRequiresGameThread(bInRequiresGameThread), TestFunc(MoveTemp(InFunc))
     {
         // Self-register into static list (no circular dependency!)
         AllTests.Add(this);
+        
+        // Initialize custom tags from parameter
+        for (const FString& Tag : Tags)
+        {
+            AddCustomTag(Tag);
+        }
     }
 
     /**
@@ -442,32 +448,32 @@ public:
 // Tests self-register via FNexusTest constructor - no circular dependency!
 
 // Internal macro implementation - handles both parallel-safe and game-thread-only tests
-#define NEXUS_TEST_INTERNAL(TestClassName, PrettyName, PriorityFlags, bGameThreadOnly) \
+#define NEXUS_TEST_INTERNAL(TestClassName, PrettyName, PriorityFlags, bGameThreadOnly, CustomTags) \
 class TestClassName : public FNexusTest \
 { \
 public: \
-    TestClassName() : FNexusTest(PrettyName, PriorityFlags, [this](const FNexusTestContext& Context) -> bool { return RunTest(Context); }, bGameThreadOnly) {} \
+    TestClassName() : FNexusTest(PrettyName, PriorityFlags, [this](const FNexusTestContext& Context) -> bool { return RunTest(Context); }, bGameThreadOnly, CustomTags) {} \
     bool RunTest(const FNexusTestContext& Context); \
 }; \
 static TestClassName Global_##TestClassName; \
 bool TestClassName::RunTest(const FNexusTestContext& Context)
 
-// Original macro - defaults to false (parallel-safe)
-#define NEXUS_TEST(TestClassName, PrettyName, PriorityFlags) \
-    NEXUS_TEST_INTERNAL(TestClassName, PrettyName, PriorityFlags, false)
+// Original macro - defaults to false (parallel-safe) with optional tags
+#define NEXUS_TEST(TestClassName, PrettyName, PriorityFlags, ...) \
+    NEXUS_TEST_INTERNAL(TestClassName, PrettyName, PriorityFlags, false, __VA_ARGS__)
 
-// New macro for game-thread-only tests
-#define NEXUS_TEST_GAMETHREAD(TestClassName, PrettyName, PriorityFlags) \
-    NEXUS_TEST_INTERNAL(TestClassName, PrettyName, PriorityFlags, true)
+// New macro for game-thread-only tests with optional tags
+#define NEXUS_TEST_GAMETHREAD(TestClassName, PrettyName, PriorityFlags, ...) \
+    NEXUS_TEST_INTERNAL(TestClassName, PrettyName, PriorityFlags, true, __VA_ARGS__)
 
-// Performance test macro - runs with ArgusLens monitoring
+// Performance test macro - runs with ArgusLens monitoring with optional tags
 // Usage: NEXUS_PERF_TEST(FMyPerfTest, "Perf.CPU.Rendering", ETestPriority::Normal, 60.0f) { ... }
-// The last parameter is test duration in seconds for ArgusLens monitoring
-#define NEXUS_PERF_TEST(TestClassName, PrettyName, PriorityFlags, DurationSeconds) \
+// The last parameter before tags is test duration in seconds for ArgusLens monitoring
+#define NEXUS_PERF_TEST(TestClassName, PrettyName, PriorityFlags, DurationSeconds, ...) \
 class TestClassName : public FNexusTest \
 { \
 public: \
-    TestClassName() : FNexusTest(PrettyName, PriorityFlags, [this](const FNexusTestContext& Context) -> bool { return RunPerformanceTest(Context); }, true) {} \
+    TestClassName() : FNexusTest(PrettyName, PriorityFlags, [this](const FNexusTestContext& Context) -> bool { return RunPerformanceTest(Context); }, true, __VA_ARGS__) {} \
     bool RunPerformanceTest(const FNexusTestContext& Context); \
 }; \
 static TestClassName Global_##TestClassName; \

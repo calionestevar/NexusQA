@@ -5,7 +5,7 @@
  * Smoke test for Nexus core orchestration.
  * Verifies basic test discovery and parallel worker initialization.
  */
-NEXUS_TEST(FNexusCoreSmoke, "Nexus.Core.Smoke", ETestPriority::Normal)
+NEXUS_TEST(FNexusCoreSmoke, "Nexus.Core.Smoke", ETestPriority::Normal, {"Smoke", "Framework"})
 {
     // Core framework bootstrapped successfully if this runs
     return true;
