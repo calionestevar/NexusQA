@@ -181,7 +181,7 @@ static void RenderSlateDashboard(const TMap<FString, int32>& Counters, const TAr
 				]
 			];
 		
-		FSlateApplication::Get().AddWindow(Window);
+		FSlateApplication::Get().AddWindow(Window.ToSharedRef());
 		DashboardWindowPtr = Window;
 	}
 	

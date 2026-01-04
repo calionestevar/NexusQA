@@ -112,6 +112,7 @@ Creates a test function that Nexus auto-discovers.
 - `TestClassName` — Unique class name for test
 - `"Test.Path.Name"` — Hierarchical test identifier (shows in reports)
 - `ETestPriority::Normal` — Priority level (see below)
+- `{...}` (optional) — Custom tags for categorization (variadic, zero or more FString tags)
 
 **Return Value:**
 - `true` — Test passed
@@ -144,6 +145,78 @@ NEXUS_TEST(FMovementTest, "MyGame.Movement.Speed", ETestPriority::Normal)
     return Speed > 500.0f;
 }
 ```
+
+---
+
+### Custom Tags (Dynamic Test Categorization)
+
+Tests can be tagged with arbitrary string categories for flexible organization and filtering. Tags appear in HTML reports and can be used to filter tests programmatically.
+
+**Syntax:**
+
+```cpp
+NEXUS_TEST(TestClassName, "Test.Path.Name", ETestPriority::Normal, {"Tag1", "Tag2", "Tag3"})
+{
+    // Test implementation
+}
+
+NEXUS_TEST_GAMETHREAD(TestClassName, "Test.Path.Name", ETestPriority::Normal, {"Gameplay", "Critical"})
+{
+    // Test implementation
+}
+```
+
+**Features:**
+- **Zero or more tags** — Use empty `{}` for no tags (default behavior)
+- **Unlimited custom tags** — Define any tags you need (no predefined list)
+- **Dynamic reports** — HTML reports generate tag sections automatically based on tags used
+- **Programmatic filtering** — Query tests by custom tags at runtime
+
+**Common Tag Conventions:**
+
+```cpp
+// Category tags
+NEXUS_TEST(FNetworkTest, "Network.Connection", ETestPriority::Normal, {"Networking"})
+NEXUS_TEST(FPerformanceTest, "Performance.CPU", ETestPriority::High, {"Performance"})
+NEXUS_TEST(FGameplayTest, "Gameplay.Combat", ETestPriority::Normal, {"Gameplay"})
+
+// Priority/Severity tags
+NEXUS_TEST(FCriticalTest, "Auth.Login", ETestPriority::Critical, {"Critical", "MustPass"})
+NEXUS_TEST(FComplexTest, "AI.Pathfinding", ETestPriority::High, {"P1"})
+
+// Compliance tags
+NEXUS_TEST(FCOPPATest, "Compliance.AgeGating", ETestPriority::Critical, {"Compliance", "COPPA"})
+NEXUS_TEST(FGDPRTest, "Compliance.DataRetention", ETestPriority::Critical, {"Compliance", "GDPR"})
+
+// Feature/System tags
+NEXUS_TEST(FReplicationTest, "Multiplayer.Replication", ETestPriority::Normal, {"Networking", "Multiplayer"})
+NEXUS_TEST(FUITest, "UI.MainMenu", ETestPriority::Normal, {"UI", "Integration"})
+
+// Mixed tags
+NEXUS_TEST(FStressTest, "Performance.MaxLoad", ETestPriority::High, {"Performance", "Stress", "P1"})
+```
+
+**Retrieving Tags at Runtime:**
+
+```cpp
+// Get all tests with a specific tag
+TArray<FNexusTest*> ComplianceTests = UNexusCore::GetTestsWithCustomTag(TEXT("Compliance"));
+
+// Count tests with a tag
+int32 NetworkingCount = UNexusCore::CountTestsWithCustomTag(TEXT("Networking"));
+
+// Get all unique tags across all tests
+TArray<FString> AllTags = UNexusCore::GetAllCustomTags();
+```
+
+**HTML Report Integration:**
+
+When tests run, the generated LCARS HTML report automatically creates:
+- **Tag distribution cards** showing count for each tag
+- **Grouped test sections** organized by tag
+- **Pass percentages** for each tag category
+
+Tags are collected dynamically from actual test results, so only tags used in your tests appear in the report.
 
 ---
 

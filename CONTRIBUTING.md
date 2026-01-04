@@ -47,13 +47,19 @@ Source/ModuleName/
 
 ### Testing Requirements
 - **New features** must include tests in `Source/<Module>/Private/Tests/`
-- **Test naming:** Use `NEXUS_TEST` macro with descriptive names
+- **Test naming:** Use `NEXUS_TEST` macro with descriptive names and tags
   ```cpp
-  NEXUS_TEST(FMyFeature, "Module.Feature.Scenario", ETestPriority::Normal)
+  NEXUS_TEST(FMyFeature, "Module.Feature.Scenario", ETestPriority::Normal, {"CategoryTag", "P1"})
   {
       // Test logic
   }
   ```
+- **Tag guidelines:**
+  - Use category tags: `"Networking"`, `"Gameplay"`, `"Performance"`, `"Compliance"`, etc.
+  - Use severity tags: `"Critical"`, `"P1"`, `"MustPass"` for important tests
+  - Use feature tags: `"Multiplayer"`, `"UI"`, `"AI"`, etc.
+  - Multiple tags per test are encouraged for better report categorization
+  
 - **Coverage target:** Aim for >80% on new code paths
 - **Run before commit:** `.\Scripts\Engage.ps1` (Windows) or `./Scripts/RideOut.sh` (Unix)
 

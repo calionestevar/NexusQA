@@ -343,6 +343,7 @@ Legacy → Nexus, AutomationController
 - [x] **Performance Test Helper Macros** — `NEXUS_PERF_TEST` for dedicated performance benchmarking
 - [x] **Test Timeout Handling** — Per-test timeout with `MaxDurationSeconds`, auto-fail on timeout
 - [x] **Test Fixture/Setup/Teardown** — `BeforeEach`/`AfterEach` callbacks for shared test data
+- [x] **Dynamic String-Based Custom Tags** — Tag tests with arbitrary categories; reports auto-generate sections for used tags
 - [x] **Test Filtering/Tagging System** — `ETestTag` enum, `RunTestsWithTags()` for CI/CD workflows
 - [x] **Failure Stack Trace Capture** — Automatic diagnostics on test failure in `FNexusTestResult`
 - [x] **Test Result History & Trend Analysis** — `DetectRegressions()`, `ExportTestTrends()` for performance baselines
