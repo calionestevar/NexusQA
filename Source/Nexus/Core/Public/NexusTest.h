@@ -268,9 +268,17 @@ public:
         AllTests.Add(this);
         
         // Initialize custom tags from parameter
-        for (const FString& Tag : Tags)
+        if (Tags.size() == 0)
         {
-            AddCustomTag(Tag);
+            // Default tag for backwards compatibility - all tests appear in reports
+            AddCustomTag(TEXT("Untagged"));
+        }
+        else
+        {
+            for (const FString& Tag : Tags)
+            {
+                AddCustomTag(Tag);
+            }
         }
     }
 
@@ -473,7 +481,7 @@ bool TestClassName::RunTest(const FNexusTestContext& Context)
 class TestClassName : public FNexusTest \
 { \
 public: \
-    TestClassName() : FNexusTest(PrettyName, PriorityFlags, [this](const FNexusTestContext& Context) -> bool { return RunPerformanceTest(Context); }, true, __VA_ARGS__) {} \
+    TestClassName() : FNexusTest(PrettyName, PriorityFlags, [this](const FNexusTestContext& Context) -> bool { return RunPerformanceTest(Context); }, true, { __VA_ARGS__ }) {} \
     bool RunPerformanceTest(const FNexusTestContext& Context); \
 }; \
 static TestClassName Global_##TestClassName; \
