@@ -181,6 +181,7 @@ void UNexusCore::RunAllTests(bool bParallel)
     FailedTests = 0;
     SkippedTests = 0;
     CriticalTests = 0;
+    TotalTests = DiscoveredTests.Num();  // Ensure counter is set correctly
     
     // Sort: Critical first, then Smoke, then Normal
     DiscoveredTests.Sort([](const FNexusTest& A, const FNexusTest& B) {

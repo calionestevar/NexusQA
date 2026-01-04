@@ -8,6 +8,11 @@
 #include "HAL/CriticalSection.h"
 #include "Misc/ScopeLock.h"
 #include "Engine/Engine.h"
+#include "Widgets/SWindow.h"
+#include "Widgets/SBoxPanel.h"
+#include "Widgets/Text/STextBlock.h"
+#include "Framework/Application/SlateApplication.h"
+#include "Styling/AppStyle.h"
 
 static TMap<FString, int32> SafetyCounters;
 static TArray<FString> EventLog;
@@ -137,26 +142,112 @@ static void RenderImGuiDashboard(const TMap<FString, int32>& Counters, const TAr
 
 static void RenderSlateDashboard(const TMap<FString, int32>& Counters, const TArray<FString>& Events, float Uptime)
 {
-	// Slate rendering - logs dashboard state and can be extended to create actual Slate widgets
-	// For now, logs periodically to avoid spam (once per 60 frames or so)
+	// Create or update Slate dashboard window for live monitoring
+	static TWeakPtr<SWindow> DashboardWindowPtr;
+	static TSharedPtr<SVerticalBox> DashboardContentPtr;
 	static uint32 FrameCounter = 0;
-	if (++FrameCounter % 60 != 0) return;
-
-	FString CounterStr = TEXT("Safety Counters: ");
-	for (const auto& Pair : Counters)
+	
+	// Create window if it doesn't exist or was closed
+	if (!DashboardWindowPtr.IsValid())
 	{
-		CounterStr += FString::Printf(TEXT("[%s: %d] "), *Pair.Key, Pair.Value);
+		if (!FSlateApplication::IsInitialized()) return;
+		
+		// Create the content widget
+		TSharedPtr<SVerticalBox> ContentBox;
+		SAssignNew(ContentBox, SVerticalBox);
+		DashboardContentPtr = ContentBox;
+		
+		// Create main window
+		TSharedPtr<SWindow> Window = SNew(SWindow)
+			.Title(FText::FromString(TEXT("Observer Network Dashboard")))
+			.ClientSize(FVector2D(600, 500))
+			.SupportsMinimize(true)
+			.SupportsMaximize(true)
+			[
+				SNew(SVerticalBox)
+				+ SVerticalBox::Slot()
+				.Padding(10)
+				.AutoHeight()
+				[
+					SNew(STextBlock)
+					.Text(FText::FromString(TEXT("OBSERVER NETWORK — Real-Time Monitoring")))
+					.Font(FAppStyle::GetFontStyle("DetailsView.CategoryFontStyle"))
+				]
+				+ SVerticalBox::Slot()
+				.Padding(10)
+				.FillHeight(1.0f)
+				[
+					ContentBox.ToSharedRef()
+				]
+			];
+		
+		FSlateApplication::Get().AddWindow(Window);
+		DashboardWindowPtr = Window;
 	}
-
-	FString EventStr = TEXT("Recent Events: ");
-	int32 StartIdx = FMath::Max(0, Events.Num() - 5);
-	for (int32 i = StartIdx; i < Events.Num(); ++i)
+	
+	// Update content every frame (instead of every 60 frames)
+	if (DashboardContentPtr.IsValid())
 	{
-		EventStr += Events[i] + TEXT(" | ");
+		DashboardContentPtr->ClearChildren();
+		
+		// Add uptime header
+		DashboardContentPtr->AddSlot()
+			.Padding(5)
+			.AutoHeight()
+			[
+				SNew(STextBlock)
+				.Text(FText::FromString(FString::Printf(TEXT("Uptime: %.1f sec"), Uptime)))
+				.Font(FAppStyle::GetFontStyle("SmallFont"))
+			];
+		
+		// Add safety counters section
+		DashboardContentPtr->AddSlot()
+			.Padding(5, 10, 5, 5)
+			.AutoHeight()
+			[
+				SNew(STextBlock)
+				.Text(FText::FromString(TEXT("Safety Counters")))
+				.Font(FAppStyle::GetFontStyle("DetailsView.CategoryFontStyle"))
+			];
+		
+		for (const auto& Pair : Counters)
+		{
+			FString CounterText = FString::Printf(TEXT("  %s: %d"), *Pair.Key, Pair.Value);
+			DashboardContentPtr->AddSlot()
+				.Padding(10, 2, 5, 2)
+				.AutoHeight()
+				[
+					SNew(STextBlock)
+					.Text(FText::FromString(CounterText))
+					.Font(FAppStyle::GetFontStyle("SmallFont"))
+				];
+		}
+		
+		// Add recent events section
+		DashboardContentPtr->AddSlot()
+			.Padding(5, 10, 5, 5)
+			.AutoHeight()
+			[
+				SNew(STextBlock)
+				.Text(FText::FromString(TEXT("Recent Events")))
+				.Font(FAppStyle::GetFontStyle("DetailsView.CategoryFontStyle"))
+			];
+		
+		int32 StartIdx = FMath::Max(0, Events.Num() - 10);
+		for (int32 i = StartIdx; i < Events.Num(); ++i)
+		{
+			FString EventText = FString::Printf(TEXT("  [%d] %s"), i, *Events[i]);
+			DashboardContentPtr->AddSlot()
+				.Padding(10, 2, 5, 2)
+				.AutoHeight()
+				[
+					SNew(STextBlock)
+					.Text(FText::FromString(EventText))
+					.Font(FAppStyle::GetFontStyle("SmallFont"))
+					.ColorAndOpacity(FSlateColor(FLinearColor::Yellow))
+				];
+		}
 	}
-
-	UE_LOG(LogTemp, Warning, TEXT("[SLATE] DASHBOARD [%.1f sec] -- %s -- %s"), 
-		Uptime, *CounterStr, *EventStr);
 }
 
 EDashboardBackend UObserverNetworkDashboard::GetActiveBackend()

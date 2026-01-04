@@ -17,6 +17,13 @@ void FNexusConsoleCommands::OnRunTests(const TArray<FString>& Args)
 	UE_LOG(LogTemp, Warning, TEXT("🧪 NEXUS: Discovering tests..."));
 	UNexusCore::DiscoverAllTests();
 
+	// Attempt to ensure PIE world is active for game-thread tests
+	if (!UNexusCore::EnsurePIEWorldActive())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("⚠️  No active game world detected — Game-thread tests will gracefully skip"));
+		UE_LOG(LogTemp, Display, TEXT("💡 To run game-thread tests with full world context, click 'Play' in the editor first"));
+	}
+
 	UE_LOG(LogTemp, Warning, TEXT("🧪 NEXUS: Running %d test(s)..."), UNexusCore::TotalTests);
 	UNexusCore::RunAllTests(true);  // true = parallel execution
 
@@ -28,6 +35,7 @@ void FNexusConsoleCommands::OnRunTests(const TArray<FString>& Args)
 	TMap<FString, double> Durations;
 	TMap<FString, TArray<FString>> Artifacts;
 
-	LCARSReporter::ExportResultsToLCARSFromPalantir(Results, Durations, Artifacts, TEXT("Saved/NexusReports/"));
-	UE_LOG(LogTemp, Display, TEXT("📊 NEXUS: Report exported to Saved/NexusReports/"));
+	const FString LcarsPath = FPaths::ProjectSavedDir() / TEXT("NexusReports");
+	LCARSReporter::ExportResultsToLCARSFromPalantir(Results, Durations, Artifacts, LcarsPath);
+	UE_LOG(LogTemp, Display, TEXT("📊 NEXUS: Report exported to %s"), *LcarsPath);
 }
