@@ -1,6 +1,6 @@
 #include "NexusCore.h"
 
-NEXUS_TEST(FNexusIsAliveTest, "Nexus.Smoke.DummyTest_ProvesFrameworkWorks", ETestPriority::Smoke, {"Smoke", "Framework", "Critical"})
+NEXUS_TEST_TAGGED(FNexusIsAliveTest, "Nexus.Smoke.DummyTest_ProvesFrameworkWorks", ETestPriority::Smoke, {"Smoke", "Framework", "Critical"})
 {
     UE_LOG(LogTemp, Warning, TEXT("NEXUS IS ALIVE — THE REVOLUTION HAS BEGUN"));
     bool bResult = (6 * 7 == 42);
@@ -11,14 +11,14 @@ NEXUS_TEST(FNexusIsAliveTest, "Nexus.Smoke.DummyTest_ProvesFrameworkWorks", ETes
     return bResult;
 }
 
-NEXUS_TEST(FNexusCanFailTest, "Nexus.Smoke.DummyTest_CanDetectFailure", ETestPriority::Smoke, {"Smoke", "Framework"})
+NEXUS_TEST_TAGGED(FNexusCanFailTest, "Nexus.Smoke.DummyTest_CanDetectFailure", ETestPriority::Smoke, {"Smoke", "Framework"})
 {
     // This test intentionally fails to verify fail detection works
     UE_LOG(LogTemp, Error, TEXT("Intentional failure to verify fail detection"));
     return false;  // Intentional failure
 }
 
-NEXUS_TEST_GAMETHREAD(FNexusContextTest, "Nexus.GameThread.ContextAccess", ETestPriority::Normal, {"GameThread", "Gameplay"})
+NEXUS_TEST_GAMETHREAD_TAGGED(FNexusContextTest, "Nexus.GameThread.ContextAccess", ETestPriority::Normal, {"GameThread", "Gameplay"})
 {
     // Demonstrate test context usage
     // This test shows how to access world, game state, and player controller
@@ -39,7 +39,7 @@ NEXUS_TEST_GAMETHREAD(FNexusContextTest, "Nexus.GameThread.ContextAccess", ETest
 
 // Example: Skip tests based on conditions (uncomment to use)
 // You can set bSkip dynamically from commandline or config
-NEXUS_TEST(FNexusSkipExampleTest, "Nexus.Skip.ExampleSkipTest", ETestPriority::Normal, {"Example"})
+NEXUS_TEST_TAGGED(FNexusSkipExampleTest, "Nexus.Skip.ExampleSkipTest", ETestPriority::Normal, {"Example"})
 {
     // Example: This test would be skipped if certain conditions are met
     // Uncomment the line below to see skip in action during testing

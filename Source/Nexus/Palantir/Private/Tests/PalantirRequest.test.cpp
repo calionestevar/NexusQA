@@ -21,7 +21,7 @@
 // Basic REST API Tests
 //------------------------------------------------------------------------------
 
-NEXUS_TEST(FPalantirRequest_HealthCheck, "Palantir.Request.HealthCheck", (ETestPriority::Normal | ETestPriority::OnlineOnly), {"Networking", "Integration"})
+NEXUS_TEST_TAGGED(FPalantirRequest_HealthCheck, "Palantir.Request.HealthCheck", (ETestPriority::Normal | ETestPriority::OnlineOnly), {"Networking", "Integration"})
 {
 	// Health check endpoint (example.com always returns 200)
 	FPalantirResponse Res = FPalantirRequest::Get(TEXT("https://www.example.com/"))

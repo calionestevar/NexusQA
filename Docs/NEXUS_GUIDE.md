@@ -112,7 +112,6 @@ Creates a test function that Nexus auto-discovers.
 - `TestClassName` — Unique class name for test
 - `"Test.Path.Name"` — Hierarchical test identifier (shows in reports)
 - `ETestPriority::Normal` — Priority level (see below)
-- `{...}` (optional) — Custom tags for categorization (variadic, zero or more FString tags)
 
 **Return Value:**
 - `true` — Test passed
@@ -130,9 +129,10 @@ enum class ETestPriority : uint8
 };
 ```
 
-**Example:**
+**Example (Without Tags):**
 
 ```cpp
+// These tests get "Untagged" automatically
 NEXUS_TEST(FBasicTest, "MyGame.Basic.Startup", ETestPriority::Critical)
 {
     return GEngine != nullptr;  // True if engine initialized
@@ -150,50 +150,58 @@ NEXUS_TEST(FMovementTest, "MyGame.Movement.Speed", ETestPriority::Normal)
 
 ### Custom Tags (Dynamic Test Categorization)
 
-Tests can be tagged with arbitrary string categories for flexible organization and filtering. Tags appear in HTML reports and can be used to filter tests programmatically.
+Tests can be tagged with arbitrary string categories for flexible organization and filtering. Use the `_TAGGED` variant of macros when you want to assign custom tags.
 
-**Syntax:**
+**Two Macro Families:**
 
-```cpp
-NEXUS_TEST(TestClassName, "Test.Path.Name", ETestPriority::Normal, {"Tag1", "Tag2", "Tag3"})
-{
-    // Test implementation
-}
+1. **Without Tags** (Backwards compatible, gets "Untagged" automatically):
+   ```cpp
+   NEXUS_TEST(TestClassName, "Test.Path.Name", ETestPriority::Normal)
+   NEXUS_TEST_GAMETHREAD(TestClassName, "Test.Path.Name", ETestPriority::Normal)
+   NEXUS_PERF_TEST(TestClassName, "Test.Path.Name", ETestPriority::Normal, 60.0f)
+   ```
 
-NEXUS_TEST_GAMETHREAD(TestClassName, "Test.Path.Name", ETestPriority::Normal, {"Gameplay", "Critical"})
-{
-    // Test implementation
-}
-```
+2. **With Tags** (Explicit tag specification):
+   ```cpp
+   NEXUS_TEST_TAGGED(TestClassName, "Test.Path.Name", ETestPriority::Normal, {"Tag1", "Tag2"})
+   NEXUS_TEST_GAMETHREAD_TAGGED(TestClassName, "Test.Path.Name", ETestPriority::Normal, {"Tag1", "Tag2"})
+   NEXUS_PERF_TEST_TAGGED(TestClassName, "Test.Path.Name", ETestPriority::Normal, 60.0f, {"Tag1", "Tag2"})
+   ```
 
 **Features:**
-- **Zero or more tags** — Use empty `{}` for no tags (default behavior)
+- **Simple, explicit syntax** — Use untagged macros for no tags, `_TAGGED` variants for custom tags
+- **Backwards compatible** — Existing tests without tags still work
 - **Unlimited custom tags** — Define any tags you need (no predefined list)
 - **Dynamic reports** — HTML reports generate tag sections automatically based on tags used
 - **Programmatic filtering** — Query tests by custom tags at runtime
+- **Automatic "Untagged" label** — Untagged tests appear in their own report section
 
 **Common Tag Conventions:**
+````
 
 ```cpp
 // Category tags
-NEXUS_TEST(FNetworkTest, "Network.Connection", ETestPriority::Normal, {"Networking"})
-NEXUS_TEST(FPerformanceTest, "Performance.CPU", ETestPriority::High, {"Performance"})
-NEXUS_TEST(FGameplayTest, "Gameplay.Combat", ETestPriority::Normal, {"Gameplay"})
+NEXUS_TEST_TAGGED(FNetworkTest, "Network.Connection", ETestPriority::Normal, {"Networking"})
+NEXUS_TEST_TAGGED(FPerformanceTest, "Performance.CPU", ETestPriority::High, {"Performance"})
+NEXUS_TEST_TAGGED(FGameplayTest, "Gameplay.Combat", ETestPriority::Normal, {"Gameplay"})
 
 // Priority/Severity tags
-NEXUS_TEST(FCriticalTest, "Auth.Login", ETestPriority::Critical, {"Critical", "MustPass"})
-NEXUS_TEST(FComplexTest, "AI.Pathfinding", ETestPriority::High, {"P1"})
+NEXUS_TEST_TAGGED(FCriticalTest, "Auth.Login", ETestPriority::Critical, {"Critical", "MustPass"})
+NEXUS_TEST_TAGGED(FComplexTest, "AI.Pathfinding", ETestPriority::High, {"P1"})
 
 // Compliance tags
-NEXUS_TEST(FCOPPATest, "Compliance.AgeGating", ETestPriority::Critical, {"Compliance", "COPPA"})
-NEXUS_TEST(FGDPRTest, "Compliance.DataRetention", ETestPriority::Critical, {"Compliance", "GDPR"})
+NEXUS_TEST_TAGGED(FCOPPATest, "Compliance.AgeGating", ETestPriority::Critical, {"Compliance", "COPPA"})
+NEXUS_TEST_TAGGED(FGDPRTest, "Compliance.DataRetention", ETestPriority::Critical, {"Compliance", "GDPR"})
 
 // Feature/System tags
-NEXUS_TEST(FReplicationTest, "Multiplayer.Replication", ETestPriority::Normal, {"Networking", "Multiplayer"})
-NEXUS_TEST(FUITest, "UI.MainMenu", ETestPriority::Normal, {"UI", "Integration"})
+NEXUS_TEST_TAGGED(FReplicationTest, "Multiplayer.Replication", ETestPriority::Normal, {"Networking", "Multiplayer"})
+NEXUS_TEST_TAGGED(FUITest, "UI.MainMenu", ETestPriority::Normal, {"UI", "Integration"})
 
 // Mixed tags
-NEXUS_TEST(FStressTest, "Performance.MaxLoad", ETestPriority::High, {"Performance", "Stress", "P1"})
+NEXUS_TEST_TAGGED(FStressTest, "Performance.MaxLoad", ETestPriority::High, {"Performance", "Stress", "P1"})
+
+// Untagged tests (backwards compatible)
+NEXUS_TEST(FSimpleTest, "Simple.Test", ETestPriority::Normal)  // Gets "Untagged" automatically
 ```
 
 **Retrieving Tags at Runtime:**
@@ -212,11 +220,11 @@ TArray<FString> AllTags = UNexusCore::GetAllCustomTags();
 **HTML Report Integration:**
 
 When tests run, the generated LCARS HTML report automatically creates:
-- **Tag distribution cards** showing count for each tag
+- **Tag distribution cards** showing count for each tag (including "Untagged")
 - **Grouped test sections** organized by tag
 - **Pass percentages** for each tag category
 
-Tags are collected dynamically from actual test results, so only tags used in your tests appear in the report.
+Tags are collected dynamically from actual test results, so only tags used in your tests appear in the report. Tests without explicit tags get the "Untagged" category.
 
 ---
 

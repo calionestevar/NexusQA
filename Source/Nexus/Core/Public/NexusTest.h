@@ -456,33 +456,61 @@ public:
 // Tests self-register via FNexusTest constructor - no circular dependency!
 
 // Internal macro implementation - handles both parallel-safe and game-thread-only tests
-// Accepts variadic args for custom tags to handle: {"Tag1", "Tag2", ...}
-#define NEXUS_TEST_INTERNAL(TestClassName, PrettyName, PriorityFlags, bGameThreadOnly, ...) \
+#define NEXUS_TEST_INTERNAL(TestClassName, PrettyName, PriorityFlags, bGameThreadOnly, Tags) \
 class TestClassName : public FNexusTest \
 { \
 public: \
-    TestClassName() : FNexusTest(PrettyName, PriorityFlags, [this](const FNexusTestContext& Context) -> bool { return RunTest(Context); }, bGameThreadOnly, { __VA_ARGS__ }) {} \
+    TestClassName() : FNexusTest(PrettyName, PriorityFlags, [this](const FNexusTestContext& Context) -> bool { return RunTest(Context); }, bGameThreadOnly, Tags) {} \
     bool RunTest(const FNexusTestContext& Context); \
 }; \
 static TestClassName Global_##TestClassName; \
 bool TestClassName::RunTest(const FNexusTestContext& Context)
 
-// Original macro - defaults to false (parallel-safe) with optional tags
-#define NEXUS_TEST(TestClassName, PrettyName, PriorityFlags, ...) \
-    NEXUS_TEST_INTERNAL(TestClassName, PrettyName, PriorityFlags, false, __VA_ARGS__)
+// ============================================================================
+// Test Macros Without Tags (Backwards Compatible)
+// ============================================================================
 
-// New macro for game-thread-only tests with optional tags
-#define NEXUS_TEST_GAMETHREAD(TestClassName, PrettyName, PriorityFlags, ...) \
-    NEXUS_TEST_INTERNAL(TestClassName, PrettyName, PriorityFlags, true, __VA_ARGS__)
+// Standard test - parallel-safe, no tags (gets "Untagged" automatically)
+#define NEXUS_TEST(TestClassName, PrettyName, PriorityFlags) \
+    NEXUS_TEST_INTERNAL(TestClassName, PrettyName, PriorityFlags, false, {})
 
-// Performance test macro - runs with ArgusLens monitoring with optional tags
+// Game-thread-only test - no tags (gets "Untagged" automatically)
+#define NEXUS_TEST_GAMETHREAD(TestClassName, PrettyName, PriorityFlags) \
+    NEXUS_TEST_INTERNAL(TestClassName, PrettyName, PriorityFlags, true, {})
+
+// Performance test - no tags (gets "Untagged" automatically)
 // Usage: NEXUS_PERF_TEST(FMyPerfTest, "Perf.CPU.Rendering", ETestPriority::Normal, 60.0f) { ... }
-// The last parameter before tags is test duration in seconds for ArgusLens monitoring
-#define NEXUS_PERF_TEST(TestClassName, PrettyName, PriorityFlags, DurationSeconds, ...) \
+#define NEXUS_PERF_TEST(TestClassName, PrettyName, PriorityFlags, DurationSeconds) \
 class TestClassName : public FNexusTest \
 { \
 public: \
-    TestClassName() : FNexusTest(PrettyName, PriorityFlags, [this](const FNexusTestContext& Context) -> bool { return RunPerformanceTest(Context); }, true, { __VA_ARGS__ }) {} \
+    TestClassName() : FNexusTest(PrettyName, PriorityFlags, [this](const FNexusTestContext& Context) -> bool { return RunPerformanceTest(Context); }, true, {}) {} \
+    bool RunPerformanceTest(const FNexusTestContext& Context); \
+}; \
+static TestClassName Global_##TestClassName; \
+bool TestClassName::RunPerformanceTest(const FNexusTestContext& Context)
+
+// ============================================================================
+// Test Macros With Tags (New)
+// ============================================================================
+
+// Standard test with custom tags
+// Usage: NEXUS_TEST_TAGGED(FMyTest, "Module.Feature", ETestPriority::Normal, {"Networking", "P1"})
+#define NEXUS_TEST_TAGGED(TestClassName, PrettyName, PriorityFlags, Tags) \
+    NEXUS_TEST_INTERNAL(TestClassName, PrettyName, PriorityFlags, false, Tags)
+
+// Game-thread-only test with custom tags
+// Usage: NEXUS_TEST_GAMETHREAD_TAGGED(FMyTest, "Module.Feature", ETestPriority::Normal, {"Gameplay", "Critical"})
+#define NEXUS_TEST_GAMETHREAD_TAGGED(TestClassName, PrettyName, PriorityFlags, Tags) \
+    NEXUS_TEST_INTERNAL(TestClassName, PrettyName, PriorityFlags, true, Tags)
+
+// Performance test with custom tags
+// Usage: NEXUS_PERF_TEST_TAGGED(FMyPerfTest, "Perf.CPU.Rendering", ETestPriority::Normal, 60.0f, {"Performance", "P1"})
+#define NEXUS_PERF_TEST_TAGGED(TestClassName, PrettyName, PriorityFlags, DurationSeconds, Tags) \
+class TestClassName : public FNexusTest \
+{ \
+public: \
+    TestClassName() : FNexusTest(PrettyName, PriorityFlags, [this](const FNexusTestContext& Context) -> bool { return RunPerformanceTest(Context); }, true, Tags) {} \
     bool RunPerformanceTest(const FNexusTestContext& Context); \
 }; \
 static TestClassName Global_##TestClassName; \
