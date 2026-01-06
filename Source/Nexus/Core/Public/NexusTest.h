@@ -456,11 +456,11 @@ public:
 // Tests self-register via FNexusTest constructor - no circular dependency!
 
 // Internal macro implementation - handles both parallel-safe and game-thread-only tests
-#define NEXUS_TEST_INTERNAL(TestClassName, PrettyName, PriorityFlags, bGameThreadOnly, Tags) \
+#define NEXUS_TEST_INTERNAL(TestClassName, PrettyName, PriorityFlags, bGameThreadOnly, ...) \
 class TestClassName : public FNexusTest \
 { \
 public: \
-    TestClassName() : FNexusTest(PrettyName, PriorityFlags, [this](const FNexusTestContext& Context) -> bool { return RunTest(Context); }, bGameThreadOnly, Tags) {} \
+    TestClassName() : FNexusTest(PrettyName, PriorityFlags, [this](const FNexusTestContext& Context) -> bool { return RunTest(Context); }, bGameThreadOnly, __VA_ARGS__) {} \
     bool RunTest(const FNexusTestContext& Context); \
 }; \
 static TestClassName Global_##TestClassName; \
