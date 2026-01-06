@@ -231,7 +231,7 @@ void FPalantirObserver::RegisterArtifact(const FString& TestName, const FString&
 void FPalantirObserver::OnTestFinished(const FString& Name, bool bPassed)
 {
     UE_LOG(LogTemp, Display, TEXT("Palantir: Test finished: %s -> %s"), *Name, bPassed ? TEXT("PASSED") : TEXT("FAILED"));
-    UNexusCore::NotifyTestFinished(Name, bPassed);
+    // NOTE: NotifyTestFinished is called by the caller (NexusCore), not here to avoid double-counting
 
     // Record the result for final reporting (JUnit, HTML)
     {
