@@ -1,5 +1,6 @@
 #include "Nexus/Core/Public/NexusTest.h"
 #include "PalantirRequest.h"
+#include "Networking/Public/Networking.h"
 
 /**
  * Sample tests demonstrating network request tracing with PalantírRequest.
@@ -18,11 +19,36 @@
  */
 
 //------------------------------------------------------------------------------
+// Network Helper
+//------------------------------------------------------------------------------
+
+/**
+ * Check if network is available by attempting DNS lookup of a reliable domain
+ */
+static bool IsNetworkAvailable()
+{
+	// Try to resolve a reliable domain (Google DNS)
+	FIPv4Address OutAddr;
+	if (ISocketSubsystem::Get(PLATFORM_SOCKETSUBSYSTEM)->GetHostByName(ANSI_TO_TCHAR("8.8.8.8"), OutAddr))
+	{
+		return true;
+	}
+	return false;
+}
+
+//------------------------------------------------------------------------------
 // Basic REST API Tests
 //------------------------------------------------------------------------------
 
 NEXUS_TEST_TAGGED(FPalantirRequest_HealthCheck, "Palantir.Request.HealthCheck", (ETestPriority::Normal | ETestPriority::OnlineOnly), {"Networking", "Integration"})
 {
+	// Skip if network is unavailable
+	if (!IsNetworkAvailable())
+	{
+		UE_LOG(LogPalantirTrace, Warning, TEXT("Health check skipped: Network unavailable"));
+		return true;  // Skip gracefully
+	}
+
 	// Health check endpoint (example.com always returns 200)
 	FPalantirResponse Res = FPalantirRequest::Get(TEXT("https://www.example.com/"))
 		.WithTimeout(5.0f)
@@ -41,6 +67,13 @@ NEXUS_TEST_TAGGED(FPalantirRequest_HealthCheck, "Palantir.Request.HealthCheck", 
 
 NEXUS_TEST_TAGGED(FPalantirRequest_JSONValidation, "Palantir.Request.JSONValidation", (ETestPriority::Normal | ETestPriority::OnlineOnly), {"Networking", "Integration"})
 {
+	// Skip if network is unavailable
+	if (!IsNetworkAvailable())
+	{
+		UE_LOG(LogPalantirTrace, Warning, TEXT("JSON validation skipped: Network unavailable"));
+		return true;
+	}
+
 	// Test JSONPlaceholder API (public test API)
 	FPalantirResponse Res = FPalantirRequest::Get(TEXT("https://jsonplaceholder.typicode.com/users/1"))
 		.WithTimeout(10.0f)
@@ -70,6 +103,13 @@ NEXUS_TEST_TAGGED(FPalantirRequest_JSONValidation, "Palantir.Request.JSONValidat
 
 NEXUS_TEST(FPalantirRequest_PostRequest, "Palantir.Request.PostRequest", (ETestPriority::Normal | ETestPriority::OnlineOnly))
 {
+	// Skip if network is unavailable
+	if (!IsNetworkAvailable())
+	{
+		UE_LOG(LogPalantirTrace, Warning, TEXT("POST request skipped: Network unavailable"));
+		return true;
+	}
+
 	// Test POST endpoint (JSONPlaceholder echo endpoint)
 	FString PostBody = TEXT("{\"title\": \"Test Post\", \"body\": \"Test Body\", \"userId\": 1}");
 
@@ -103,6 +143,13 @@ NEXUS_TEST(FPalantirRequest_PostRequest, "Palantir.Request.PostRequest", (ETestP
 
 NEXUS_TEST(FPalantirRequest_GraphQL, "Palantir.Request.GraphQL", (ETestPriority::Normal | ETestPriority::OnlineOnly))
 {
+	// Skip if network is unavailable
+	if (!IsNetworkAvailable())
+	{
+		UE_LOG(LogPalantirTrace, Warning, TEXT("GraphQL query skipped: Network unavailable"));
+		return true;
+	}
+
 	// Test public GraphQL endpoint (SpaceX API)
 	FString Query = TEXT("{ company { name ceo coo } }");
 
@@ -136,6 +183,13 @@ NEXUS_TEST(FPalantirRequest_GraphQL, "Palantir.Request.GraphQL", (ETestPriority:
 
 NEXUS_TEST(FPalantirRequest_404Handling, "Palantir.Request.404Handling", (ETestPriority::Normal | ETestPriority::OnlineOnly))
 {
+	// Skip if network is unavailable
+	if (!IsNetworkAvailable())
+	{
+		UE_LOG(LogPalantirTrace, Warning, TEXT("404 handling test skipped: Network unavailable"));
+		return true;
+	}
+
 	// Test 404 detection
 	FPalantirResponse Res = FPalantirRequest::Get(TEXT("https://jsonplaceholder.typicode.com/nonexistent"))
 		.WithTimeout(5.0f)
@@ -153,6 +207,13 @@ NEXUS_TEST(FPalantirRequest_404Handling, "Palantir.Request.404Handling", (ETestP
 
 NEXUS_TEST(FPalantirRequest_RetryLogic, "Palantir.Request.RetryLogic", (ETestPriority::Normal | ETestPriority::OnlineOnly))
 {
+	// Skip if network is unavailable
+	if (!IsNetworkAvailable())
+	{
+		UE_LOG(LogPalantirTrace, Warning, TEXT("Retry logic test skipped: Network unavailable"));
+		return true;
+	}
+
 	// Test retry with a flaky endpoint (this will timeout or fail initially)
 	// Note: This test may take up to 15 seconds due to retries
 	FPalantirResponse Res = FPalantirRequest::Get(TEXT("https://httpstat.us/503"))
@@ -178,6 +239,13 @@ NEXUS_TEST(FPalantirRequest_RetryLogic, "Palantir.Request.RetryLogic", (ETestPri
 
 NEXUS_TEST(FPalantirRequest_AsyncRequest, "Palantir.Request.AsyncRequest", (ETestPriority::Normal | ETestPriority::OnlineOnly))
 {
+	// Skip if network is unavailable
+	if (!IsNetworkAvailable())
+	{
+		UE_LOG(LogPalantirTrace, Warning, TEXT("Async request test skipped: Network unavailable"));
+		return true;
+	}
+
 	// Test async request with callback
 	bool bCallbackFired = false;
 	int32 ResponseStatus = 0;
@@ -222,6 +290,13 @@ NEXUS_TEST(FPalantirRequest_AsyncRequest, "Palantir.Request.AsyncRequest", (ETes
 
 NEXUS_TEST(FPalantirRequest_MacroConvenience, "Palantir.Request.MacroConvenience", (ETestPriority::Normal | ETestPriority::OnlineOnly))
 {
+	// Skip if network is unavailable
+	if (!IsNetworkAvailable())
+	{
+		UE_LOG(LogPalantirTrace, Warning, TEXT("Macro convenience test skipped: Network unavailable"));
+		return true;
+	}
+
 	// Test convenience macros - pass URLs directly without extra TEXT wrapper
 	FPalantirResponse Res = FPalantirRequest::Get(TEXT("https://www.example.com/"))
 		.WithTimeout(5.0f)
