@@ -496,21 +496,21 @@ bool TestClassName::RunPerformanceTest(const FNexusTestContext& Context)
 
 // Standard test with custom tags
 // Usage: NEXUS_TEST_TAGGED(FMyTest, "Module.Feature", ETestPriority::Normal, {"Networking", "P1"})
-#define NEXUS_TEST_TAGGED(TestClassName, PrettyName, PriorityFlags, Tags) \
-    NEXUS_TEST_INTERNAL(TestClassName, PrettyName, PriorityFlags, false, Tags)
+#define NEXUS_TEST_TAGGED(TestClassName, PrettyName, PriorityFlags, ...) \
+    NEXUS_TEST_INTERNAL(TestClassName, PrettyName, PriorityFlags, false, __VA_ARGS__)
 
 // Game-thread-only test with custom tags
 // Usage: NEXUS_TEST_GAMETHREAD_TAGGED(FMyTest, "Module.Feature", ETestPriority::Normal, {"Gameplay", "Critical"})
-#define NEXUS_TEST_GAMETHREAD_TAGGED(TestClassName, PrettyName, PriorityFlags, Tags) \
-    NEXUS_TEST_INTERNAL(TestClassName, PrettyName, PriorityFlags, true, Tags)
+#define NEXUS_TEST_GAMETHREAD_TAGGED(TestClassName, PrettyName, PriorityFlags, ...) \
+    NEXUS_TEST_INTERNAL(TestClassName, PrettyName, PriorityFlags, true, __VA_ARGS__)
 
 // Performance test with custom tags
 // Usage: NEXUS_PERF_TEST_TAGGED(FMyPerfTest, "Perf.CPU.Rendering", ETestPriority::Normal, 60.0f, {"Performance", "P1"})
-#define NEXUS_PERF_TEST_TAGGED(TestClassName, PrettyName, PriorityFlags, DurationSeconds, Tags) \
+#define NEXUS_PERF_TEST_TAGGED(TestClassName, PrettyName, PriorityFlags, DurationSeconds, ...) \
 class TestClassName : public FNexusTest \
 { \
 public: \
-    TestClassName() : FNexusTest(PrettyName, PriorityFlags, [this](const FNexusTestContext& Context) -> bool { return RunPerformanceTest(Context); }, true, Tags) {} \
+    TestClassName() : FNexusTest(PrettyName, PriorityFlags, [this](const FNexusTestContext& Context) -> bool { return RunPerformanceTest(Context); }, true, __VA_ARGS__) {} \
     bool RunPerformanceTest(const FNexusTestContext& Context); \
 }; \
 static TestClassName Global_##TestClassName; \
