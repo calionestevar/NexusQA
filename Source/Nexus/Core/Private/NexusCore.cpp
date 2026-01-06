@@ -57,7 +57,7 @@ static void PopulatePerformanceMetrics(FTestPerformanceMetrics& OutMetrics)
     // ArgusLens is optional - only populate if module is loaded
     // Use reflection to check if UArgusLens class exists (avoids hard dependency)
     // Use nullptr instead of ANY_PACKAGE (removed in UE 5.7)
-    UClass* ArgusLensClass = FindObject<UClass>(nullptr, TEXT("ArgusLens"), true);
+    UClass* ArgusLensClass = FindObject<UClass>(nullptr, TEXT("ArgusLens"), EFindObjectFlags::ExactClass);
     
     if (!ArgusLensClass)
     {
