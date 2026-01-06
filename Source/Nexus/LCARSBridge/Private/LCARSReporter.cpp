@@ -141,6 +141,11 @@ void LCARSReporter::ExportResultsToLCARSFromPalantir(const TMap<FString, bool>& 
     {
         FinalPath = FPaths::Combine(FPaths::ProjectSavedDir(), TEXT("LCARSReport.json"));
     }
+    else if (!FinalPath.EndsWith(TEXT(".json")))
+    {
+        // If OutputPath is a directory, append the filename
+        FinalPath = FPaths::Combine(OutputPath, TEXT("LCARSReport.json"));
+    }
 
     FString OutputString;
     TSharedRef<TJsonWriter<>> Writer = TJsonWriterFactory<>::Create(&OutputString);

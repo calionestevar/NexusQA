@@ -451,16 +451,49 @@ NEXUS_TEST_GAMETHREAD(FGameStateTest, "Gameplay.GameState.Access", ETestPriority
 }
 ```
 
-### Auto-Detection: No World Available?
+### Running Game-Thread Tests with Auto-PIE
 
-When running tests in headless/command-line mode (no PIE), game-thread tests gracefully skip:
+Game-thread tests require an active game world to function properly. NEXUS provides automatic PIE (Play-in-Editor) launching to handle this:
+
+#### Configuration
+
+To enable Auto-PIE launch, add the following to your `DefaultGame.ini`:
+
+```ini
+[/Script/Nexus.NexusSettings]
+TestMapPath=/Game/Maps/YourTestMap
+```
+
+Replace `/Game/Maps/YourTestMap` with the path to your test level.
+
+#### How It Works
+
+When you run tests with the `Nexus.RunTests` console command:
+
+1. **Detection Phase**: Framework checks if a PIE/game world is already active
+2. **Auto-Launch Phase**: If no world found, framework automatically launches PIE with the configured `TestMapPath`
+3. **Wait Phase**: Framework waits up to 5 seconds for the world to fully initialize
+4. **Execution Phase**: Once world is ready, game-thread tests execute normally
+
+#### Manual PIE Launch
+
+If you prefer to launch PIE manually before running tests:
+
+1. Click the "Play" button in the Unreal Editor toolbar
+2. Wait for the game world to fully load
+3. Run the `Nexus.RunTests` console command
+4. The framework will detect the active world and proceed immediately
+
+#### Graceful Fallback
+
+If Auto-PIE fails or no `TestMapPath` is configured, game-thread tests gracefully skip:
 
 ```
 ⚠️  No active game world detected
 💡 Tip: Click 'Play' in the editor to start PIE mode before running tests
 ```
 
-This is expected behavior. World-dependent tests are skipped, and world-independent tests continue.
+This is expected behavior and prevents test failures due to missing world context.
 
 ---
 
