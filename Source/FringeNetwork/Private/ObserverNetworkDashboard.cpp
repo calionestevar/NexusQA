@@ -157,12 +157,14 @@ static void RenderSlateDashboard(const TMap<FString, int32>& Counters, const TAr
 		SAssignNew(ContentBox, SVerticalBox);
 		DashboardContentPtr = ContentBox;
 		
-		// Create main window
+		// Create main window with improved sizing and positioning
 		TSharedPtr<SWindow> Window = SNew(SWindow)
 			.Title(FText::FromString(TEXT("Observer Network Dashboard")))
-			.ClientSize(FVector2D(600, 500))
+			.ClientSize(FVector2D(700, 600))
 			.SupportsMinimize(true)
 			.SupportsMaximize(true)
+			.IsInitiallyMaximized(false)
+			.SizingRule(ESizingRule::UserSized)
 			[
 				SNew(SVerticalBox)
 				+ SVerticalBox::Slot()
@@ -170,8 +172,9 @@ static void RenderSlateDashboard(const TMap<FString, int32>& Counters, const TAr
 				.AutoHeight()
 				[
 					SNew(STextBlock)
-					.Text(FText::FromString(TEXT("OBSERVER NETWORK — Real-Time Monitoring")))
+					.Text(FText::FromString(TEXT("📡 OBSERVER NETWORK — Real-Time Monitoring Dashboard")))
 					.Font(FAppStyle::GetFontStyle("DetailsView.CategoryFontStyle"))
+					.ColorAndOpacity(FSlateColor(FLinearColor(0.1f, 1.0f, 0.8f)))  // Cyan
 				]
 				+ SVerticalBox::Slot()
 				.Padding(10)
@@ -182,7 +185,13 @@ static void RenderSlateDashboard(const TMap<FString, int32>& Counters, const TAr
 			];
 		
 		FSlateApplication::Get().AddWindow(Window.ToSharedRef());
+		
+		// Bring window to front and focus it for visibility
+		Window->BringToFront(true);
+		FSlateApplication::Get().SetKeyboardFocus(Window);
+		
 		DashboardWindowPtr = Window;
+		UE_LOG(LogTemp, Display, TEXT("📊 Observer Network Dashboard window created and focused"));
 	}
 	
 	// Update content every frame (instead of every 60 frames)
@@ -190,61 +199,123 @@ static void RenderSlateDashboard(const TMap<FString, int32>& Counters, const TAr
 	{
 		DashboardContentPtr->ClearChildren();
 		
-		// Add uptime header
+		// Add uptime header with emoji and formatting
+		FString UptimeText = FString::Printf(TEXT("⏱️  Uptime: %.1f seconds | Frame: %u"), Uptime, FrameCounter++);
 		DashboardContentPtr->AddSlot()
-			.Padding(5)
+			.Padding(8)
 			.AutoHeight()
 			[
 				SNew(STextBlock)
-				.Text(FText::FromString(FString::Printf(TEXT("Uptime: %.1f sec"), Uptime)))
+				.Text(FText::FromString(UptimeText))
 				.Font(FAppStyle::GetFontStyle("SmallFont"))
+				.ColorAndOpacity(FSlateColor(FLinearColor::Green))
 			];
 		
-		// Add safety counters section
+		// Add separator
 		DashboardContentPtr->AddSlot()
-			.Padding(5, 10, 5, 5)
+			.Padding(5, 5, 5, 5)
+			.AutoHeight()
+			[
+				SNew(SBorder)
+				.BorderImage(FAppStyle::GetBrush("ToolBar.Background"))
+				.Padding(0)
+				[
+					SNew(SBox)
+					.HeightOverride(2.0f)
+				]
+			];
+		
+		// Add safety counters section with formatting
+		DashboardContentPtr->AddSlot()
+			.Padding(8, 10, 8, 5)
 			.AutoHeight()
 			[
 				SNew(STextBlock)
-				.Text(FText::FromString(TEXT("Safety Counters")))
+				.Text(FText::FromString(TEXT("🛡️  Safety Counters")))
 				.Font(FAppStyle::GetFontStyle("DetailsView.CategoryFontStyle"))
+				.ColorAndOpacity(FSlateColor(FLinearColor(1.0f, 0.85f, 0.0f)))  // Gold
 			];
 		
 		for (const auto& Pair : Counters)
 		{
-			FString CounterText = FString::Printf(TEXT("  %s: %d"), *Pair.Key, Pair.Value);
+			// Color code counters based on value
+			FLinearColor CounterColor = FLinearColor::White;
+			if (Pair.Value > 10) CounterColor = FLinearColor(1.0f, 0.3f, 0.3f);  // Red for high counts
+			else if (Pair.Value > 5) CounterColor = FLinearColor(1.0f, 0.7f, 0.0f);  // Orange for medium
+			else if (Pair.Value > 0) CounterColor = FLinearColor(1.0f, 1.0f, 0.0f);  // Yellow for some
+			
+			FString CounterText = FString::Printf(TEXT("  📌 %s: %d"), *Pair.Key, Pair.Value);
 			DashboardContentPtr->AddSlot()
-				.Padding(10, 2, 5, 2)
+				.Padding(12, 3, 8, 3)
 				.AutoHeight()
 				[
 					SNew(STextBlock)
 					.Text(FText::FromString(CounterText))
 					.Font(FAppStyle::GetFontStyle("SmallFont"))
+					.ColorAndOpacity(FSlateColor(CounterColor))
 				];
 		}
 		
-		// Add recent events section
+		// Add separator
 		DashboardContentPtr->AddSlot()
-			.Padding(5, 10, 5, 5)
+			.Padding(5, 8, 5, 5)
+			.AutoHeight()
+			[
+				SNew(SBorder)
+				.BorderImage(FAppStyle::GetBrush("ToolBar.Background"))
+				.Padding(0)
+				[
+					SNew(SBox)
+					.HeightOverride(2.0f)
+				]
+			];
+		
+		// Add recent events section with better formatting
+		FString EventHeaderText = FString::Printf(TEXT("📋 Recent Events (%d total)"), Events.Num());
+		DashboardContentPtr->AddSlot()
+			.Padding(8, 10, 8, 5)
 			.AutoHeight()
 			[
 				SNew(STextBlock)
-				.Text(FText::FromString(TEXT("Recent Events")))
+				.Text(FText::FromString(EventHeaderText))
 				.Font(FAppStyle::GetFontStyle("DetailsView.CategoryFontStyle"))
+				.ColorAndOpacity(FSlateColor(FLinearColor(0.2f, 0.8f, 1.0f)))  // Light blue
 			];
 		
-		int32 StartIdx = FMath::Max(0, Events.Num() - 10);
+		int32 StartIdx = FMath::Max(0, Events.Num() - 15);  // Show last 15 events
 		for (int32 i = StartIdx; i < Events.Num(); ++i)
 		{
-			FString EventText = FString::Printf(TEXT("  [%d] %s"), i, *Events[i]);
+			const FString& Event = Events[i];
+			
+			// Determine event type and color
+			FLinearColor EventColor = FLinearColor::Yellow;
+			FString EventIcon = TEXT("ℹ️");
+			
+			if (Event.Contains(TEXT("BLOCKED")))
+			{
+				EventColor = FLinearColor(0.0f, 1.0f, 0.5f);  // Green for blocked (expected)
+				EventIcon = TEXT("🛑");
+			}
+			else if (Event.Contains(TEXT("FAILED")))
+			{
+				EventColor = FLinearColor(1.0f, 0.3f, 0.3f);  // Red for failed (error)
+				EventIcon = TEXT("⚠️");
+			}
+			else if (Event.Contains(TEXT("SUCCESS")))
+			{
+				EventColor = FLinearColor(0.0f, 1.0f, 0.0f);  // Green for success
+				EventIcon = TEXT("✓");
+			}
+			
+			FString EventText = FString::Printf(TEXT("  %s [%d] %s"), *EventIcon, i, *Event);
 			DashboardContentPtr->AddSlot()
-				.Padding(10, 2, 5, 2)
+				.Padding(12, 2, 8, 2)
 				.AutoHeight()
 				[
 					SNew(STextBlock)
 					.Text(FText::FromString(EventText))
 					.Font(FAppStyle::GetFontStyle("SmallFont"))
-					.ColorAndOpacity(FSlateColor(FLinearColor::Yellow))
+					.ColorAndOpacity(FSlateColor(EventColor))
 				];
 		}
 	}
