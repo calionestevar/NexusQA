@@ -45,8 +45,7 @@ NEXUS_TEST_TAGGED(FPalantirRequest_HealthCheck, "Palantir.Request.HealthCheck", 
 	// Skip if network is unavailable
 	if (!IsNetworkAvailable())
 	{
-		UE_LOG(LogPalantirTrace, Warning, TEXT("Health check skipped: Network unavailable"));
-		return true;  // Skip gracefully
+		NEXUS_SKIP_TEST("Network unavailable");
 	}
 
 	// Health check endpoint (example.com always returns 200)
@@ -70,8 +69,7 @@ NEXUS_TEST_TAGGED(FPalantirRequest_JSONValidation, "Palantir.Request.JSONValidat
 	// Skip if network is unavailable
 	if (!IsNetworkAvailable())
 	{
-		UE_LOG(LogPalantirTrace, Warning, TEXT("JSON validation skipped: Network unavailable"));
-		return true;
+		NEXUS_SKIP_TEST("Network unavailable");
 	}
 
 	// Test JSONPlaceholder API (public test API)
@@ -106,8 +104,7 @@ NEXUS_TEST(FPalantirRequest_PostRequest, "Palantir.Request.PostRequest", (ETestP
 	// Skip if network is unavailable
 	if (!IsNetworkAvailable())
 	{
-		UE_LOG(LogPalantirTrace, Warning, TEXT("POST request skipped: Network unavailable"));
-		return true;
+		NEXUS_SKIP_TEST("Network unavailable");
 	}
 
 	// Test POST endpoint (JSONPlaceholder echo endpoint)
@@ -146,8 +143,7 @@ NEXUS_TEST(FPalantirRequest_GraphQL, "Palantir.Request.GraphQL", (ETestPriority:
 	// Skip if network is unavailable
 	if (!IsNetworkAvailable())
 	{
-		UE_LOG(LogPalantirTrace, Warning, TEXT("GraphQL query skipped: Network unavailable"));
-		return true;
+		NEXUS_SKIP_TEST("Network unavailable");
 	}
 
 	// Test public GraphQL endpoint (SpaceX API)
@@ -186,8 +182,7 @@ NEXUS_TEST(FPalantirRequest_404Handling, "Palantir.Request.404Handling", (ETestP
 	// Skip if network is unavailable
 	if (!IsNetworkAvailable())
 	{
-		UE_LOG(LogPalantirTrace, Warning, TEXT("404 handling test skipped: Network unavailable"));
-		return true;
+		NEXUS_SKIP_TEST("Network unavailable");
 	}
 
 	// Test 404 detection
@@ -210,8 +205,7 @@ NEXUS_TEST(FPalantirRequest_RetryLogic, "Palantir.Request.RetryLogic", (ETestPri
 	// Skip if network is unavailable
 	if (!IsNetworkAvailable())
 	{
-		UE_LOG(LogPalantirTrace, Warning, TEXT("Retry logic test skipped: Network unavailable"));
-		return true;
+		NEXUS_SKIP_TEST("Network unavailable");
 	}
 
 	// Test retry with a flaky endpoint (this will timeout or fail initially)
@@ -242,8 +236,7 @@ NEXUS_TEST(FPalantirRequest_AsyncRequest, "Palantir.Request.AsyncRequest", (ETes
 	// Skip if network is unavailable
 	if (!IsNetworkAvailable())
 	{
-		UE_LOG(LogPalantirTrace, Warning, TEXT("Async request test skipped: Network unavailable"));
-		return true;
+		NEXUS_SKIP_TEST("Network unavailable");
 	}
 
 	// Test async request with callback
@@ -293,8 +286,7 @@ NEXUS_TEST(FPalantirRequest_MacroConvenience, "Palantir.Request.MacroConvenience
 	// Skip if network is unavailable
 	if (!IsNetworkAvailable())
 	{
-		UE_LOG(LogPalantirTrace, Warning, TEXT("Macro convenience test skipped: Network unavailable"));
-		return true;
+		NEXUS_SKIP_TEST("Network unavailable");
 	}
 
 	// Test convenience macros - pass URLs directly without extra TEXT wrapper
