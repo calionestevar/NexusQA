@@ -261,7 +261,7 @@ void UNexusCore::RunAllTests(bool bParallel)
                     return false;
                 }
 
-                FPalantirObserver::OnTestStarted(Test->TestName);
+                FPalantirObserver::OnTestStarted(Test);  // Pass the test object to capture metadata
                 UNexusCore::NotifyTestStarted(Test->TestName);
 
                 // Parallel tests typically don't have world access, but we create an empty context
@@ -529,7 +529,7 @@ void UNexusCore::RunSequentialWithFailFast()
             continue;
         }
 
-        FPalantirObserver::OnTestStarted(Name);
+        FPalantirObserver::OnTestStarted(Test);  // Pass the test object to capture metadata
         NotifyTestStarted(Name);
 
         bool bPassed = Test->Execute(TestContext);
@@ -552,7 +552,13 @@ void UNexusCore::RunSequentialWithFailFast()
 
 double UNexusCore::GetAverageTestDuration(const FString& TestName)
 {
-    if (FNexusTest::AllResults.Num() == 0)
+    // Use Palantir's duration map which is populated during test execution
+    extern TMap<FString, double> GPalantirTestDurations;
+    extern FCriticalSection GPalantirMutex;
+    
+    FScopeLock _lock(&GPalantirMutex);
+    
+    if (GPalantirTestDurations.Num() == 0)
     {
         return 0.0;
     }
@@ -560,11 +566,11 @@ double UNexusCore::GetAverageTestDuration(const FString& TestName)
     double TotalDuration = 0.0;
     int32 Count = 0;
     
-    for (const FNexusTestResult& Result : FNexusTest::AllResults)
+    for (const auto& Pair : GPalantirTestDurations)
     {
-        if (TestName.IsEmpty() || Result.TestName == TestName)
+        if (TestName.IsEmpty() || Pair.Key == TestName)
         {
-            TotalDuration += Result.DurationSeconds;
+            TotalDuration += Pair.Value;
             ++Count;
         }
     }

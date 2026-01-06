@@ -100,6 +100,8 @@ static TMap<FString, FDateTime> GPalantirTestStartTimes;
 static TMap<FString, double> GPalantirTestDurations;
 // Support multiple artifacts per test (screenshots, logs, replays)
 static TMap<FString, TArray<FString>> GPalantirArtifactPaths;
+// Store test metadata for report generation (tags, priority, etc.)
+static TMap<FString, TArray<FString>> GPalantirTestTags;
 static FCriticalSection GPalantirMutex;
 
 // Pluggable provider (set during Initialize)
@@ -214,6 +216,29 @@ void FPalantirObserver::OnTestStarted(const FString& Name)
     {
         FScopeLock _lock(&GPalantirMutex);
         GPalantirTestStartTimes.Add(Name, FDateTime::Now());
+    }
+}
+
+void FPalantirObserver::OnTestStarted(const FNexusTest* Test)
+{
+    if (!Test)
+    {
+        return;
+    }
+    
+    UE_LOG(LogTemp, Display, TEXT("Palantir: Test started: %s"), *Test->TestName);
+    UNexusCore::NotifyTestStarted(Test->TestName);
+    
+    // Record start time and metadata
+    {
+        FScopeLock _lock(&GPalantirMutex);
+        GPalantirTestStartTimes.Add(Test->TestName, FDateTime::Now());
+        
+        // Store test tags for report generation
+        if (Test->GetCustomTags().Num() > 0)
+        {
+            GPalantirTestTags.Add(Test->TestName, Test->GetCustomTags());
+        }
     }
 }
 
@@ -359,7 +384,7 @@ void FPalantirObserver::GenerateFinalReport()
     TMap<FString, int32> TagPassCountMap;
     TMap<FString, TArray<FString>> TagTestsMap;
     
-    // Iterate through actual test results and categorize by custom tags
+    // Iterate through actual test results and categorize by stored custom tags
     {
         FScopeLock _lock(&GPalantirMutex);
         for (const auto& ResultPair : GPalantirTestResults)
@@ -367,21 +392,13 @@ void FPalantirObserver::GenerateFinalReport()
             const FString& TestName = ResultPair.Key;
             bool bPassed = ResultPair.Value;
             
-            // Find the test definition to get its custom tags
-            FNexusTest* TestDef = nullptr;
-            for (FNexusTest* Test : UNexusCore::DiscoveredTests)
+            // Get the stored tags for this test (captured during OnTestStarted)
+            if (GPalantirTestTags.Contains(TestName))
             {
-                if (Test && Test->TestName == TestName)
-                {
-                    TestDef = Test;
-                    break;
-                }
-            }
-            
-            if (TestDef && TestDef->GetCustomTags().Num() > 0)
-            {
+                const TArray<FString>& Tags = GPalantirTestTags[TestName];
+                
                 // Categorize by all custom tags
-                for (const FString& Tag : TestDef->GetCustomTags())
+                for (const FString& Tag : Tags)
                 {
                     if (!UniqueTags.Contains(Tag))
                     {
