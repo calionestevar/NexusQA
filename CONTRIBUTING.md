@@ -47,18 +47,37 @@ Source/ModuleName/
 
 ### Testing Requirements
 - **New features** must include tests in `Source/<Module>/Private/Tests/`
-- **Test naming:** Use `NEXUS_TEST` or `NEXUS_TEST_TAGGED` macros with descriptive names
+- **Test naming:** Use `NEXUS_TEST`, `NEXUS_TEST_TAGGED`, or `NEXUS_TEST_GAMETHREAD_TAGGED` macros with descriptive names
   ```cpp
-  // Without tags (gets "Untagged" automatically):
+  // Parallel test without tags (gets "Untagged" automatically):
   NEXUS_TEST(FMyFeature, "Module.Feature.Scenario", ETestPriority::Normal)
   {
-      // Test logic
+      // Test logic - no world access
+      return true;
   }
   
-  // With tags (use for better categorization):
+  // Parallel test with tags (use for better categorization):
   NEXUS_TEST_TAGGED(FMyFeature, "Module.Feature.Scenario", ETestPriority::Normal, {"CategoryTag", "P1"})
   {
-      // Test logic
+      // Test logic - parallel-safe, no UWorld access
+      return true;
+  }
+  
+  // Game-thread test (auto-PIE launches world, then runs test):
+  NEXUS_TEST_GAMETHREAD_TAGGED(FGameplayTest, "Gameplay.Movement", ETestPriority::Normal, {"Gameplay"})
+  {
+      // UWorld available via FNexusTestContext
+      // Auto-PIE automatically launches world before this runs
+      return true;
+  }
+  
+  // Conditional skipping for environment-specific tests:
+  NEXUS_TEST(FNetworkTest, "Network.Online.API", ETestPriority::OnlineOnly)
+  {
+      if (!IsNetworkAvailable()) {
+          NEXUS_SKIP_TEST("Network unavailable - skipping online test");
+      }
+      return TestRemoteAPI();
   }
   ```
 - **Tag guidelines:**
@@ -67,6 +86,13 @@ Source/ModuleName/
   - Use feature tags: `"Multiplayer"`, `"UI"`, `"AI"`, etc.
   - Multiple tags per test are encouraged for better report categorization
   - Untagged tests are supported; they automatically get the "Untagged" category in reports
+
+- **Skip Patterns (Best Practices):**
+  - Check for network availability before running online tests
+  - Check for feature flags before testing experimental features
+  - Use platform checks for platform-specific tests
+  - Document why a test might be skipped in the skip reason
+  - Skipped tests don't count as pass or fail — they're tracked separately in reports
   
 - **Coverage target:** Aim for >80% on new code paths
 - **Run before commit:** `.\Scripts\Engage.ps1` (Windows) or `./Scripts/RideOut.sh` (Unix)

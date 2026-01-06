@@ -10,12 +10,15 @@ Named after the Observer Network concept from "Fringe," it watches for anomalies
 
 ## Features
 
-### 📊 Live Dashboard (ImGui)
-- **Real-time event logging** - See safety events as they occur
-- **Session uptime tracking** - Monitor how long tests have been running
-- **Event counters** - Track blocked/passed safety checks
-- **Color-coded status** - Green for blocked (safe), red for failures
-- **Thread-safe rendering** - No locks held during ImGui calls
+### 📊 Slate Live Dashboard (In-Editor)
+- **Real-time test status** - See current test counts (Passed/Failed/Skipped/Total)
+- **Test status indicators** - ✓ Passed (green) | ⚠️ Failed (red) | ⏭️ Skipped (gold)
+- **Session uptime tracking** - Monitor how long tests have been running with frame counter
+- **Event logging with categorization** - See safety events and test events as they occur
+- **Color-coded event types** - Green for SUCCESS, Red for FAILED, Gold for SKIPPED, Green for BLOCKED
+- **Professional UI** - 700x600 window with keyboard focus, configurable sizing, emoji indicators
+- **Emoji icons** - 📡 OBSERVER, ⏱️ Uptime, 🧪 Test Status, 🛡️ Safety, 📋 Events, 🛑 BLOCKED, ⚠️ FAILED, ✓ SUCCESS, ⏭️ SKIPPED
+- **Thread-safe rendering** - Dashboard data copied under lock, rendered without locks
 
 ### 📋 Web Report Generation
 - **HTML report export** - Beautiful formatted report with charts
