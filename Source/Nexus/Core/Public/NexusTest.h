@@ -35,9 +35,10 @@ struct NEXUS_API FNexusTestResult
 {
     FString TestName;
     bool bPassed = false;
+    bool bSkipped = false;       // true if test was skipped (not passed or failed)
     double DurationSeconds = 0.0;
     uint32 Attempts = 1;
-    FString ErrorMessage;        // Error message if test failed
+    FString ErrorMessage;        // Error message if test failed or skipped
     TArray<FString> StackTrace;  // Stack trace on failure (diagnostic info)
     FDateTime Timestamp = FDateTime::Now();
     
@@ -49,6 +50,16 @@ struct NEXUS_API FNexusTestResult
     FString GetStackTraceString() const
     {
         return FString::Join(StackTrace, TEXT("\n"));
+    }
+    
+    bool IsSkipped() const
+    {
+        return bSkipped;
+    }
+    
+    bool HasResult() const
+    {
+        return bPassed || !bPassed;  // True if not skipped (has actual result)
     }
 };
 
@@ -528,3 +539,18 @@ bool TestClassName::RunPerformanceTest(const FNexusTestContext& Context)
 
 // Check if performance data is available (ArgusLens ran)
 #define HAS_PERF_DATA(Context) ((Context).HasPerformanceData())
+// ============================================================================
+// Test Skip Helper - Mark a test as skipped with optional reason
+// ============================================================================
+
+// Skip test with optional reason message
+// Usage: NEXUS_SKIP_TEST("Network unavailable");
+// Returns true to signal test framework that skipping was intentional (not a failure)
+#define NEXUS_SKIP_TEST(SkipReason) \
+    do { \
+        LastResult.bSkipped = true; \
+        LastResult.bPassed = false; \
+        LastResult.ErrorMessage = FString(SkipReason); \
+        UE_LOG(LogNexus, Display, TEXT("SKIPPED: %s [%s]"), *TestName, *FString(SkipReason)); \
+        return true; \
+    } while(false)

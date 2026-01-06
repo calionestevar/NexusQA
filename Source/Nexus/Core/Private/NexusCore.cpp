@@ -268,11 +268,20 @@ void UNexusCore::RunAllTests(bool bParallel)
                 FNexusTestContext EmptyContext;
                 bool bPassed = Test->Execute(EmptyContext);
 
-                UNexusCore::NotifyTestFinished(Test->TestName, bPassed);
-                FPalantirObserver::OnTestFinished(Test->TestName, bPassed);
+                // Handle skipped tests separately
+                if (Test->LastResult.bSkipped)
+                {
+                    UNexusCore::NotifyTestSkipped(Test->TestName);
+                    FPalantirObserver::OnTestSkipped(Test->TestName);
+                }
+                else
+                {
+                    UNexusCore::NotifyTestFinished(Test->TestName, bPassed);
+                    FPalantirObserver::OnTestFinished(Test->TestName, bPassed);
+                }
 
                 // Signal critical failure for fail-fast behavior
-                if (!bPassed && NexusHasFlag(Test->Priority, ETestPriority::Critical))
+                if (!bPassed && !Test->LastResult.bSkipped && NexusHasFlag(Test->Priority, ETestPriority::Critical))
                 {
                     bCriticalFailed.store(true);
                     UE_LOG(LogNexus, Error, TEXT("CRITICAL TEST FAILED: %s — Aborting remaining tests"), *Test->TestName);

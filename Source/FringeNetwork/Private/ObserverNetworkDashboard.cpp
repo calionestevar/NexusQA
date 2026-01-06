@@ -225,6 +225,83 @@ static void RenderSlateDashboard(const TMap<FString, int32>& Counters, const TAr
 				]
 			];
 		
+		// Add test status section with counters
+		DashboardContentPtr->AddSlot()
+			.Padding(8, 10, 8, 5)
+			.AutoHeight()
+			[
+				SNew(STextBlock)
+				.Text(FText::FromString(TEXT("🧪 Test Status")))
+				.Font(FAppStyle::GetFontStyle("DetailsView.CategoryFontStyle"))
+				.ColorAndOpacity(FSlateColor(FLinearColor(0.2f, 1.0f, 0.8f)))  // Cyan
+			];
+		
+		// Add pass/fail/skip counters
+		UNexusCore* CoreRef = nullptr;
+		if (CoreRef || true)  // Always show counters if available
+		{
+			FString PassedText = FString::Printf(TEXT("  ✓ Passed: %d"), UNexusCore::PassedTests);
+			FString FailedText = FString::Printf(TEXT("  ⚠️  Failed: %d"), UNexusCore::FailedTests);
+			FString SkippedText = FString::Printf(TEXT("  ⏭️  Skipped: %d"), UNexusCore::SkippedTests);
+			FString TotalText = FString::Printf(TEXT("  📊 Total: %d / %d"), 
+				UNexusCore::PassedTests + UNexusCore::FailedTests + UNexusCore::SkippedTests,
+				UNexusCore::TotalTests);
+			
+			DashboardContentPtr->AddSlot()
+				.Padding(12, 3, 8, 3)
+				.AutoHeight()
+				[
+					SNew(STextBlock)
+					.Text(FText::FromString(PassedText))
+					.Font(FAppStyle::GetFontStyle("SmallFont"))
+					.ColorAndOpacity(FSlateColor(FLinearColor(0.0f, 1.0f, 0.0f)))  // Green
+				];
+			
+			DashboardContentPtr->AddSlot()
+				.Padding(12, 3, 8, 3)
+				.AutoHeight()
+				[
+					SNew(STextBlock)
+					.Text(FText::FromString(FailedText))
+					.Font(FAppStyle::GetFontStyle("SmallFont"))
+					.ColorAndOpacity(FSlateColor(FLinearColor(1.0f, 0.3f, 0.3f)))  // Red
+				];
+			
+			DashboardContentPtr->AddSlot()
+				.Padding(12, 3, 8, 3)
+				.AutoHeight()
+				[
+					SNew(STextBlock)
+					.Text(FText::FromString(SkippedText))
+					.Font(FAppStyle::GetFontStyle("SmallFont"))
+					.ColorAndOpacity(FSlateColor(FLinearColor(1.0f, 0.8f, 0.0f)))  // Gold
+				];
+			
+			DashboardContentPtr->AddSlot()
+				.Padding(12, 3, 8, 3)
+				.AutoHeight()
+				[
+					SNew(STextBlock)
+					.Text(FText::FromString(TotalText))
+					.Font(FAppStyle::GetFontStyle("SmallFont"))
+					.ColorAndOpacity(FSlateColor(FLinearColor(0.7f, 0.7f, 0.7f)))  // Gray
+				];
+		}
+		
+		// Add separator
+		DashboardContentPtr->AddSlot()
+			.Padding(5, 8, 5, 5)
+			.AutoHeight()
+			[
+				SNew(SBorder)
+				.BorderImage(FAppStyle::GetBrush("ToolBar.Background"))
+				.Padding(0)
+				[
+					SNew(SBox)
+					.HeightOverride(2.0f)
+				]
+			];
+		
 		// Add safety counters section with formatting
 		DashboardContentPtr->AddSlot()
 			.Padding(8, 10, 8, 5)
@@ -291,7 +368,12 @@ static void RenderSlateDashboard(const TMap<FString, int32>& Counters, const TAr
 			FLinearColor EventColor = FLinearColor::Yellow;
 			FString EventIcon = TEXT("ℹ️");
 			
-			if (Event.Contains(TEXT("BLOCKED")))
+			if (Event.Contains(TEXT("SKIPPED")))
+			{
+				EventColor = FLinearColor(1.0f, 0.8f, 0.0f);  // Gold for skipped
+				EventIcon = TEXT("⏭️");
+			}
+			else if (Event.Contains(TEXT("BLOCKED")))
 			{
 				EventColor = FLinearColor(0.0f, 1.0f, 0.5f);  // Green for blocked (expected)
 				EventIcon = TEXT("🛑");

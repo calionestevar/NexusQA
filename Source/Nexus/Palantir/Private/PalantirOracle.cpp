@@ -321,6 +321,39 @@ void FPalantirObserver::OnTestFinished(const FString& Name, bool bPassed)
     }
 }
 
+void FPalantirObserver::OnTestSkipped(const FString& Name)
+{
+    UE_LOG(LogTemp, Warning, TEXT("Palantir: Test skipped: %s"), *Name);
+    
+    // Record skipped test result
+    {
+        FScopeLock _lock(&GPalantirMutex);
+        GPalantirTestResults.Add(Name, false);  // Skipped counts as not-failed but not-passed
+    }
+    
+    // Write per-test skip log
+    const FString ReportDir = FPaths::ProjectSavedDir() / TEXT("NexusReports");
+    FPlatformFileManager::Get().GetPlatformFile().CreateDirectoryTree(*ReportDir);
+    
+    FString SafeName = Name;
+    for (TCHAR& C : SafeName) if (!FChar::IsAlnum(C)) C = TEXT('_');
+    const FString TestLogPath = ReportDir / FString::Printf(TEXT("test_%s.log"), *SafeName);
+    FString LogContents = FString::Printf(TEXT("Test: %s\nResult: SKIPPED\nTime: %s\n"),
+        *Name,
+        *FDateTime::Now().ToString());
+    FFileHelper::SaveStringToFile(LogContents, *TestLogPath);
+    
+    // Register skip log as artifact
+    {
+        FScopeLock _lock(&GPalantirMutex);
+        if (!GPalantirArtifactPaths.Contains(Name))
+        {
+            GPalantirArtifactPaths.Add(Name, TArray<FString>());
+        }
+        GPalantirArtifactPaths[Name].Add(TestLogPath);
+    }
+}
+
 void FPalantirObserver::UpdateLiveOverlay()
 {
     if (!GEngine || !GEngine->GameViewport) return;
@@ -349,9 +382,10 @@ void FPalantirObserver::GenerateFinalReport()
     // Start with the template (same pattern as UObserverNetworkDashboard)
     FString Html = LCARSReporter::GetEmbeddedHTMLTemplate();
 
-    // Calculate system integrity percentage
-    double IntegrityPercent = (UNexusCore::TotalTests > 0) ? 
-        (static_cast<double>(UNexusCore::PassedTests) / UNexusCore::TotalTests) * 100.0 : 0.0;
+    // Calculate system integrity percentage (passed / (passed + failed), excluding skipped)
+    int32 ExecutedTests = UNexusCore::PassedTests + UNexusCore::FailedTests;
+    double IntegrityPercent = (ExecutedTests > 0) ? 
+        (static_cast<double>(UNexusCore::PassedTests) / ExecutedTests) * 100.0 : 0.0;
     
     FString IntegrityClass = IntegrityPercent < 70 ? TEXT("critical") : 
                              IntegrityPercent < 85 ? TEXT("warning") : TEXT("");
@@ -361,6 +395,8 @@ void FPalantirObserver::GenerateFinalReport()
     Html.ReplaceInline(TEXT("{INTEGRITY_PERCENT}"), *FString::Printf(TEXT("%.1f"), IntegrityPercent));
     Html.ReplaceInline(TEXT("{INTEGRITY_CLASS}"), *IntegrityClass);
     Html.ReplaceInline(TEXT("{PASSED_TESTS}"), *FString::FromInt(UNexusCore::PassedTests));
+    Html.ReplaceInline(TEXT("{SKIPPED_TESTS}"), *FString::FromInt(UNexusCore::SkippedTests));
+    Html.ReplaceInline(TEXT("{FAILED_TESTS}"), *FString::FromInt(UNexusCore::FailedTests));
     Html.ReplaceInline(TEXT("{TOTAL_TESTS}"), *FString::FromInt(UNexusCore::TotalTests));
     Html.ReplaceInline(TEXT("{CRITICAL_TESTS}"), *FString::FromInt(UNexusCore::CriticalTests));
     

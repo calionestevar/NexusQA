@@ -619,6 +619,63 @@ UE_LOG(LogTemp, Display, TEXT("Median test duration: %.2fms"), MedianDuration * 
 - `test_trends.csv` — Frame-by-frame history (TestName, Timestamp, Duration, Passed)
 - `test_trends_summary.json` — Summary with pass rates and average durations
 
+### Skipping Tests Conditionally
+
+Some tests need to be skipped based on runtime conditions (e.g., network unavailable, feature disabled). Use `NEXUS_SKIP_TEST()` to mark tests as skipped instead of failing:
+
+```cpp
+#include "Nexus/Core/Public/NexusCore.h"
+#include "ISocketSubsystem.h"
+
+NEXUS_TEST(FNetworkTest_OnlineOnly, "Network.Remote.API", ETestPriority::OnlineOnly)
+{
+    // Check if network is available before running
+    ISocketSubsystem* SocketSubsystem = ISocketSubsystem::Get(PLATFORM_SOCKETSUBSYSTEM);
+    if (!SocketSubsystem) {
+        NEXUS_SKIP_TEST("Network unavailable - skipping online test");
+    }
+    
+    // If we get here, network is available
+    bool bSuccess = TestRemoteAPI();
+    return bSuccess;
+}
+
+// Another example: feature-gated test
+NEXUS_TEST(FExperimentalFeatureTest, "Game.Experimental.NewWeapon", ETestPriority::Normal)
+{
+    if (!IsExperimentalFeatureEnabled()) {
+        NEXUS_SKIP_TEST("Experimental feature disabled in config");
+    }
+    
+    // Test the experimental feature
+    return TestWeaponSystem();
+}
+
+// Platform-specific test
+NEXUS_TEST(FPlatformSpecificTest, "Platform.Mobile.Touch", ETestPriority::Normal)
+{
+#if !WITH_EDITOR || PLATFORM_ANDROID || PLATFORM_IOS
+    // Test touch input
+    return TestTouchInput();
+#else
+    NEXUS_SKIP_TEST("Touch input not supported on this platform");
+#endif
+}
+```
+
+**Key Points:**
+- Skipped tests don't count as pass or fail
+- Reported separately in test results and dashboard
+- Shows skip reason in logs and reports
+- Useful for tests that can't run in all environments
+- Reports show: Passed / Failed / Skipped / Total
+
+**In Reports/Dashboard:**
+- ✓ Passed tests (green)
+- ⚠️ Failed tests (red)
+- ⏭️ Skipped tests (gold)
+- Shows why tests were skipped in artifacts
+
 ### Stack Traces on Failure
 
 Failed tests automatically capture diagnostic stack traces:

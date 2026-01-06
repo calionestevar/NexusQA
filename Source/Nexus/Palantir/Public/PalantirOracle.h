@@ -54,6 +54,7 @@ public:
     static void OnTestStarted(const FString& Name);
     static void OnTestStarted(const class FNexusTest* Test);  // Overload to capture test metadata
     static void OnTestFinished(const FString& Name, bool bPassed);
+    static void OnTestSkipped(const FString& Name);  // Called when a test is skipped
     // Register an artifact (screenshot, log, replay) for a given test name.
     static void RegisterArtifact(const FString& TestName, const FString& ArtifactPath);
 };
