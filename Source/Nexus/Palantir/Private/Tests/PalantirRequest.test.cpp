@@ -39,7 +39,7 @@ NEXUS_TEST_TAGGED(FPalantirRequest_HealthCheck, "Palantir.Request.HealthCheck", 
 	return true;
 }
 
-NEXUS_TEST(FPalantirRequest_JSONValidation, "Palantir.Request.JSONValidation", (ETestPriority::Normal | ETestPriority::OnlineOnly), {"Networking", "Integration"})
+NEXUS_TEST_TAGGED(FPalantirRequest_JSONValidation, "Palantir.Request.JSONValidation", (ETestPriority::Normal | ETestPriority::OnlineOnly), {"Networking", "Integration"})
 {
 	// Test JSONPlaceholder API (public test API)
 	FPalantirResponse Res = FPalantirRequest::Get(TEXT("https://jsonplaceholder.typicode.com/users/1"))

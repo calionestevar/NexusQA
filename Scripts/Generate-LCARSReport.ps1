@@ -61,7 +61,7 @@ $sampleTests = @(
 # Calculate metrics
 $totalTests = $sampleTests.Count
 $passedTests = ($sampleTests | Where-Object { $_.Passed }).Count
-$failedTests = $totalTests - $passedTests
+$failedTests = ($sampleTests | Where-Object { -not $_.Passed }).Count
 $integrityPercent = [math]::Round(($passedTests / $totalTests) * 100, 1)
 $integrityClass = if ($integrityPercent -lt 70) { "critical" } elseif ($integrityPercent -lt 85) { "warning" } else { "" }
 $avgDuration = [math]::Round(($sampleTests.Duration | Measure-Object -Average).Average * 1000, 0)
@@ -156,6 +156,7 @@ $html = $templateHtml `
     -replace "{INTEGRITY_PERCENT}", $integrityPercent `
     -replace "{INTEGRITY_CLASS}", $integrityClass `
     -replace "{PASSED_TESTS}", $passedTests `
+    -replace "{FAILED_TESTS}", $failedTests `
     -replace "{TOTAL_TESTS}", $totalTests `
     -replace "{CRITICAL_TESTS}", $criticalTests `
     -replace "{AVG_DURATION}", $avgDuration `
