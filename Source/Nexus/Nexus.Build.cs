@@ -29,7 +29,9 @@ public class Nexus : ModuleRules
             "Engine",
             "HTTP",
             "Json",
-            "JsonUtilities"
+            "JsonUtilities",
+            "Sockets",
+            "Networking"
         });
 
         PrivateDependencyModuleNames.AddRange(new string[]
