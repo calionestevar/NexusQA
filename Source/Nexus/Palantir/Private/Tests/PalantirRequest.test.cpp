@@ -32,7 +32,7 @@ static bool IsNetworkAvailable()
 {
 	// Try to resolve a reliable domain (Google DNS)
 	TSharedRef<FInternetAddr> OutAddr = ISocketSubsystem::Get(PLATFORM_SOCKETSUBSYSTEM)->CreateInternetAddr();
-	if (ISocketSubsystem::Get(PLATFORM_SOCKETSUBSYSTEM)->GetHostByName("8.8.8.8", OutAddr))
+	if (ISocketSubsystem::Get(PLATFORM_SOCKETSUBSYSTEM)->GetHostByName("8.8.8.8", *OutAddr))
 	{
 		return true;
 	}
