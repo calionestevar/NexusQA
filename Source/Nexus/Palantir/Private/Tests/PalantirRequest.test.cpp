@@ -31,7 +31,7 @@
 static bool IsNetworkAvailable()
 {
 	// Try to resolve a reliable domain (Google DNS)
-	FIPv4Address OutAddr;
+	FInternetAddr OutAddr;
 	if (ISocketSubsystem::Get(PLATFORM_SOCKETSUBSYSTEM)->GetHostByName(ANSI_TO_TCHAR("8.8.8.8"), OutAddr))
 	{
 		return true;
