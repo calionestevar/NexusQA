@@ -1,5 +1,6 @@
 #include "NexusConsoleCommands.h"
 #include "NexusCore.h"
+#include "Nexus/Core/Public/NexusTest.h"
 #include "Nexus/LCARSBridge/Public/LCARSReporter.h"
 #include "Nexus/Palantir/Public/PalantirOracle.h"
 #include "HAL/IConsoleManager.h"
@@ -25,36 +26,45 @@ void FNexusConsoleCommands::OnRunTests(const TArray<FString>& Args)
 		UE_LOG(LogTemp, Display, TEXT("💡 To run game-thread tests with full world context, click 'Play' in the editor first"));
 	}
 
-	UE_LOG(LogTemp, Warning, TEXT("🧪 NEXUS: Running %d test(s)..."), UNexusCore::TotalTests);
+	int32 TotalTests = FNexusTest::AllTests.Num();
+	UE_LOG(LogTemp, Warning, TEXT("🧪 NEXUS: Running %d test(s)..."), TotalTests);
 	UNexusCore::RunAllTests(true);  // true = parallel execution
 
-	UE_LOG(LogTemp, Display, TEXT("✅ NEXUS: Complete — %d/%d passed"), 
-		UNexusCore::PassedTests, UNexusCore::TotalTests);
+	// Calculate pass/fail/skip counts from results
+	int32 PassedCount = 0;
+	int32 FailedCount = 0;
+	int32 SkippedCount = 0;
+	
+	for (const FNexusTestResult& Result : FNexusTest::AllResults)
+	{
+		if (Result.bSkipped)
+		{
+			SkippedCount++;
+		}
+		else if (Result.bPassed)
+		{
+			PassedCount++;
+		}
+		else
+		{
+			FailedCount++;
+		}
+	}
 
-	// Populate maps with actual test results from FPalantirOracle
+	UE_LOG(LogTemp, Display, TEXT("✅ NEXUS: Complete — %d/%d passed"), PassedCount, TotalTests);
+
+	// Populate maps with actual test results from AllResults
 	TMap<FString, bool> Results;
 	TMap<FString, double> Durations;
 	TMap<FString, TArray<FString>> Artifacts;
 
-	const TMap<FString, FPalantirTestResult>& OracleResults = FPalantirOracle::Get().GetAllTestResults();
-	for (const auto& Pair : OracleResults)
+	for (const FNexusTestResult& Result : FNexusTest::AllResults)
 	{
-		const FString& TestName = Pair.Key;
-		const FPalantirTestResult& TestResult = Pair.Value;
-
-		Results.Add(TestName, TestResult.bPassed);
-		Durations.Add(TestName, TestResult.Duration);
+		Results.Add(Result.TestName, Result.bPassed);
+		Durations.Add(Result.TestName, Result.DurationSeconds);
 		
-		// Collect artifact paths
-		TArray<FString> ArtifactPaths;
-		if (!TestResult.ScreenshotPath.IsEmpty()) ArtifactPaths.Add(TestResult.ScreenshotPath);
-		if (!TestResult.TraceFilePath.IsEmpty()) ArtifactPaths.Add(TestResult.TraceFilePath);
-		if (!TestResult.LogFilePath.IsEmpty()) ArtifactPaths.Add(TestResult.LogFilePath);
-		
-		if (ArtifactPaths.Num() > 0)
-		{
-			Artifacts.Add(TestName, ArtifactPaths);
-		}
+		// Artifacts would be added by the observer/reporter system
+		// For now, we skip artifact collection from results
 	}
 
 	const FString LcarsPath = FPaths::ProjectSavedDir() / TEXT("NexusReports");
