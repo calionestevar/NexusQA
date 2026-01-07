@@ -236,57 +236,75 @@ static void RenderSlateDashboard(const TMap<FString, int32>& Counters, const TAr
 				.ColorAndOpacity(FSlateColor(FLinearColor(0.2f, 1.0f, 0.8f)))  // Cyan
 			];
 		
-		// Add pass/fail/skip counters
-		UNexusCore* CoreRef = nullptr;
-		if (CoreRef || true)  // Always show counters if available
+		// Add pass/fail/skip counters from FNexusTest::AllResults
+		int32 PassedCount = 0;
+		int32 FailedCount = 0;
+		int32 SkippedCount = 0;
+		
+		// Count test results from AllResults
+		for (const FNexusTestResult& Result : FNexusTest::AllResults)
 		{
-			FString PassedText = FString::Printf(TEXT("  ✓ Passed: %d"), UNexusCore::PassedTests);
-			FString FailedText = FString::Printf(TEXT("  ⚠️  Failed: %d"), UNexusCore::FailedTests);
-			FString SkippedText = FString::Printf(TEXT("  ⏭️  Skipped: %d"), UNexusCore::SkippedTests);
-			FString TotalText = FString::Printf(TEXT("  📊 Total: %d / %d"), 
-				UNexusCore::PassedTests + UNexusCore::FailedTests + UNexusCore::SkippedTests,
-				UNexusCore::TotalTests);
-			
-			DashboardContentPtr->AddSlot()
-				.Padding(12, 3, 8, 3)
-				.AutoHeight()
-				[
-					SNew(STextBlock)
-					.Text(FText::FromString(PassedText))
-					.Font(FAppStyle::GetFontStyle("SmallFont"))
-					.ColorAndOpacity(FSlateColor(FLinearColor(0.0f, 1.0f, 0.0f)))  // Green
-				];
-			
-			DashboardContentPtr->AddSlot()
-				.Padding(12, 3, 8, 3)
-				.AutoHeight()
-				[
-					SNew(STextBlock)
-					.Text(FText::FromString(FailedText))
-					.Font(FAppStyle::GetFontStyle("SmallFont"))
-					.ColorAndOpacity(FSlateColor(FLinearColor(1.0f, 0.3f, 0.3f)))  // Red
-				];
-			
-			DashboardContentPtr->AddSlot()
-				.Padding(12, 3, 8, 3)
-				.AutoHeight()
-				[
-					SNew(STextBlock)
-					.Text(FText::FromString(SkippedText))
-					.Font(FAppStyle::GetFontStyle("SmallFont"))
-					.ColorAndOpacity(FSlateColor(FLinearColor(1.0f, 0.8f, 0.0f)))  // Gold
-				];
-			
-			DashboardContentPtr->AddSlot()
-				.Padding(12, 3, 8, 3)
-				.AutoHeight()
-				[
-					SNew(STextBlock)
-					.Text(FText::FromString(TotalText))
-					.Font(FAppStyle::GetFontStyle("SmallFont"))
-					.ColorAndOpacity(FSlateColor(FLinearColor(0.7f, 0.7f, 0.7f)))  // Gray
-				];
+			if (Result.bSkipped)
+			{
+				SkippedCount++;
+			}
+			else if (Result.bPassed)
+			{
+				PassedCount++;
+			}
+			else
+			{
+				FailedCount++;
+			}
 		}
+		
+		int32 TotalExecuted = PassedCount + FailedCount + SkippedCount;
+		int32 TotalDiscovered = FNexusTest::AllTests.Num();
+		
+		FString PassedText = FString::Printf(TEXT("  ✓ Passed: %d"), PassedCount);
+		FString FailedText = FString::Printf(TEXT("  ⚠️  Failed: %d"), FailedCount);
+		FString SkippedText = FString::Printf(TEXT("  ⏭️  Skipped: %d"), SkippedCount);
+		FString TotalText = FString::Printf(TEXT("  📊 Total: %d / %d"), TotalExecuted, TotalDiscovered);
+		
+		DashboardContentPtr->AddSlot()
+			.Padding(12, 3, 8, 3)
+			.AutoHeight()
+			[
+				SNew(STextBlock)
+				.Text(FText::FromString(PassedText))
+				.Font(FAppStyle::GetFontStyle("SmallFont"))
+				.ColorAndOpacity(FSlateColor(FLinearColor(0.0f, 1.0f, 0.0f)))  // Green
+			];
+		
+		DashboardContentPtr->AddSlot()
+			.Padding(12, 3, 8, 3)
+			.AutoHeight()
+			[
+				SNew(STextBlock)
+				.Text(FText::FromString(FailedText))
+				.Font(FAppStyle::GetFontStyle("SmallFont"))
+				.ColorAndOpacity(FSlateColor(FLinearColor(1.0f, 0.3f, 0.3f)))  // Red
+			];
+		
+		DashboardContentPtr->AddSlot()
+			.Padding(12, 3, 8, 3)
+			.AutoHeight()
+			[
+				SNew(STextBlock)
+				.Text(FText::FromString(SkippedText))
+				.Font(FAppStyle::GetFontStyle("SmallFont"))
+				.ColorAndOpacity(FSlateColor(FLinearColor(1.0f, 0.8f, 0.0f)))  // Gold
+			];
+		
+		DashboardContentPtr->AddSlot()
+			.Padding(12, 3, 8, 3)
+			.AutoHeight()
+			[
+				SNew(STextBlock)
+				.Text(FText::FromString(TotalText))
+				.Font(FAppStyle::GetFontStyle("SmallFont"))
+				.ColorAndOpacity(FSlateColor(FLinearColor(0.7f, 0.7f, 0.7f)))  // Gray
+			];
 		
 		// Add separator
 		DashboardContentPtr->AddSlot()
