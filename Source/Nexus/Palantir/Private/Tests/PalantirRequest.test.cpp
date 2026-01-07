@@ -3,7 +3,7 @@
 #include "Http.h"
 #include "Sockets.h"
 #include "SocketSubsystem.h"
-#include "IPAddress.h"
+#include "IpAddress.h"
 
 /**
  * Sample tests demonstrating network request tracing with PalantírRequest.
