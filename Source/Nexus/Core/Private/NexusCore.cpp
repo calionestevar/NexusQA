@@ -561,25 +561,15 @@ void UNexusCore::RunSequentialWithFailFast()
 
 double UNexusCore::GetAverageTestDuration(const FString& TestName)
 {
-    // Use Palantir's duration map which is populated during test execution
-    extern TMap<FString, double> GPalantirTestDurations;
-    extern FCriticalSection GPalantirMutex;
-    
-    FScopeLock _lock(&GPalantirMutex);
-    
-    if (GPalantirTestDurations.Num() == 0)
-    {
-        return 0.0;
-    }
-    
+    // Calculate average from test results
     double TotalDuration = 0.0;
     int32 Count = 0;
     
-    for (const auto& Pair : GPalantirTestDurations)
+    for (const FNexusTestResult& Result : FNexusTest::AllResults)
     {
-        if (TestName.IsEmpty() || Pair.Key == TestName)
+        if (TestName.IsEmpty() || Result.TestName == TestName)
         {
-            TotalDuration += Pair.Value;
+            TotalDuration += Result.DurationSeconds;
             ++Count;
         }
     }
