@@ -1,4 +1,5 @@
 #include "ObserverNetworkDashboard.h"
+#include "Nexus/Core/Public/NexusTest.h"
 #if WITH_IMGUI
 #include "imgui.h"
 #endif
