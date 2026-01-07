@@ -1,6 +1,6 @@
 #include "Nexus/Core/Public/NexusTest.h"
 #include "PalantirRequest.h"
-#include "Networking/Public/Networking.h"
+#include "Http.h"
 
 /**
  * Sample tests demonstrating network request tracing with PalantírRequest.
