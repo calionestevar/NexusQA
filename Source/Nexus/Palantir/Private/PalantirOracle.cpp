@@ -262,22 +262,29 @@ void FPalantirObserver::OnTestFinished(const FString& Name, bool bPassed)
     {
         FScopeLock _lock(&GPalantirMutex);
         GPalantirTestResults.Add(Name, bPassed);
-    }
-
-    // Compute duration if we recorded a start time
-    double DurationSeconds = 0.0;
-    {
-        FScopeLock _lock(&GPalantirMutex);
+        // Record full result for LCARS/Palantir
+        FPalantirTestResult Result;
+        Result.bPassed = bPassed;
+        Result.bSkipped = false;
+        Result.Duration = 0.0;
+        // Find priority if possible
+        Result.Priority = 0;
+        for (FNexusTest* Test : UNexusCore::DiscoveredTests)
+        {
+            if (Test && Test->TestName == Name)
+            {
+                Result.Priority = static_cast<uint8>(Test->Priority);
+                break;
+            }
+        }
         if (GPalantirTestStartTimes.Contains(Name))
         {
             FDateTime Start = GPalantirTestStartTimes[Name];
-            DurationSeconds = (FDateTime::Now() - Start).GetTotalSeconds();
+            Result.Duration = (FDateTime::Now() - Start).GetTotalSeconds();
             GPalantirTestStartTimes.Remove(Name);
         }
-    }
-    {
-        FScopeLock _lock(&GPalantirMutex);
-        GPalantirTestDurations.Add(Name, DurationSeconds);
+        GPalantirTestDurations.Add(Name, Result.Duration);
+        FPalantirOracle::Get().RecordTestResult(Name, Result);
     }
 
     // Ensure report directory exists and write a per-test log/artifact (simple summary).
@@ -329,6 +336,22 @@ void FPalantirObserver::OnTestSkipped(const FString& Name)
     {
         FScopeLock _lock(&GPalantirMutex);
         GPalantirTestResults.Add(Name, false);  // Skipped counts as not-failed but not-passed
+        // Record full result for LCARS/Palantir
+        FPalantirTestResult Result;
+        Result.bPassed = false;
+        Result.bSkipped = true;
+        Result.Duration = 0.0;
+        // Find priority if possible
+        Result.Priority = 0;
+        for (FNexusTest* Test : UNexusCore::DiscoveredTests)
+        {
+            if (Test && Test->TestName == Name)
+            {
+                Result.Priority = static_cast<uint8>(Test->Priority);
+                break;
+            }
+        }
+        FPalantirOracle::Get().RecordTestResult(Name, Result);
     }
     
     // Write per-test skip log
@@ -512,17 +535,22 @@ void FPalantirObserver::GenerateFinalReport()
     }
     Html.ReplaceInline(TEXT("{GROUPED_TEST_SECTIONS}"), *GroupedSections);
     
-    // Generate flat test table rows
+    // Generate flat test table rows with skipped status
     FString TableRows;
-    for (const auto& Pair : GPalantirTestResults)
+    for (const auto& Pair : FPalantirOracle::Get().GetAllTestResults())
     {
         const FString& TestName = Pair.Key;
-        bool bPassed = Pair.Value;
+        const FPalantirTestResult& Result = Pair.Value;
+        FString Status;
+        FString CssClass;
+        if (Result.bSkipped) { Status = TEXT("SKIPPED"); CssClass = TEXT("test-skipped"); }
+        else if (Result.bPassed) { Status = TEXT("PASSED"); CssClass = TEXT("test-passed"); }
+        else { Status = TEXT("FAILED"); CssClass = TEXT("test-failed"); }
         TableRows += FString::Printf(
             TEXT("<tr><td class='test-name'>%s</td><td class='%s'>%s</td></tr>\n"),
             *TestName,
-            bPassed ? TEXT("test-passed") : TEXT("test-failed"),
-            bPassed ? TEXT("PASSED") : TEXT("FAILED"));
+            *CssClass,
+            *Status);
     }
     Html.ReplaceInline(TEXT("{ALL_TESTS_TABLE_ROWS}"), *TableRows);
     
@@ -532,24 +560,22 @@ void FPalantirObserver::GenerateFinalReport()
     FFileHelper::SaveStringToFile(Html, *HtmlPath);
     UE_LOG(LogTemp, Warning, TEXT("LCARS FINAL REPORT GENERATED --> %s"), *HtmlPath);
     
-    const int32 Total = GPalantirTestResults.Num();
-    int32 Failures = 0;
-    for (const auto& P : GPalantirTestResults) if (!P.Value) ++Failures;
+    // Count failures and skipped
+    int32 Total = 0, Failures = 0, Skipped = 0;
+    for (const auto& Pair : FPalantirOracle::Get().GetAllTestResults()) {
+        ++Total;
+        if (Pair.Value.bSkipped) ++Skipped;
+        else if (!Pair.Value.bPassed) ++Failures;
+    }
 
     FString Xml = TEXT("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
-    Xml += FString::Printf(TEXT("<testsuites>\n  <testsuite name=\"Nexus\" tests=\"%d\" failures=\"%d\">\n"), Total, Failures);
+    Xml += FString::Printf(TEXT("<testsuites>\n  <testsuite name=\"Nexus\" tests=\"%d\" failures=\"%d\" skipped=\"%d\">\n"), Total, Failures, Skipped);
 
-    for (const auto& P : GPalantirTestResults)
+    for (const auto& Pair : FPalantirOracle::Get().GetAllTestResults())
     {
-        const FString& TestName = P.Key;
-        bool bPassed = P.Value;
-        // Include duration if available
-        double DurationSeconds = 0.0;
-        if (GPalantirTestDurations.Contains(TestName))
-        {
-            DurationSeconds = GPalantirTestDurations[TestName];
-        }
-        // Check for artifact paths and include them in system-out
+        const FString& TestName = Pair.Key;
+        const FPalantirTestResult& Result = Pair.Value;
+        double DurationSeconds = Result.Duration;
         FString SystemOut;
         if (GPalantirArtifactPaths.Contains(TestName))
         {
@@ -559,9 +585,12 @@ void FPalantirObserver::GenerateFinalReport()
                 SystemOut += FString::Printf(TEXT("%s\n"), *ArtifactPath);
             }
         }
-
         Xml += FString::Printf(TEXT("    <testcase classname=\"NexusTests\" name=\"%s\" time=\"%.3f\">"), *TestName, DurationSeconds);
-        if (!bPassed)
+        if (Result.bSkipped)
+        {
+            Xml += TEXT("\n      <skipped />\n");
+        }
+        else if (!Result.bPassed)
         {
             Xml += TEXT("\n      <failure message=\"failed\">Test failed</failure>\n");
         }

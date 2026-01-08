@@ -20,59 +20,66 @@ void LCARSReporter::ExportResultsToLCARS(const FAutomationTestFramework& Framewo
 	const TMap<FString, FPalantirTestResult>& OracleResults = FPalantirOracle::Get().GetAllTestResults();
 
 	TArray<TSharedPtr<FJsonValue>> TestsArray;
-	int32 PassedCount = 0;
-	int32 FailedCount = 0;
+    int32 PassedCount = 0;
+    int32 FailedCount = 0;
+    int32 SkippedCount = 0;
 
-	for (const auto& Pair : OracleResults)
-	{
-		const FString& TestName = Pair.Key;
-		const FPalantirTestResult& TestResult = Pair.Value;
+    for (const auto& Pair : OracleResults)
+    {
+        const FString& TestName = Pair.Key;
+        const FPalantirTestResult& TestResult = Pair.Value;
 
-		TSharedPtr<FJsonObject> TestObj = MakeShareable(new FJsonObject);
-		TestObj->SetStringField(TEXT("name"), TestName);
-		TestObj->SetBoolField(TEXT("passed"), TestResult.bPassed);
-		TestObj->SetNumberField(TEXT("duration"), TestResult.Duration);
-		
-		if (!TestResult.ErrorMessage.IsEmpty())
-		{
-			TestObj->SetStringField(TEXT("error"), TestResult.ErrorMessage);
-		}
+        TSharedPtr<FJsonObject> TestObj = MakeShareable(new FJsonObject);
+        TestObj->SetStringField(TEXT("name"), TestName);
+        TestObj->SetBoolField(TEXT("passed"), TestResult.bPassed);
+        TestObj->SetBoolField(TEXT("skipped"), TestResult.bSkipped);
+        TestObj->SetNumberField(TEXT("duration"), TestResult.Duration);
+        TestObj->SetNumberField(TEXT("priority"), TestResult.Priority);
+        if (!TestResult.ErrorMessage.IsEmpty())
+        {
+            TestObj->SetStringField(TEXT("error"), TestResult.ErrorMessage);
+        }
 
-		// Attach any artifact paths
-		TArray<TSharedPtr<FJsonValue>> JsonArtifacts;
-		if (!TestResult.ScreenshotPath.IsEmpty())
-		{
-			JsonArtifacts.Add(MakeShareable(new FJsonValueString(TestResult.ScreenshotPath)));
-		}
-		if (!TestResult.TraceFilePath.IsEmpty())
-		{
-			JsonArtifacts.Add(MakeShareable(new FJsonValueString(TestResult.TraceFilePath)));
-		}
-		if (!TestResult.LogFilePath.IsEmpty())
-		{
-			JsonArtifacts.Add(MakeShareable(new FJsonValueString(TestResult.LogFilePath)));
-		}
+        // Attach any artifact paths
+        TArray<TSharedPtr<FJsonValue>> JsonArtifacts;
+        if (!TestResult.ScreenshotPath.IsEmpty())
+        {
+            JsonArtifacts.Add(MakeShareable(new FJsonValueString(TestResult.ScreenshotPath)));
+        }
+        if (!TestResult.TraceFilePath.IsEmpty())
+        {
+            JsonArtifacts.Add(MakeShareable(new FJsonValueString(TestResult.TraceFilePath)));
+        }
+        if (!TestResult.LogFilePath.IsEmpty())
+        {
+            JsonArtifacts.Add(MakeShareable(new FJsonValueString(TestResult.LogFilePath)));
+        }
 
-		if (JsonArtifacts.Num() > 0)
-		{
-			TestObj->SetArrayField(TEXT("artifacts"), JsonArtifacts);
-		}
+        if (JsonArtifacts.Num() > 0)
+        {
+            TestObj->SetArrayField(TEXT("artifacts"), JsonArtifacts);
+        }
 
-		TestsArray.Add(MakeShareable(new FJsonValueObject(TestObj)));
+        TestsArray.Add(MakeShareable(new FJsonValueObject(TestObj)));
 
-		if (TestResult.bPassed)
-		{
-			PassedCount++;
-		}
-		else
-		{
-			FailedCount++;
-		}
-	}
+        if (TestResult.bSkipped)
+        {
+            SkippedCount++;
+        }
+        else if (TestResult.bPassed)
+        {
+            PassedCount++;
+        }
+        else
+        {
+            FailedCount++;
+        }
+    }
 
     Report->SetArrayField(TEXT("tests"), TestsArray);
     Report->SetNumberField(TEXT("passed"), PassedCount);
     Report->SetNumberField(TEXT("failed"), FailedCount);
+    Report->SetNumberField(TEXT("skipped"), SkippedCount);
     Report->SetNumberField(TEXT("total"), TestsArray.Num());
 
     FString OutputString;

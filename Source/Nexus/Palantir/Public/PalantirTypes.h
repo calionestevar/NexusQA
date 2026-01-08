@@ -10,8 +10,14 @@ struct FPalantirTestResult
 	/** Whether the test passed */
 	bool bPassed = false;
 
+	/** Whether the test was skipped */
+	bool bSkipped = false;
+
 	/** Execution duration in seconds */
 	double Duration = 0.0;
+
+	/** Test priority (0=Normal, 1=Critical, etc.) */
+	uint8 Priority = 0;
 
 	/** Path to screenshot artifact if captured */
 	FString ScreenshotPath;

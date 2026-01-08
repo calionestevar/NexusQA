@@ -34,13 +34,25 @@ static FNexusTestContext CreateTestContext()
         {
             Context.World = World;
             Context.GameState = World->GetGameState();
-            
-            // Get first player controller
-            if (APlayerController* PC = World->GetFirstPlayerController())
+
+            // Wait for PlayerController possession (up to 5 seconds)
+            const double WaitStart = FPlatformTime::Seconds();
+            const double Timeout = 5.0;
+            while (FPlatformTime::Seconds() - WaitStart < Timeout)
             {
-                Context.PlayerController = PC;
+                APlayerController* PC = World->GetFirstPlayerController();
+                if (PC && PC->GetPawn())
+                {
+                    Context.PlayerController = PC;
+                    break;
+                }
+                FPlatformProcess::Sleep(0.05f);
             }
-            
+            // If not possessed, still assign PC if available
+            if (!Context.PlayerController && World->GetFirstPlayerController())
+            {
+                Context.PlayerController = World->GetFirstPlayerController();
+            }
             break;
         }
     }
