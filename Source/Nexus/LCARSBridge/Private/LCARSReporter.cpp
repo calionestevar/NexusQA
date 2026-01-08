@@ -70,29 +70,36 @@ void LCARSReporter::ExportResultsToLCARS(const FAutomationTestFramework& Framewo
 		}
 	}
 
-	Report->SetArrayField(TEXT("tests"), TestsArray);
-	Report->SetNumberField(TEXT("passed"), PassedCount);
-	Report->SetNumberField(TEXT("failed"), FailedCount);
-	Report->SetNumberField(TEXT("total"), PassedCount + FailedCount);
+    Report->SetArrayField(TEXT("tests"), TestsArray);
+    Report->SetNumberField(TEXT("passed"), PassedCount);
+    Report->SetNumberField(TEXT("failed"), FailedCount);
+    Report->SetNumberField(TEXT("total"), TestsArray.Num());
 
-	FString OutputString;
-	TSharedRef<TJsonWriter<>> Writer = TJsonWriterFactory<>::Create(&OutputString);
-	FJsonSerializer::Serialize(Report.ToSharedRef(), Writer);
+    FString OutputString;
+    TSharedRef<TJsonWriter<>> Writer = TJsonWriterFactory<>::Create(&OutputString);
+    FJsonSerializer::Serialize(Report.ToSharedRef(), Writer);
 
-	FString FinalPath = OutputPath;
-	if (FinalPath.IsEmpty())
-	{
-		FinalPath = FPaths::Combine(FPaths::ProjectSavedDir(), TEXT("LCARSReport.json"));
-	}
+    FString FinalPath = OutputPath;
+    if (FinalPath.IsEmpty())
+    {
+        FinalPath = FPaths::Combine(FPaths::ProjectSavedDir(), TEXT("LCARSReport.json"));
+    }
 
-	if (FFileHelper::SaveStringToFile(OutputString, *FinalPath))
-	{
-		UE_LOG(LogTemp, Warning, TEXT("LCARS Report generated — %d passed, %d failed -> %s"), PassedCount, FailedCount, *FinalPath);
-	}
-	else
-	{
-		UE_LOG(LogTemp, Error, TEXT("Failed to write LCARS report to %s"), *FinalPath);
-	}
+    // Ensure output directory exists
+    FString Dir = FPaths::GetPath(FinalPath);
+    if (!FPaths::DirectoryExists(Dir))
+    {
+        IFileManager::Get().MakeDirectory(*Dir, true);
+    }
+
+    if (FFileHelper::SaveStringToFile(OutputString, *FinalPath))
+    {
+        UE_LOG(LogTemp, Warning, TEXT("LCARS Report generated — %d passed, %d failed -> %s"), PassedCount, FailedCount, *FinalPath);
+    }
+    else
+    {
+        UE_LOG(LogTemp, Error, TEXT("Failed to write LCARS report to %s"), *FinalPath);
+    }
 }
 
 void LCARSReporter::ExportResultsToLCARSFromPalantir(const TMap<FString, bool>& Results,
@@ -135,6 +142,7 @@ void LCARSReporter::ExportResultsToLCARSFromPalantir(const TMap<FString, bool>& 
     }
 
     Report->SetArrayField(TEXT("tests"), TestsArray);
+    Report->SetNumberField(TEXT("total"), TestsArray.Num());
 
     FString FinalPath = OutputPath;
     if (FinalPath.IsEmpty())
@@ -145,6 +153,13 @@ void LCARSReporter::ExportResultsToLCARSFromPalantir(const TMap<FString, bool>& 
     {
         // If OutputPath is a directory, append the filename
         FinalPath = FPaths::Combine(OutputPath, TEXT("LCARSReport.json"));
+    }
+
+    // Ensure output directory exists
+    FString Dir = FPaths::GetPath(FinalPath);
+    if (!FPaths::DirectoryExists(Dir))
+    {
+        IFileManager::Get().MakeDirectory(*Dir, true);
     }
 
     FString OutputString;
