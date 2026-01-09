@@ -30,9 +30,11 @@
  */
 static bool IsNetworkAvailable()
 {
-	// Try to resolve a reliable domain (Google DNS)
+	// Try to resolve a reliable domain (Google DNS) using modern GetAddressInfo API
 	TSharedRef<FInternetAddr> OutAddr = ISocketSubsystem::Get(PLATFORM_SOCKETSUBSYSTEM)->CreateInternetAddr();
-	if (ISocketSubsystem::Get(PLATFORM_SOCKETSUBSYSTEM)->GetHostByName("8.8.8.8", *OutAddr))
+	FAddressInfoResult AddrInfo = ISocketSubsystem::Get(PLATFORM_SOCKETSUBSYSTEM)->GetAddressInfo(TEXT("8.8.8.8"), nullptr, EAddressInfoFlags::Default, ESocketType::SOCKTYPE_Datagram);
+	
+	if (AddrInfo.IsValid() && AddrInfo->GetAddress(OutAddr))
 	{
 		return true;
 	}
