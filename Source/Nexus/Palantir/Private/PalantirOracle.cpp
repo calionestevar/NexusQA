@@ -297,7 +297,7 @@ void FPalantirObserver::OnTestFinished(const FString& Name, bool bPassed)
     FString LogContents = FString::Printf(TEXT("Test: %s\nResult: %s\nDuration: %.3fs\nTime: %s\n"),
         *Name,
         bPassed ? TEXT("PASSED") : TEXT("FAILED"),
-        DurationSeconds,
+        Result.Duration,
         *FDateTime::Now().ToString());
     FFileHelper::SaveStringToFile(LogContents, *TestLogPath);
     // Add the per-test log as an artifact; keep array for multiple artifacts.
