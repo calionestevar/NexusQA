@@ -258,12 +258,14 @@ void FPalantirObserver::OnTestFinished(const FString& Name, bool bPassed)
     UE_LOG(LogTemp, Display, TEXT("Palantir: Test finished: %s -> %s"), *Name, bPassed ? TEXT("PASSED") : TEXT("FAILED"));
     // NOTE: NotifyTestFinished is called by the caller (NexusCore), not here to avoid double-counting
 
+    // Declare Result in outer scope to use it outside the lock
+    FPalantirTestResult Result;
+    
     // Record the result for final reporting (JUnit, HTML)
     {
         FScopeLock _lock(&GPalantirMutex);
         GPalantirTestResults.Add(Name, bPassed);
         // Record full result for LCARS/Palantir
-        FPalantirTestResult Result;
         Result.bPassed = bPassed;
         Result.bSkipped = false;
         Result.Duration = 0.0;
@@ -294,7 +296,7 @@ void FPalantirObserver::OnTestFinished(const FString& Name, bool bPassed)
     FString SafeName = Name;
     for (TCHAR& C : SafeName) if (!FChar::IsAlnum(C)) C = TEXT('_');
     const FString TestLogPath = ReportDir / FString::Printf(TEXT("test_%s.log"), *SafeName);
-    FString LogContents = FString::Printf(TEXT("Test: %s\nResult: %s\nDuration: %.3fs\nTime: %s\n"),
+    FString LogContents = FString::Printf(TEXT("Test: %s\nResult: %s\nDuration: %.3f seconds\nTime: %s\n"),
         *Name,
         bPassed ? TEXT("PASSED") : TEXT("FAILED"),
         Result.Duration,
