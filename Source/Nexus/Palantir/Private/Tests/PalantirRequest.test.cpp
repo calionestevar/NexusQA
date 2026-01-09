@@ -31,10 +31,14 @@
 static bool IsNetworkAvailable()
 {
 	// Try to resolve a reliable domain (Google DNS) using modern GetAddressInfo API
-	TSharedRef<FInternetAddr> OutAddr = ISocketSubsystem::Get(PLATFORM_SOCKETSUBSYSTEM)->CreateInternetAddr();
-	FAddressInfoResult AddrInfo = ISocketSubsystem::Get(PLATFORM_SOCKETSUBSYSTEM)->GetAddressInfo(TEXT("8.8.8.8"), nullptr, EAddressInfoFlags::Default, ESocketType::SOCKTYPE_Datagram);
+	FAddressInfoResult AddrInfo = ISocketSubsystem::Get(PLATFORM_SOCKETSUBSYSTEM)->GetAddressInfo(
+		TEXT("8.8.8.8"), 
+		nullptr, 
+		EAddressInfoFlags::Default, 
+		ESocketProtocolFamily::IPv4, 
+		ESocketType::SOCKTYPE_Datagram);
 	
-	if (AddrInfo.IsValid() && AddrInfo->GetAddress(OutAddr))
+	if (AddrInfo.Results.Num() > 0)
 	{
 		return true;
 	}
