@@ -34,10 +34,11 @@ static bool IsNetworkAvailable()
 	FAddressInfoResult AddrInfo = ISocketSubsystem::Get(PLATFORM_SOCKETSUBSYSTEM)->GetAddressInfo(
 		TEXT("8.8.8.8"), 
 		nullptr, 
-		FName(TEXT("udp")),  // Protocol specification as FName
 		EAddressInfoFlags::Default, 
 		ESocketProtocolFamily::IPv4, 
-		ESocketType::SOCKTYPE_Datagram);
+		ESocketType::SOCKTYPE_Datagram, 
+		ESocketAddressFamily::ADDRESSFAMILY_Unspecified
+	);
 	
 	if (AddrInfo.Results.Num() > 0)
 	{
