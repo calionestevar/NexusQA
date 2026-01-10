@@ -11,6 +11,8 @@
 #include "GameFramework/GameStateBase.h"
 #include "GameFramework/PlayerController.h"
 #include <atomic>
+#include "Editor/EditorEngine.h"
+#include "PlaySession.h"
 
 DEFINE_LOG_CATEGORY(LogNexus);
 
@@ -168,7 +170,13 @@ bool UNexusCore::EnsurePIEWorldActive()
         UE_LOG(LogNexus, Warning, TEXT("NEXUS: No active game world - launching PIE with map: %s"), *TestMapPath);
         
         // Request PIE with the configured map
-        GEditor->RequestPlaySession(false, nullptr, false, &TestMapPath);
+        FRequestPlaySessionParams Params;
+        Params.MapToLoad = TestMapPath;
+        Params.bSimulateInEditor = false;
+        Params.bPlayInEditorFloating = false;
+        Params.SessionPreviewTypeOverride = EPlaySessionPreviewType::None;
+
+        GEditor->RequestPlaySession(Params);
         
         // Wait briefly for PIE to initialize (up to 5 seconds)
         double WaitStartTime = FPlatformTime::Seconds();
