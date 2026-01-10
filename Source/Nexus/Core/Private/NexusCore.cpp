@@ -125,6 +125,9 @@ void UNexusCore::Execute(const TArray<FString>& Args)
         return;
     }
 
+    // Ensure PIE world is active before running tests (required for game-thread tests)
+    EnsurePIEWorldActive();
+
     RunAllTests(true);
     FPalantirObserver::GenerateFinalReport();
 }
@@ -201,6 +204,34 @@ void UNexusCore::DiscoverAllTests()
     // FNexusTest::AllTests is populated automatically when NEXUS_TEST() static objects
     // are constructed at module load time
     DiscoveredTests = FNexusTest::AllTests;
+    
+    // Check for duplicate tests (possible if macros were instantiated multiple times)
+    TSet<FString> SeenTestNames;
+    TArray<FNexusTest*> DedupedTests;
+    int32 DuplicateCount = 0;
+    
+    for (FNexusTest* Test : DiscoveredTests)
+    {
+        if (!Test) continue;
+        
+        if (SeenTestNames.Contains(Test->TestName))
+        {
+            ++DuplicateCount;
+            UE_LOG(LogNexus, Warning, TEXT("⚠️  Duplicate test detected: %s — This test is registered multiple times"), *Test->TestName);
+        }
+        else
+        {
+            SeenTestNames.Add(Test->TestName);
+            DedupedTests.Add(Test);
+        }
+    }
+    
+    if (DuplicateCount > 0)
+    {
+        UE_LOG(LogNexus, Warning, TEXT("⚠️  Found %d duplicate test registrations — Deduplicating..."), DuplicateCount);
+        DiscoveredTests = DedupedTests;
+    }
+    
     TotalTests = DiscoveredTests.Num();
     UE_LOG(LogNexus, Display, TEXT("NEXUS: Discovered %d test(s)"), DiscoveredTests.Num());
 }
@@ -253,7 +284,7 @@ void UNexusCore::RunAllTests(bool bParallel)
             if (Test->bSkip)
             {
                 UNexusCore::NotifyTestSkipped(Test->TestName);
-                FPalantirObserver::OnTestFinished(Test->TestName, true);
+                FPalantirObserver::OnTestSkipped(Test->TestName);
                 continue;
             }
 
@@ -317,6 +348,9 @@ void UNexusCore::RunAllTests(bool bParallel)
     else if (ParallelTests.Num() > 0)
     {
         // Run parallel-safe tests sequentially
+        // This handles two cases:
+        // 1. bParallel=false (sequential mode requested)
+        // 2. bParallel=true but only 1 test (no benefit from parallelization)
         UE_LOG(LogNexus, Display, TEXT("NEXUS: Running %d parallel-safe tests sequentially"), ParallelTests.Num());
         DiscoveredTests = ParallelTests;
         RunSequentialWithFailFast();
@@ -342,12 +376,22 @@ void UNexusCore::RunAllTests(bool bParallel)
         
         if (!bHasActiveWorld)
         {
-            UE_LOG(LogNexus, Warning, TEXT("⚠️  No active game world detected — Game-thread tests will gracefully skip"));
+            UE_LOG(LogNexus, Warning, TEXT("⚠️  No active game world detected — Skipping %d game-thread tests"), GameThreadTests.Num());
             UE_LOG(LogNexus, Display, TEXT("💡 To run game-thread tests with full world context, click 'Play' in the editor first"));
+            
+            // Auto-skip all game-thread tests since there's no world
+            for (FNexusTest* Test : GameThreadTests)
+            {
+                if (!Test) continue;
+                NotifyTestSkipped(Test->TestName);
+                FPalantirObserver::OnTestSkipped(Test->TestName);
+            }
         }
-        
-        DiscoveredTests = GameThreadTests;
-        RunSequentialWithFailFast();
+        else
+        {
+            DiscoveredTests = GameThreadTests;
+            RunSequentialWithFailFast();
+        }
     }
 
     FPalantirObserver::GenerateFinalReport();
@@ -546,7 +590,7 @@ void UNexusCore::RunSequentialWithFailFast()
         if (Test->bSkip)
         {
             NotifyTestSkipped(Name);
-            FPalantirObserver::OnTestFinished(Name, true);  // Skipped counts as passed for reporting
+            FPalantirObserver::OnTestSkipped(Name);
             continue;
         }
 

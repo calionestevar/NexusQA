@@ -330,7 +330,9 @@ public:
         if (bSkip)
         {
             UE_LOG(LogNexus, Warning, TEXT("SKIPPED: %s"), *TestName);
-            return true;  // Skipped tests count as passed
+            LastResult.bSkipped = true;
+            LastResult.bPassed = false;
+            return true;  // Return true to signal graceful skip (not a failure)
         }
         
         // RAII guard automatically creates and cleans up trace context

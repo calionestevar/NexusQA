@@ -399,7 +399,17 @@ void FPalantirObserver::UpdateLiveOverlay()
 void FPalantirObserver::GenerateFinalReport()
 {
     const FString ReportDir = FPaths::ProjectSavedDir() / TEXT("NexusReports");
-    FPlatformFileManager::Get().GetPlatformFile().CreateDirectory(*ReportDir);
+    
+    // Ensure directory exists - use CreateDirectoryTree for nested paths
+    IPlatformFile& PlatformFile = FPlatformFileManager::Get().GetPlatformFile();
+    if (!PlatformFile.DirectoryExists(*ReportDir))
+    {
+        if (!PlatformFile.CreateDirectoryTree(*ReportDir))
+        {
+            UE_LOG(LogTemp, Error, TEXT("FAILED to create report directory: %s"), *ReportDir);
+            return;
+        }
+    }
 
     const FString Timestamp = FDateTime::Now().ToString(TEXT("%Y%m%d_%H%M%S"));
     const FString HtmlPath = ReportDir / FString::Printf(TEXT("LCARS_Report_%s.html"), *Timestamp);
@@ -559,8 +569,14 @@ void FPalantirObserver::GenerateFinalReport()
     // Protect all file writes with mutex to prevent race conditions
     FScopeLock _lock(&GPalantirMutex);
     
-    FFileHelper::SaveStringToFile(Html, *HtmlPath);
-    UE_LOG(LogTemp, Warning, TEXT("LCARS FINAL REPORT GENERATED --> %s"), *HtmlPath);
+    if (FFileHelper::SaveStringToFile(Html, *HtmlPath))
+    {
+        UE_LOG(LogTemp, Warning, TEXT("LCARS HTML REPORT GENERATED --> %s"), *HtmlPath);
+    }
+    else
+    {
+        UE_LOG(LogTemp, Error, TEXT("Failed to write HTML report --> %s"), *HtmlPath);
+    }
     
     // Count failures and skipped
     int32 Total = 0, Failures = 0, Skipped = 0;
