@@ -31,13 +31,13 @@
 static bool IsNetworkAvailable()
 {
 	// Try to resolve a reliable domain (Google DNS) using modern GetAddressInfo API with FName protocol
-	FAddressInfoResult AddrInfo = ISocketSubsystem::Get(PLATFORM_SOCKETSUBSYSTEM)->GetAddressInfo(
+	auto AddrInfo = ISocketSubsystem::Get(PLATFORM_SOCKETSUBSYSTEM)->GetAddressInfo(
 		TEXT("8.8.8.8"), 
 		nullptr, 
 		EAddressInfoFlags::Default, 
 		ESocketProtocolFamily::IPv4, 
 		ESocketType::SOCKTYPE_Datagram, 
-		ESocketAddressFamily::ADDRESSFAMILY_Unspecified
+		EAddressInfoAddressFamily::Unspecified
 	);
 	
 	if (AddrInfo.Results.Num() > 0)

@@ -92,7 +92,7 @@ void UCortexiphanInjector::InjectChaos(float DurationSeconds, float Intensity)
     // End chaos after the requested duration — clear the periodic timer safely.
     World->GetTimerManager().SetTimer(*EndTimerHandle, FTimerDelegate::CreateLambda([ChaosTimerHandle, World]()
     {
-        if (World && World->GetTimerManager().IsTimerActive(ChaosTimerHandle))
+        if (World && World->GetTimerManager().IsTimerActive(*ChaosTimerHandle))
         {
             World->GetTimerManager().ClearTimer(*ChaosTimerHandle);
             ChaosLog(TEXT("CORTEXIPHAN EFFECT SUBSIDING — RETURNING TO BASELINE"));
