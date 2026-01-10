@@ -44,5 +44,11 @@
 			"Type": "Runtime",
 			"LoadingPhase": "Default"
 		}
+	],
+	"Dependencies": [
+		{
+		"Name": "Sockets",
+		"Type": "Runtime"
+		}
 	]
 }

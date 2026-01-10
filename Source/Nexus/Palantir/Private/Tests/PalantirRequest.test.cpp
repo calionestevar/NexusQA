@@ -4,7 +4,7 @@
 #include "Sockets.h"
 #include "SocketSubsystem.h"
 #include "IpAddress.h"
-#include "Sockets/Public/AddressInfoTypes.h"
+#include "AddressInfoTypes.h"
 
 /**
  * Sample tests demonstrating network request tracing with PalantírRequest.
@@ -40,7 +40,7 @@ static bool IsNetworkAvailable()
 		ESocketType::SOCKTYPE_Datagram, 
 		EAddressInfoAddressFamily::Unspecified
 	);
-	
+
 	if (AddrInfo.Results.Num() > 0)
 	{
 		return true;
