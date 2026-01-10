@@ -4,6 +4,8 @@
 #include "Misc/Paths.h"
 #include "HAL/PlatformFileManager.h"
 #include "Misc/DateTime.h"
+#include "Json.h"
+#include "JsonUtilities.h"
 
 // Define WITH_IMGUI if not already defined by the build system
 #ifndef WITH_IMGUI
@@ -102,6 +104,10 @@ static TMap<FString, double> GPalantirTestDurations;
 static TMap<FString, TArray<FString>> GPalantirArtifactPaths;
 // Store test metadata for report generation (tags, priority, etc.)
 static TMap<FString, TArray<FString>> GPalantirTestTags;
+// Baseline duration tracking for regression detection
+static TMap<FString, double> GBaselineTestDurations;
+static TMap<FString, double> GRegressionDeltas;  // Current - Baseline for each test
+static int32 GRegressionCount = 0;
 static FCriticalSection GPalantirMutex;
 
 // Pluggable provider (set during Initialize)
@@ -206,6 +212,9 @@ void FPalantirObserver::Initialize()
         GLCARSProvider.Reset(new FPalantirInMemoryProvider());
         UE_LOG(LogTemp, Display, TEXT("LCARS provider: Palantir (in-memory) selected"));
     }
+    
+    // Load baseline durations for regression detection
+    FPalantirObserver::LoadBaselineData();
 }
 
 void FPalantirObserver::OnTestStarted(const FString& Name)
@@ -235,10 +244,15 @@ void FPalantirObserver::OnTestStarted(const FNexusTest* Test)
         GPalantirTestStartTimes.Add(Test->TestName, FDateTime::Now());
         
         // Store test tags for report generation
-        if (Test->GetCustomTags().Num() > 0)
+        // Always store tags, even if empty (ensures all tests appear in categorization)
+        TArray<FString> Tags = Test->GetCustomTags();
+        if (Tags.Num() == 0)
         {
-            GPalantirTestTags.Add(Test->TestName, Test->GetCustomTags());
+            // Tests without explicit tags should have been given "Untagged" in constructor
+            // but ensure it exists for consistency
+            Tags.Add(TEXT("Untagged"));
         }
+        GPalantirTestTags.Add(Test->TestName, Tags);
     }
 }
 
@@ -284,6 +298,15 @@ void FPalantirObserver::OnTestFinished(const FString& Name, bool bPassed)
             FDateTime Start = GPalantirTestStartTimes[Name];
             Result.Duration = (FDateTime::Now() - Start).GetTotalSeconds();
             GPalantirTestStartTimes.Remove(Name);
+            // Log duration for debugging
+            if (Result.Duration < 0.001)
+            {
+                UE_LOG(LogTemp, Warning, TEXT("⚠️  Test duration suspiciously low for %s: %.6f seconds"), *Name, Result.Duration);
+            }
+        }
+        else
+        {
+            UE_LOG(LogTemp, Warning, TEXT("⚠️  No start time recorded for test: %s — Duration will be 0"), *Name);
         }
         GPalantirTestDurations.Add(Name, Result.Duration);
         FPalantirOracle::Get().RecordTestResult(Name, Result);
@@ -396,6 +419,125 @@ void FPalantirObserver::UpdateLiveOverlay()
 #endif
 }
 
+void FPalantirObserver::LoadBaselineData()
+{
+    const FString ReportDir = FPaths::ProjectSavedDir() / TEXT("NexusReports");
+    const FString BaselineFile = ReportDir / TEXT("test-baseline.json");
+    
+    GBaselineTestDurations.Empty();
+    
+    if (!FPaths::FileExists(*BaselineFile))
+    {
+        UE_LOG(LogTemp, Display, TEXT("✓ No existing baseline data found (first run or baseline reset)"));
+        return;
+    }
+    
+    FString JsonContent;
+    if (!FFileHelper::LoadFileToString(JsonContent, *BaselineFile))
+    {
+        UE_LOG(LogTemp, Warning, TEXT("⚠️  Failed to load baseline data from: %s"), *BaselineFile);
+        return;
+    }
+    
+    TSharedPtr<FJsonObject> JsonObject;
+    TSharedRef<TJsonReader<>> Reader = TJsonReaderFactory<>::Create(JsonContent);
+    
+    if (!FJsonSerializer::Deserialize(Reader, JsonObject) || !JsonObject.IsValid())
+    {
+        UE_LOG(LogTemp, Warning, TEXT("⚠️  Failed to parse baseline JSON"));
+        return;
+    }
+    
+    // Load baselines: each test name maps to duration in seconds
+    for (const auto& Field : JsonObject->Values)
+    {
+        double Duration = Field.Value->AsNumber();
+        GBaselineTestDurations.Add(Field.Key, Duration);
+    }
+    
+    UE_LOG(LogTemp, Display, TEXT("✓ Loaded baseline data for %d tests"), GBaselineTestDurations.Num());
+}
+
+void FPalantirObserver::SaveBaselineData()
+{
+    const FString ReportDir = FPaths::ProjectSavedDir() / TEXT("NexusReports");
+    const FString BaselineFile = ReportDir / TEXT("test-baseline.json");
+    
+    // Ensure directory exists
+    IPlatformFile& PlatformFile = FPlatformFileManager::Get().GetPlatformFile();
+    if (!PlatformFile.DirectoryExists(*ReportDir))
+    {
+        if (!PlatformFile.CreateDirectoryTree(*ReportDir))
+        {
+            UE_LOG(LogTemp, Error, TEXT("⚠️  Failed to create baseline directory: %s"), *ReportDir);
+            return;
+        }
+    }
+    
+    // Build JSON with current test durations
+    TSharedPtr<FJsonObject> JsonObject = MakeShareable(new FJsonObject());
+    
+    {
+        FScopeLock _lock(&GPalantirMutex);
+        for (const auto& Pair : GPalantirTestDurations)
+        {
+            JsonObject->SetNumberField(Pair.Key, Pair.Value);
+        }
+    }
+    
+    FString JsonOutput;
+    TSharedRef<TJsonWriter<>> Writer = TJsonWriterFactory<>::Create(&JsonOutput);
+    FJsonSerializer::Serialize(JsonObject.ToSharedRef(), Writer);
+    
+    if (FFileHelper::SaveStringToFile(JsonOutput, *BaselineFile))
+    {
+        UE_LOG(LogTemp, Display, TEXT("✓ Saved baseline data for %d tests to: %s"), GPalantirTestDurations.Num(), *BaselineFile);
+    }
+    else
+    {
+        UE_LOG(LogTemp, Error, TEXT("⚠️  Failed to save baseline data to: %s"), *BaselineFile);
+    }
+}
+
+void FPalantirObserver::DetectRegressions()
+{
+    GRegressionDeltas.Empty();
+    GRegressionCount = 0;
+    
+    const double REGRESSION_THRESHOLD = 0.1;  // 10% slower is a regression
+    
+    {
+        FScopeLock _lock(&GPalantirMutex);
+        for (const auto& Pair : GPalantirTestDurations)
+        {
+            const FString& TestName = Pair.Key;
+            double CurrentDuration = Pair.Value;
+            
+            if (GBaselineTestDurations.Contains(TestName))
+            {
+                double BaselineDuration = GBaselineTestDurations[TestName];
+                double Delta = CurrentDuration - BaselineDuration;
+                double PercentChange = (Delta / BaselineDuration) * 100.0;
+                
+                GRegressionDeltas.Add(TestName, Delta);
+                
+                // Flag as regression if test is more than 10% slower
+                if (PercentChange > REGRESSION_THRESHOLD)
+                {
+                    ++GRegressionCount;
+                    UE_LOG(LogTemp, Warning, TEXT("⚠️  REGRESSION DETECTED: %s (+%.1f%% slower: %.3fs → %.3fs)"), 
+                        *TestName, PercentChange, BaselineDuration, CurrentDuration);
+                }
+            }
+        }
+    }
+    
+    if (GRegressionCount > 0)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("⚠️  REGRESSION ALERT: %d tests slower than baseline"), GRegressionCount);
+    }
+}
+
 void FPalantirObserver::GenerateFinalReport()
 {
     const FString ReportDir = FPaths::ProjectSavedDir() / TEXT("NexusReports");
@@ -410,6 +552,12 @@ void FPalantirObserver::GenerateFinalReport()
             return;
         }
     }
+    
+    // Detect regressions before saving baseline (so we can report on them)
+    FPalantirObserver::DetectRegressions();
+    
+    // Save new baseline for next run
+    FPalantirObserver::SaveBaselineData();
 
     const FString Timestamp = FDateTime::Now().ToString(TEXT("%Y%m%d_%H%M%S"));
     const FString HtmlPath = ReportDir / FString::Printf(TEXT("LCARS_Report_%s.html"), *Timestamp);
@@ -442,10 +590,9 @@ void FPalantirObserver::GenerateFinalReport()
     Html.ReplaceInline(TEXT("{AVG_DURATION}"), *FString::Printf(TEXT("%.0f"), AvgDuration));
     Html.ReplaceInline(TEXT("{PERF_STATUS}"), *PerfStatus);
     
-    // Regression metrics
-    int32 RegressionCount = UNexusCore::DetectRegressions(0);
-    FString RegressionStatus = RegressionCount == 0 ? TEXT("All clear") : TEXT("Investigate");
-    Html.ReplaceInline(TEXT("{REGRESSION_COUNT}"), *FString::FromInt(RegressionCount));
+    // Regression metrics (already calculated in DetectRegressions called earlier)
+    FString RegressionStatus = GRegressionCount == 0 ? TEXT("✓ All clear") : TEXT("⚠️  Investigate");
+    Html.ReplaceInline(TEXT("{REGRESSION_COUNT}"), *FString::FromInt(GRegressionCount));
     Html.ReplaceInline(TEXT("{REGRESSION_STATUS}"), *RegressionStatus);
     
     // Generate tag distribution cards and grouped test sections
@@ -464,22 +611,28 @@ void FPalantirObserver::GenerateFinalReport()
             bool bPassed = ResultPair.Value;
             
             // Get the stored tags for this test (captured during OnTestStarted)
+            TArray<FString> Tags;
             if (GPalantirTestTags.Contains(TestName))
             {
-                const TArray<FString>& Tags = GPalantirTestTags[TestName];
-                
-                // Categorize by all custom tags
-                for (const FString& Tag : Tags)
+                Tags = GPalantirTestTags[TestName];
+            }
+            else
+            {
+                // Fallback: tests without tags still need to appear somewhere
+                Tags.Add(TEXT("Untagged"));
+            }
+            
+            // Categorize by all tags
+            for (const FString& Tag : Tags)
+            {
+                if (!UniqueTags.Contains(Tag))
                 {
-                    if (!UniqueTags.Contains(Tag))
-                    {
-                        UniqueTags.Add(Tag);
-                    }
-                    
-                    TagCountMap.FindOrAdd(Tag, 0)++;
-                    if (bPassed) TagPassCountMap.FindOrAdd(Tag, 0)++;
-                    TagTestsMap.FindOrAdd(Tag).Add(TestName);
+                    UniqueTags.Add(Tag);
                 }
+                
+                TagCountMap.FindOrAdd(Tag, 0)++;
+                if (bPassed) TagPassCountMap.FindOrAdd(Tag, 0)++;
+                TagTestsMap.FindOrAdd(Tag).Add(TestName);
             }
         }
     }
@@ -565,6 +718,38 @@ void FPalantirObserver::GenerateFinalReport()
             *Status);
     }
     Html.ReplaceInline(TEXT("{ALL_TESTS_TABLE_ROWS}"), *TableRows);
+    
+    // Generate regression details table (tests that are slower than baseline)
+    FString RegressionRows;
+    {
+        FScopeLock _lock(&GPalantirMutex);
+        for (const auto& Pair : GRegressionDeltas)
+        {
+            const FString& TestName = Pair.Key;
+            double Delta = Pair.Value;
+            double Baseline = GBaselineTestDurations.Contains(TestName) ? GBaselineTestDurations[TestName] : 0.0;
+            double Current = Baseline + Delta;
+            double PercentChange = Baseline > 0 ? (Delta / Baseline) * 100.0 : 0.0;
+            
+            // Only show actual regressions (positive deltas over 10%)
+            if (PercentChange > 10.0)
+            {
+                RegressionRows += FString::Printf(
+                    TEXT("<tr><td>%s</td><td>%.3fs</td><td>%.3fs</td><td style='color:red'>+%.1f%%</td></tr>\n"),
+                    *TestName,
+                    Baseline,
+                    Current,
+                    PercentChange);
+            }
+        }
+    }
+    
+    // If no regressions, show success message
+    if (RegressionRows.IsEmpty())
+    {
+        RegressionRows = TEXT("<tr><td colspan='4' style='text-align:center; color:green'>✓ No regressions detected</td></tr>\n");
+    }
+    Html.ReplaceInline(TEXT("{REGRESSION_DETAILS}"), *RegressionRows);
     
     // Protect all file writes with mutex to prevent race conditions
     FScopeLock _lock(&GPalantirMutex);

@@ -57,4 +57,9 @@ public:
     static void OnTestSkipped(const FString& Name);  // Called when a test is skipped
     // Register an artifact (screenshot, log, replay) for a given test name.
     static void RegisterArtifact(const FString& TestName, const FString& ArtifactPath);
+    
+    // Baseline and regression detection
+    static void LoadBaselineData();              // Load baseline durations from file
+    static void SaveBaselineData();              // Save current durations as new baseline
+    static void DetectRegressions();             // Compare current vs baseline and flag regressions
 };
