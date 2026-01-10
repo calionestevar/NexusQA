@@ -751,6 +751,38 @@ void FPalantirObserver::GenerateFinalReport()
     }
     Html.ReplaceInline(TEXT("{REGRESSION_DETAILS}"), *RegressionRows);
     
+    // Generate critical tests details table
+    FString CriticalTestsRows;
+    {
+        FScopeLock _lock(&GPalantirMutex);
+        for (const auto& Pair : FPalantirOracle::Get().GetAllTestResults())
+        {
+            const FString& TestName = Pair.Key;
+            const FPalantirTestResult& Result = Pair.Value;
+            
+            // Only show critical tests
+            if ((Result.Priority & static_cast<uint8>(ETestPriority::Critical)) != 0)
+            {
+                FString Status = Result.bSkipped ? TEXT("SKIPPED") : (Result.bPassed ? TEXT("✓ PASS") : TEXT("✗ FAIL"));
+                FString StatusStyle = Result.bSkipped ? TEXT("color:orange") : (Result.bPassed ? TEXT("color:green") : TEXT("color:red"));
+                
+                CriticalTestsRows += FString::Printf(
+                    TEXT("<tr><td>%s</td><td style='%s'>%s</td><td>%.3fs</td></tr>\n"),
+                    *TestName,
+                    *StatusStyle,
+                    *Status,
+                    Result.Duration);
+            }
+        }
+    }
+    
+    // If no critical tests found, show informational message
+    if (CriticalTestsRows.IsEmpty())
+    {
+        CriticalTestsRows = TEXT("<tr><td colspan='3' style='text-align:center; color:blue'>ℹ️  No critical tests in this run</td></tr>\n");
+    }
+    Html.ReplaceInline(TEXT("{CRITICAL_TESTS_DETAILS}"), *CriticalTestsRows);
+    
     // Protect all file writes with mutex to prevent race conditions
     FScopeLock _lock(&GPalantirMutex);
     

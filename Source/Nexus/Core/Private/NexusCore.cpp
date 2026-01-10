@@ -258,6 +258,12 @@ void UNexusCore::RunAllTests(bool bParallel)
     {
         if (!Test) continue;
         
+        // Count critical tests
+        if (NexusHasFlag(Test->Priority, ETestPriority::Critical))
+        {
+            ++CriticalTests;
+        }
+        
         if (Test->bRequiresGameThread)
         {
             GameThreadTests.Add(Test);

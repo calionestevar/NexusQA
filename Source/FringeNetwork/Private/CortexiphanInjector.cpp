@@ -40,7 +40,7 @@ static void ChaosLog(const FString& Msg)
 
 void UCortexiphanInjector::InjectChaos(float DurationSeconds, float Intensity)
 {
-    // In static context, use GEngine to get the world
+    // Get world context - use GEngine since this is a static-like operation
     UWorld* World = GEngine ? GEngine->GetCurrentPlayWorld() : nullptr;
     if (!World)
     {
@@ -92,7 +92,7 @@ void UCortexiphanInjector::InjectChaos(float DurationSeconds, float Intensity)
     // End chaos after the requested duration — clear the periodic timer safely.
     World->GetTimerManager().SetTimer(*EndTimerHandle, FTimerDelegate::CreateLambda([ChaosTimerHandle, World]()
     {
-        if (World)
+        if (World && ChaosTimerHandle.IsValid())
         {
             World->GetTimerManager().ClearTimer(*ChaosTimerHandle);
             ChaosLog(TEXT("CORTEXIPHAN EFFECT SUBSIDING — RETURNING TO BASELINE"));
@@ -107,7 +107,8 @@ void UCortexiphanInjector::TriggerLagSpike(float AddedLatencyMs)
     if (GEngine)
     {
         UWorld* World = GEngine->GetCurrentPlayWorld();
-        if (World && GEngine->GetFirstLocalPlayerController(World))
+        APlayerController* PC = World ? GEngine->GetFirstLocalPlayerController(World) : nullptr;
+        if (PC && World)
         {
             GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, FString::Printf(TEXT("+%.0fms LAG"), AddedLatencyMs));
         }

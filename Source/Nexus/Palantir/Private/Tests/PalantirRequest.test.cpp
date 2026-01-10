@@ -30,10 +30,11 @@
  */
 static bool IsNetworkAvailable()
 {
-	// Try to resolve a reliable domain (Google DNS) using modern GetAddressInfo API
+	// Try to resolve a reliable domain (Google DNS) using modern GetAddressInfo API with FName protocol
 	FAddressInfoResult AddrInfo = ISocketSubsystem::Get(PLATFORM_SOCKETSUBSYSTEM)->GetAddressInfo(
 		TEXT("8.8.8.8"), 
 		nullptr, 
+		FName(TEXT("udp")),  // Protocol specification as FName
 		EAddressInfoFlags::Default, 
 		ESocketProtocolFamily::IPv4, 
 		ESocketType::SOCKTYPE_Datagram);
