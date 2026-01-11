@@ -25,6 +25,11 @@
 			"LoadingPhase": "Default"
 		},
 		{
+			"Name": "FargoEditor",
+			"Type": "Editor",
+			"LoadingPhase": "PostEngineInit"
+		},
+		{
 			"Name": "FringeNetwork",
 			"Type": "Runtime",
 			"LoadingPhase": "Default"
