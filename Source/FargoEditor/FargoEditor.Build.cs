@@ -4,8 +4,6 @@ public class FargoEditor : ModuleRules
 {
     public FargoEditor(ReadOnlyTargetRules Target) : base(Target)
     {
-        Type = ModuleType.Editor;
-
         PublicDependencyModuleNames.AddRange(new string[]
         {
             "Core",
