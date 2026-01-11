@@ -16,6 +16,7 @@ public:
     static void RunTestsWithTags(ETestTag Tags, bool bParallel = true);  // Run only tests matching tags
     static void RegisterTest(class FNexusTest* Test);
     static bool EnsurePIEWorldActive();  // Auto-launch PIE if needed for game-thread tests
+    static bool EnsurePIEWorldActive(const FString& MapPath);  // Auto-launch PIE if needed for game-thread tests
     static void RunSequentialWithFailFast();
     static FString GetAbortFilePath();
     static void SignalAbort(const FString& Reason = TEXT(""));

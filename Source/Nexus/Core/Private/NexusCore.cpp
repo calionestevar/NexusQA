@@ -11,6 +11,9 @@
 #include "GameFramework/GameStateBase.h"
 #include "GameFramework/PlayerController.h"
 #include <atomic>
+#if WITH_EDITOR
+#include "NexusEditorBridge.h"
+#endif
 
 DEFINE_LOG_CATEGORY(LogNexus);
 
@@ -134,9 +137,20 @@ void UNexusCore::Execute(const TArray<FString>& Args)
 
 bool UNexusCore::EnsurePIEWorldActive()
 {
-    // TODO: Call FargoEditor bridge to launch PIE if not already running
-    return true;
+    const FString DefaultMapPath = TEXT("");
+    return EnsurePIEWorldActive(DefaultMapPath);
 }
+
+bool UNexusCore::EnsurePIEWorldActive(const FString& MapPath)
+{
+#if WITH_EDITOR
+    return FNexusEditorBridge::EnsurePIEWorldActive(MapPath);
+#else
+    UE_LOG(LogNexus, Warning, TEXT("EnsurePIEWorldActive called outside editor"));
+    return false;
+#endif
+}
+
 void UNexusCore::DiscoverAllTests()
 {
     // Copy discovered tests from FNexusTest::AllTests into UNexusCore::DiscoveredTests
