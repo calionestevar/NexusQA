@@ -135,6 +135,7 @@ void UNexusCore::Execute(const TArray<FString>& Args)
 bool UNexusCore::EnsurePIEWorldActive()
 {
     // TODO: Call FargoEditor bridge to launch PIE if not already running
+    return true;
 }
 void UNexusCore::DiscoverAllTests()
 {
