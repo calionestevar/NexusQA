@@ -11,8 +11,6 @@
 #include "GameFramework/GameStateBase.h"
 #include "GameFramework/PlayerController.h"
 #include <atomic>
-#include "Editor/EditorEngine.h"
-#include "PlaySession.h"
 
 DEFINE_LOG_CATEGORY(LogNexus);
 
@@ -136,76 +134,8 @@ void UNexusCore::Execute(const TArray<FString>& Args)
 
 bool UNexusCore::EnsurePIEWorldActive()
 {
-    UWorld* World = nullptr;
-    
-    // Check if we're already in a PIE/game world
-    if (GEngine && GEngine->GetWorldContexts().Num() > 0)
-    {
-        for (const FWorldContext& Context : GEngine->GetWorldContexts())
-        {
-            if (Context.World() && Context.World()->IsGameWorld())
-            {
-                World = Context.World();
-                break;
-            }
-        }
-    }
-    
-    if (World)
-    {
-        UE_LOG(LogNexus, Display, TEXT("NEXUS: Active game world detected [%s]"), *World->GetMapName());
-        return true;
-    }
-    
-    // Try to read test map from config and launch PIE
-#if WITH_EDITOR
-    FString TestMapPath = TEXT("");
-    if (GConfig)
-    {
-        GConfig->GetString(TEXT("/Script/Nexus.NexusSettings"), TEXT("TestMapPath"), TestMapPath, GGameIni);
-    }
-    
-    if (!TestMapPath.IsEmpty() && GEditor)
-    {
-        UE_LOG(LogNexus, Warning, TEXT("NEXUS: No active game world - launching PIE with map: %s"), *TestMapPath);
-        
-        // Request PIE with the configured map
-        FRequestPlaySessionParams Params;
-        Params.MapToLoad = TestMapPath;
-        Params.bSimulateInEditor = false;
-        Params.bPlayInEditorFloating = false;
-        Params.SessionPreviewTypeOverride = EPlaySessionPreviewType::None;
-
-        GEditor->RequestPlaySession(Params);
-        
-        // Wait briefly for PIE to initialize (up to 5 seconds)
-        double WaitStartTime = FPlatformTime::Seconds();
-        while (FPlatformTime::Seconds() - WaitStartTime < 5.0)
-        {
-            // Check if PIE world is now active
-            for (const FWorldContext& Context : GEngine->GetWorldContexts())
-            {
-                if (Context.World() && Context.World()->IsGameWorld())
-                {
-                    UE_LOG(LogNexus, Display, TEXT("NEXUS: PIE world launched successfully [%s]"), *Context.World()->GetMapName());
-                    return true;
-                }
-            }
-            
-            // Brief sleep to avoid busy-waiting
-            FPlatformProcess::Sleep(0.1f);
-        }
-        
-        UE_LOG(LogNexus, Warning, TEXT("NEXUS: PIE launch in progress but world not yet ready. Game-thread tests may skip."));
-        return false;
-    }
-#endif
-    
-    UE_LOG(LogNexus, Error, TEXT("NEXUS: No game world active and no TestMapPath configured. Game-thread tests will fail."));
-    UE_LOG(LogNexus, Error, TEXT("NEXUS: Configure TestMapPath in DefaultGame.ini under [/Script/Nexus.NexusSettings]"));
-    return false;
+    // TODO: Call FargoEditor bridge to launch PIE if not already running
 }
-
 void UNexusCore::DiscoverAllTests()
 {
     // Copy discovered tests from FNexusTest::AllTests into UNexusCore::DiscoveredTests
