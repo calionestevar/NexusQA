@@ -4,6 +4,7 @@
 #include "Editor/EditorEngine.h"
 #include "UnrealEdGlobals.h"
 #include "Editor/UnrealEdEngine.h"
+#include "Settings/EditorPlaySettings.h"
 
 bool FNexusEditorBridge::EnsurePIEWorldActive(const FString& MapPath)
 {
@@ -27,10 +28,8 @@ bool FNexusEditorBridge::EnsurePIEWorldActive(const FString& MapPath)
     }
 
     FRequestPlaySessionParams Params;
-    Params.MapToLoad = MapPath;
-    Params.bSimulateInEditor = false;
-    Params.bPlayInEditorFloating = false;
-    Params.SessionPreviewTypeOverride = EPlaySessionPreviewType::None;
+    Params.SessionPreviewTypeOverride = EPlaySessionPreviewType::NoPreview;
+    Params.StartLocation = FVector::ZeroVector;
 
     GEditor->RequestPlaySession(Params);
 

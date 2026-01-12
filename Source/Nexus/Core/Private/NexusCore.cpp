@@ -12,9 +12,7 @@
 #include "GameFramework/PlayerController.h"
 #include "NexusEditorBridgeRegistry.h"
 #include <atomic>
-#if WITH_EDITOR
-#include "NexusEditorBridge.h"
-#endif
+#include "INexusEditorBridge.h"
 
 DEFINE_LOG_CATEGORY(LogNexus);
 

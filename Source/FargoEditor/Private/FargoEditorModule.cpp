@@ -1,23 +1,29 @@
+#include "FargoEditorBridge.h"
+#include "Editor/NexusEditorBridgeRegistry.h"
 #include "Modules/ModuleManager.h"
+
+DEFINE_LOG_CATEGORY_STATIC(LogFargoEditor, Log, All);
 
 class FFargoEditorModule : public IModuleInterface
 {
 public:
-    virtual void StartupModule() override {}
-    virtual void ShutdownModule() override {}
+    virtual void StartupModule() override;
+    virtual void ShutdownModule() override;
+
+private:
+    TUniquePtr<FFargoEditorBridge> FargoEditorBridge;
 };
 
 IMPLEMENT_MODULE(FFargoEditorModule, FargoEditor)
 
 void FFargoEditorModule::StartupModule()
 {
-	UE_LOG(LogFargoEditorModule, Warning, TEXT("🌐 FARGO EDITOR MODULE INITIALIZING"));
-    
+    UE_LOG(LogFargoEditor, Warning, TEXT("🌐 FARGO EDITOR MODULE INITIALIZING"));
+
     FargoEditorBridge = MakeUnique<FFargoEditorBridge>();
     FNexusEditorBridgeRegistry::Register(FargoEditorBridge.Get());
-	bFargoEditorModuleInitialized = true;
 
-	UE_LOG(LogFargoEditorModule, Display, TEXT("✅ FARGO EDITOR MODULE ONLINE"));
+    UE_LOG(LogFargoEditor, Display, TEXT("✅ FARGO EDITOR MODULE ONLINE"));
 }
 
 void FFargoEditorModule::ShutdownModule()
