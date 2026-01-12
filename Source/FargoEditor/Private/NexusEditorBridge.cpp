@@ -7,25 +7,46 @@
 
 bool FNexusEditorBridge::EnsurePIEWorldActive(const FString& MapPath)
 {
-    if (!GEditor)
+    if (!GEditor || !GEngine)
     {
-        UE_LOG(LogTemp, Error, TEXT("GEditor is null"));
         return false;
     }
 
-    if (GEditor->PlayWorld)
+    // Already running?
+    for (const FWorldContext& Context : GEngine->GetWorldContexts())
     {
-        // PIE already running
-        return true;
-    }   
-
-    FRequestPlaySessionParams Params;
-
-    if (!MapPath.IsEmpty())
-    {
-        Params.Map = MapPath;
+        if (Context.World() && Context.World()->IsGameWorld())
+        {
+            return true;
+        }
     }
 
+    if (MapPath.IsEmpty())
+    {
+        return false;
+    }
+
+    FRequestPlaySessionParams Params;
+    Params.MapToLoad = MapPath;
+    Params.bSimulateInEditor = false;
+    Params.bPlayInEditorFloating = false;
+    Params.SessionPreviewTypeOverride = EPlaySessionPreviewType::None;
+
     GEditor->RequestPlaySession(Params);
-    return true;
+
+    // Legacy wait loop (to be replaced later)
+    double Start = FPlatformTime::Seconds();
+    while (FPlatformTime::Seconds() - Start < 5.0)
+    {
+        for (const FWorldContext& Context : GEngine->GetWorldContexts())
+        {
+            if (Context.World() && Context.World()->IsGameWorld())
+            {
+                return true;
+            }
+        }
+        FPlatformProcess::Sleep(0.1f);
+    }
+
+    return false;
 }

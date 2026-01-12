@@ -10,6 +10,7 @@
 #include "Engine/World.h"
 #include "GameFramework/GameStateBase.h"
 #include "GameFramework/PlayerController.h"
+#include "NexusEditorBridgeRegistry.h"
 #include <atomic>
 #if WITH_EDITOR
 #include "NexusEditorBridge.h"
@@ -137,8 +138,29 @@ void UNexusCore::Execute(const TArray<FString>& Args)
 
 bool UNexusCore::EnsurePIEWorldActive()
 {
-    const FString DefaultMapPath = TEXT("");
-    return EnsurePIEWorldActive(DefaultMapPath);
+    FString TestMapPath;
+
+    if (GConfig)
+    {
+        GConfig->GetString(
+            TEXT("/Script/Nexus.NexusSettings"),
+            TEXT("TestMapPath"),
+            TestMapPath,
+            GGameIni);
+    }
+
+#if WITH_EDITOR
+    if (INexusEditorBridge* Bridge = FNexusEditorBridgeRegistry::Get())
+    {
+        return Bridge->EnsurePIEWorldActive(TestMapPath);
+    }
+
+    UE_LOG(LogNexus, Warning,
+        TEXT("EnsurePIEWorldActive called, but no editor bridge is registered"));
+    return false;
+#else
+    return false;
+#endif
 }
 
 bool UNexusCore::EnsurePIEWorldActive(const FString& MapPath)
