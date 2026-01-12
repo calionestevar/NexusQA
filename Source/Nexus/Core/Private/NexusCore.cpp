@@ -13,6 +13,7 @@
 #include "NexusEditorBridgeRegistry.h"
 #include <atomic>
 #include "INexusEditorBridge.h"
+#include "NexusAutomationUtils.h"
 
 DEFINE_LOG_CATEGORY(LogNexus);
 
@@ -142,7 +143,7 @@ bool UNexusCore::EnsurePIEWorldActive()
             TEXT("NEXUS: Editor features disabled (CI / automation context)"));
         return false;
     }
-    
+
     if (FNexusEditorBridgeRegistry::Get().IsEditorAvailable())
     {
         return FNexusEditorBridgeRegistry::Get()

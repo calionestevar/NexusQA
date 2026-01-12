@@ -1,6 +1,6 @@
 #include "FargoEditorBridge.h"
 #include "Editor.h"
-#include "UnrealEd/Public/PlayInEditorDataTypes.h"
+#include "PlayInEditorDataTypes.h"
 
 bool FFargoEditorBridge::EnsurePIEWorldActive(const FString& /*MapPath*/)
 {
