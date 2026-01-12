@@ -135,30 +135,24 @@ void UNexusCore::Execute(const TArray<FString>& Args)
 }
 
 bool UNexusCore::EnsurePIEWorldActive()
-{
-    FString TestMapPath;
-
-    if (GConfig)
+{    
+    if (Nexus_ShouldAvoidEditorFeatures())
     {
-        GConfig->GetString(
-            TEXT("/Script/Nexus.NexusSettings"),
-            TEXT("TestMapPath"),
-            TestMapPath,
-            GGameIni);
+        UE_LOG(LogNexus, Display,
+            TEXT("NEXUS: Editor features disabled (CI / automation context)"));
+        return false;
+    }
+    
+    if (FNexusEditorBridgeRegistry::Get().IsEditorAvailable())
+    {
+        return FNexusEditorBridgeRegistry::Get()
+            .EnsurePIEWorldActive(GetConfiguredTestMap());
     }
 
-#if WITH_EDITOR
-    if (INexusEditorBridge* Bridge = FNexusEditorBridgeRegistry::Get())
-    {
-        return Bridge->EnsurePIEWorldActive(TestMapPath);
-    }
+    UE_LOG(LogNexus, Display,
+        TEXT("NEXUS: Editor not available — skipping PIE world activation"));
 
-    UE_LOG(LogNexus, Warning,
-        TEXT("EnsurePIEWorldActive called, but no editor bridge is registered"));
     return false;
-#else
-    return false;
-#endif
 }
 
 bool UNexusCore::EnsurePIEWorldActive(const FString& MapPath)
@@ -170,6 +164,22 @@ bool UNexusCore::EnsurePIEWorldActive(const FString& MapPath)
     return false;
 #endif
 }
+
+FString UNexusCore::GetConfiguredTestMap() const
+{
+    FString TestMapPath;
+    if (GConfig)
+    {
+        GConfig->GetString(
+            TEXT("/Script/Nexus.NexusSettings"),
+            TEXT("TestMapPath"),
+            TestMapPath,
+            GGameIni
+        );
+    }
+    return TestMapPath;
+}
+
 
 void UNexusCore::DiscoverAllTests()
 {

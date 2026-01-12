@@ -1,31 +1,16 @@
 #include "FargoEditorBridge.h"
-
 #include "Editor.h"
-#include "Editor/EditorEngine.h"
-#include "UnrealEdGlobals.h"
+#include "UnrealEd/Public/PlayInEditorDataTypes.h"
 
-bool FFargoEditorBridge::EnsurePIEWorldActive(const FString& MapPath)
+bool FFargoEditorBridge::EnsurePIEWorldActive(const FString& /*MapPath*/)
 {
-    if (!GEditor || !GEngine)
-    {
-        return false;
-    }
-
-    for (const FWorldContext& Context : GEngine->GetWorldContexts())
-    {
-        if (Context.World() && Context.World()->IsGameWorld())
-        {
-            return true;
-        }
-    }
-
-    if (MapPath.IsEmpty())
+    if (!GEditor)
     {
         return false;
     }
 
     FRequestPlaySessionParams Params;
-    Params.MapToLoad = MapPath;
+    Params.SessionPreviewTypeOverride = EPlaySessionPreviewType::NoPreview;
 
     GEditor->RequestPlaySession(Params);
     return true;

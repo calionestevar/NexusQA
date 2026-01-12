@@ -5,10 +5,8 @@
 class FNexusEditorBridgeRegistry
 {
 public:
+    static INexusEditorBridge& Get();
+
     static void Register(INexusEditorBridge* Bridge);
     static void Unregister(INexusEditorBridge* Bridge);
-    static INexusEditorBridge* Get();
-
-private:
-    static INexusEditorBridge* ActiveBridge;
 };

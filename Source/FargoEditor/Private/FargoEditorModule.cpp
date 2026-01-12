@@ -1,5 +1,5 @@
 #include "FargoEditorBridge.h"
-#include "Editor/NexusEditorBridgeRegistry.h"
+#include "NexusEditorBridgeRegistry.h"
 #include "Modules/ModuleManager.h"
 
 DEFINE_LOG_CATEGORY_STATIC(LogFargoEditor, Log, All);

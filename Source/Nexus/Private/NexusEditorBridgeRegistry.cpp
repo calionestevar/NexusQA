@@ -1,21 +1,30 @@
 #include "NexusEditorBridgeRegistry.h"
+#include "NexusNullEditorBridge.h"
 
-INexusEditorBridge* FNexusEditorBridgeRegistry::ActiveBridge = nullptr;
+static TUniquePtr<INexusEditorBridge> ActiveBridge;
+
+INexusEditorBridge& FNexusEditorBridgeRegistry::Get()
+{
+    if (!ActiveBridge)
+    {
+        ActiveBridge = MakeUnique<FNexusNullEditorBridge>();
+    }
+    return *ActiveBridge;
+}
 
 void FNexusEditorBridgeRegistry::Register(INexusEditorBridge* Bridge)
 {
-    ActiveBridge = Bridge;
-}
-
-void FNexusEditorBridgeRegistry::Unregister(INexusEditorBridgeRegistry* Bridge)
-{
-    if (ActiveBridge == Bridge)
+    if (Bridge)
     {
-        ActiveBridge = nullptr;
+        ActiveBridge.Reset();
+        ActiveBridge = TUniquePtr<INexusEditorBridge>(Bridge);
     }
 }
 
-INexusEditorBridge* FNexusEditorBridgeRegistry::Get()
+void FNexusEditorBridgeRegistry::Unregister(INexusEditorBridge* Bridge)
 {
-    return ActiveBridge;
+    if (ActiveBridge.Get() == Bridge)
+    {
+        ActiveBridge = MakeUnique<FNexusNullEditorBridge>();
+    }
 }
