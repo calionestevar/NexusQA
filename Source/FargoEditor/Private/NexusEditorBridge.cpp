@@ -4,7 +4,7 @@
 #include "Editor/EditorEngine.h"
 #include "UnrealEdGlobals.h"
 #include "Editor/UnrealEdEngine.h"
-#include "Settings/EditorPlaySettings.h"
+#include "EditorPlaySettings.h"
 
 bool FNexusEditorBridge::EnsurePIEWorldActive(const FString& MapPath)
 {

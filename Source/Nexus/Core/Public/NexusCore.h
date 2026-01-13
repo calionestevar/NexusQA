@@ -17,7 +17,6 @@ public:
     static void RegisterTest(class FNexusTest* Test);
     static bool EnsurePIEWorldActive();  // Auto-launch PIE if needed for game-thread tests
     static bool EnsurePIEWorldActive(const FString& MapPath);  // Auto-launch PIE if needed for game-thread tests
-    static FString GetConfiguredTestMap() const;  // Get map path from config or default
     static void RunSequentialWithFailFast();
     static FString GetAbortFilePath();
     static void SignalAbort(const FString& Reason = TEXT(""));
@@ -48,4 +47,6 @@ public:
     static int32 SkippedTests;
     static int32 CriticalTests;
     static TArray<class FNexusTest*> DiscoveredTests;
+private:
+    FString GetConfiguredTestMap() const;
 };
