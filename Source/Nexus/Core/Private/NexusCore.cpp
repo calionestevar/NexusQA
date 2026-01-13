@@ -159,7 +159,8 @@ bool UNexusCore::EnsurePIEWorldActive()
 bool UNexusCore::EnsurePIEWorldActive(const FString& MapPath)
 {
 #if WITH_EDITOR
-    return FNexusEditorBridge::EnsurePIEWorldActive(MapPath);
+    return FNexusEditorBridgeRegistry::Get()
+        .EnsurePIEWorldActive(MapPath);
 #else
     UE_LOG(LogNexus, Warning, TEXT("EnsurePIEWorldActive called outside editor"));
     return false;
