@@ -1,5 +1,5 @@
 #include "FargoEditorBridge.h"
-#include "NexusEditorBridgeRegistry.h"
+#include "INexusEditorBridge.h"
 #include "Modules/ModuleManager.h"
 
 DEFINE_LOG_CATEGORY_STATIC(LogFargoEditor, Log, All);
@@ -21,13 +21,13 @@ void FFargoEditorModule::StartupModule()
     UE_LOG(LogFargoEditor, Warning, TEXT("🌐 FARGO EDITOR MODULE INITIALIZING"));
 
     FargoEditorBridge = MakeUnique<FFargoEditorBridge>();
-    FNexusEditorBridgeRegistry::Register(FargoEditorBridge.Get());
+    RegisterNexusEditorBridge(FargoEditorBridge.Get());
 
     UE_LOG(LogFargoEditor, Display, TEXT("✅ FARGO EDITOR MODULE ONLINE"));
 }
 
 void FFargoEditorModule::ShutdownModule()
 {
-    FNexusEditorBridgeRegistry::Unregister(FargoEditorBridge.Get());
+    UnregisterNexusEditorBridge(FargoEditorBridge.Get());
     FargoEditorBridge.Reset();
 }

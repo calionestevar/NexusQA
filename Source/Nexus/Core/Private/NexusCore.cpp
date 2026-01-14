@@ -147,7 +147,7 @@ bool UNexusCore::EnsurePIEWorldActive()
     if (FNexusEditorBridgeRegistry::Get().IsEditorAvailable())
     {
         return FNexusEditorBridgeRegistry::Get()
-            .EnsurePIEWorldActive(GetConfiguredTestMap());
+            .EnsurePIEWorldActive(UNexusCore::GetConfiguredTestMap());
     }
 
     UE_LOG(LogNexus, Display,
@@ -167,7 +167,7 @@ bool UNexusCore::EnsurePIEWorldActive(const FString& MapPath)
 #endif
 }
 
-FString UNexusCore::GetConfiguredTestMap() const
+FString UNexusCore::GetConfiguredTestMap()
 {
     FString TestMapPath;
     if (GConfig)
