@@ -1,4 +1,5 @@
 #include "NexusCore.h"
+#include "Nexus/Public/NexusModule.h"
 #include "NexusTest.h"
 #include "Nexus/Palantir/Public/PalantirOracle.h"
 #include "Misc/CommandLine.h"
@@ -15,7 +16,7 @@
 #include "INexusEditorBridge.h"
 #include "NexusAutomationUtils.h"
 
-DEFINE_LOG_CATEGORY(LogNexus, Log, All);
+DEFINE_LOG_CATEGORY(LogNexus);
 
 // Define static members
 TArray<FNexusTestResult> FNexusTest::AllResults;

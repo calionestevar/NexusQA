@@ -1,6 +1,7 @@
 #pragma once
 #include "CoreMinimal.h"
 #include "NexusTest.h"
+#include "Nexus/Public/NexusModule.h"
 
 /**
  * NexusCore - Test framework coordinator

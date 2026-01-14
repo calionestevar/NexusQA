@@ -1,4 +1,5 @@
 #include "Nexus/Core/Public/NexusTest.h"
+#include "Nexus/Public/NexusModule.h"
 #include "PalantirRequest.h"
 #include "Http.h"
 #include "Sockets.h"
