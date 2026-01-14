@@ -35,7 +35,7 @@ static bool IsNetworkAvailable()
 		TEXT("8.8.8.8"), 
 		nullptr, 
 		EAddressInfoFlags::Default, 
-		ESocketProtocolFamily::IPv4, 
+		FName(TEXT("ipv4")), 
 		ESocketType::SOCKTYPE_Datagram
 	);
 

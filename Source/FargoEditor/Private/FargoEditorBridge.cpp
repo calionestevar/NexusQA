@@ -1,5 +1,5 @@
 #include "FargoEditorBridge.h"
-#include "Editor.h"
+#include "Editor/EditorEngine.h"
 #include "PlayInEditorDataTypes.h"
 
 bool FFargoEditorBridge::EnsurePIEWorldActive(const FString& /*MapPath*/)

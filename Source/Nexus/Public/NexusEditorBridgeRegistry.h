@@ -2,7 +2,7 @@
 
 #include "INexusEditorBridge.h"
 
-class FNexusEditorBridgeRegistry
+class NEXUS_API FNexusEditorBridgeRegistry
 {
 public:
     static INexusEditorBridge& Get();
