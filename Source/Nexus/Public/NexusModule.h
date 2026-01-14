@@ -32,4 +32,4 @@ public:
 };
 
 // Declare log category for use throughout the module
-DECLARE_LOG_CATEGORY_EXTERN(LogNexusModule, Log, All);
+DECLARE_LOG_CATEGORY_EXTERN(LogNexus, Log, All);

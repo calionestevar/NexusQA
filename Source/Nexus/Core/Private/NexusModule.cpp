@@ -5,7 +5,7 @@
 
 #define LOCTEXT_NAMESPACE "FNexusModule"
 
-DEFINE_LOG_CATEGORY(LogNexusModule);
+DEFINE_LOG_CATEGORY_STATIC(LogNexusModule, Log, All);
 
 static bool bNexusModuleInitialized = false;
 
