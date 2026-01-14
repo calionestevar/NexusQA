@@ -15,7 +15,7 @@
 #include "INexusEditorBridge.h"
 #include "NexusAutomationUtils.h"
 
-DEFINE_LOG_CATEGORY(LogNexus);
+DEFINE_LOG_CATEGORY_STATIC(LogNexus, Log, All);
 
 // Define static members
 TArray<FNexusTestResult> FNexusTest::AllResults;
