@@ -8,7 +8,6 @@
 class UNexusCore;
 class AGameStateBase;
 class APlayerController;
-DECLARE_LOG_CATEGORY_EXTERN(LogNexus, Display, All);
 
 /**
  * Performance metrics captured during test execution
