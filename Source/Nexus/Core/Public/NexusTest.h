@@ -2,7 +2,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "Nexus/Palantir/Public/PalantirTrace.h"
-#include "Nexus/Public/NexusModule.h"
+#include "NexusModule.h"
 #include "HAL/PlatformStackWalk.h"
 
 // Forward declarations
