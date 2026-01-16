@@ -659,9 +659,9 @@ void FPalantirObserver::GenerateFinalReport()
     FString GroupedSections;
     for (const FString& Tag : UniqueTags)
     {
-        int32 TotalInTag = TagCountMap[Tag];
-        int32 PassedInTag = TagPassCountMap[Tag];
-        TArray<FString>& TestsInTag = TagTestsMap[Tag];
+        int32 TotalInTag  = TagCountMap.FindRef(Tag);
+        int32 PassedInTag = TagPassCountMap.FindRef(Tag);
+        TArray<FString>& TestsInTag = TagTestsMap.FindChecked(Tag);
         
         FString PassPercent = TotalInTag > 0 ? 
             FString::Printf(TEXT("%.1f"), (static_cast<double>(PassedInTag) / TotalInTag) * 100.0) : 
